@@ -11,12 +11,12 @@
 vcl 4.1;
 
 import directors;	# Load the vmod_directors
-import std;			# Load the std, not STD for god sake
-import vsthrottle;	# throttling by rate
-#import shield;		# resets the connection
+import std;		# Load the std, not STD for god sake
+import vsthrottle;	# throttling by rate; you need varnish-modules so google or apt install varnish-modules
+#import shield;		# resets the connection; didn't work for me
 
 # Let's Encrypt
-include "/etc/varnish/ext/letsencrypt.vcl";
+include "/etc/varnish/ext/letsencrypt.vcl";	# I really don't know if this id doing something, it was because Hitch
 
 # Monit
 include "/etc/varnish/ext/monit.vcl";
@@ -42,14 +42,14 @@ probe sondi {
 	.threshold = 3;
 }
 
-backend default {					# use your servers instead default if you have more than just one
+backend default {				# use your servers instead default if you have more than just one
 	.host = "127.0.0.1";			# IP or Hostname of backend
-	.port = "81";					# Apache or whatever is listening
+	.port = "81";				# Apache or whatever is listening
 	.max_connections = 800;			# That's it enough 
 	.first_byte_timeout = 300s;		# How long to wait before we receive a first byte from our backend?
 	.connect_timeout = 300s;		# How long to wait for a backend connection?
-	.between_bytes_timeout = 300s;	# How long to wait between bytes received from our backend?
-	.probe = sondi;					# We have chance to recycle the probe 
+	.between_bytes_timeout = 300s;		# How long to wait between bytes received from our backend?
+	.probe = sondi;				# We have chance to recycle the probe 
 }
 
 # Only allow purging from specific IPs
@@ -61,10 +61,11 @@ acl purge {
 #acl whitelist {
 #	"localhost";
 #	"127.0.0.1";
-#	"85.76.104.205";
+#	"<your-home-ip>";
 #}
 
 acl forbidden {
+# just as example, use fail2ban instead
 	"144.76.151.45";
 	"95.175.104.158";
 	"95.175.104.125";
@@ -93,14 +94,13 @@ sub vcl_recv {
 	}
 	
 	# Do not allow outside access to cron.php or install.php.
+	## This gave some problems to me
 	#if (req.url ~ "^/(cron|install)\.php$" && !client.ip ~ internal) {
-    # error 404 "Page not found.";
+    	# error 404 "Page not found.";
 	
 	## Your lifeline: Turn OFF cache
-	## For caching keep this commented
+	## For caching keep this commented, but Varnish is still affecting headers, cookies etc.
 	# return(pass);
-	
-
 	
 	## Your last hope: a dumb TCP termination
 	## It passes everything right thru Varnish
@@ -217,6 +217,7 @@ sub vcl_hash {
 	}
 	
 	# hash User-Agent for requests that have them
+	# normally you will kill all UA's but I'm using three of them
 	if (req.http.User-Agent) {
 	hash_data(req.http.User-Agent);
 	}
@@ -446,15 +447,13 @@ sub vcl_deliver {
 
 	# HIT & MISS
 	if (obj.hits > 0) { # Add debug header to see if it's a HIT/MISS and the number of hits, disable when not needed
-	#set resp.http.X-Mood = "A Million on My Soul by Alexiane";
 		set resp.http.X-Cache = "Done";
 	} else {
-		#set resp.http.X-Mood = "...Baby One More Time by Britney Spears";
 		set resp.http.X-Cache = "Phew";
 	}
 
 	# Show hit counts (per objecthead)
-	set resp.http.X-Wham-Xmas = (obj.hits);   #(obj.hits + 120);
+	set resp.http.X-Wham-Xmas = (obj.hits);
 
 	# Earlier we set 1 year for Varnish and 3 months for client. Now it will finished
 	if (resp.http.magicmarker) {
@@ -475,7 +474,7 @@ sub vcl_deliver {
 	unset resp.http.X-Powered-By;
 	unset resp.http.X-Drupal-Cache;
 	unset resp.http.X-Varnish;
-	#unset resp.http.Age;  # you need this for Pingdom
+	#unset resp.http.Age;  			# you need this for Pingdom
 	unset resp.http.Via;
 	unset resp.http.Link;
 	unset resp.http.X-Generator;
@@ -483,14 +482,10 @@ sub vcl_deliver {
 
 		
 	## let's set some extra just for fun
+	## Please, don't use this
 	set resp.http.Server = "Caffeine v64.19";
 	set resp.http.X-Powered-By = "Talisker";
 	set resp.http.X-callsign = "Basic stack";
-	set resp.http.X-callsign-W3 = "Laura";
-	set resp.http.X-callsign-Cache = "Emppa";
-	set resp.http.X-callsign-CacheD = "Rasmus";
-	set resp.http.X-callsign-Termination = "Aapo";
-	set resp.http.X-callsign-DB = "Tiitu";
 	set resp.http.X-UXSpecialist = "Jakke Lehtonen";
 	set resp.http.X-UXSite = "https://www.eksis.one";
 	set resp.http.X-UXMeme = "Keep calm and smoke your coffee and drink your smokes - it's just a user";
@@ -500,7 +495,8 @@ sub vcl_deliver {
 
 }
 
-
+############# vcl_purge ################
+#
 sub vcl_purge {
 
 	# Only handle actual PURGE HTTP methods, everything else is discarded
@@ -512,7 +508,7 @@ sub vcl_purge {
 }
 
 
-
+############# vcl_synth #################
 sub vcl_synth {
 
 	if (resp.status == 720) {
@@ -556,6 +552,8 @@ sub vcl_synth {
 "} );
     return (deliver);
 
+## This works just fibe but I'm not using them
+#
 		# forbidden
 #		if (resp.status == 403) {
 #			synthetic(std.fileread("/etc/varnish/error/403.html"));
