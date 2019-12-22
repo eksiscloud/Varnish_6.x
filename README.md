@@ -8,3 +8,21 @@ The stack is:
 - Nging is ternminating SSL and taking care HTTP/2
 - Varnish is listening port 8080
 - Apache2 is listening port 81
+
+I'm using Fail2ban to ban IP of bots too. Overkill?
+
+jail.local:
+[varnish-403]
+port = http,https
+filter = varnish-403
+logpath  = /var/log/varnish/varnishncsa.log
+maxretry = 1
+findtime = 24h
+bantime = -1
+enabled = true
+
+filter:
+[Definition]
+failregex = ^<HOST> - .* "(GET|POST|HEAD).*HTTP.*" 403 .*$
+
+ignoreregex =
