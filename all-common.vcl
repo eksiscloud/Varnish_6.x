@@ -1,5 +1,6 @@
 ## Common for all subdomains
-##
+## cookies etc.
+#
 sub vcl_recv {
 
 	
@@ -10,15 +11,6 @@ sub vcl_recv {
 	set req.hash_always_miss = true;
 	}
 	
-	# Some generic URL manipulation, useful for all templates that follow
-	# First remove the Google Analytics added parameters, useless for our backend
-#	if (req.url ~ "(\?|&)(utm_source|utm_medium|utm_campaign|utm_content|gclid|cx|ie|cof|siteurl)=") {
-#		set req.url = regsuball(req.url, "&(utm_source|utm_medium|utm_campaign|utm_content|gclid|cx|ie|cof|siteurl)=([A-z0-9_\-\.%25]+)", "");
-#		set req.url = regsuball(req.url, "\?(utm_source|utm_medium|utm_campaign|utm_content|gclid|cx|ie|cof|siteurl)=([A-z0-9_\-\.%25]+)", "?");
-#		set req.url = regsub(req.url, "\?&", "?");
-#		set req.url = regsub(req.url, "\?$", "");
-#  }
-
 	# Some generic URL manipulation, useful for all templates that follow
 	# First remove URL parameters used to track effectiveness of online marketing campaigns
 	if (req.url ~ "(\?|&)(utm_[a-z]+|gclid|cx|ie|cof|siteurl|fbclid)=") {
@@ -83,14 +75,10 @@ sub vcl_recv {
 	set req.http.Cookie = regsuball(req.http.Cookie, "_wp_session=[^;]+(; )?", "");
 	
 	# Moodle
+	## I tried but couldn't get login of Moodle work
 #	set req.http.Cookie = regsuball(req.http.Cookie, "MoodleSession=[^;]+(; )?", "");
 #	set req.http.Cookie = regsuball(req.http.Cookie, "MoodleTest=[^;]+(; )?", "");
 #	set req.http.Cookie = regsuball(req.http.Cookie, "MOODLEID=[^;]+(; )?", "");
-
-	# Do not pass other Cookies
-	if (!req.http.Cookie) {
-	unset req.http.Cookie;
-	}
 	
 	if (req.http.Cookie ~ "__distillery") {
 	unset req.http.Cookie; 
@@ -109,6 +97,11 @@ sub vcl_recv {
 	if (req.url ~ "\.(bmp|bz2|css|doc|eot|flv|gif|ico|jpeg|jpg|js|less|pdf|png|rtf|swf|txt|woff|xml)(\?.*|)$") {
 		unset req.http.Cookie;
 		set req.url = regsub(req.url, "\?.*$", "");
+	}
+	
+	# Do not pass other Cookies
+	if (!req.http.Cookie) {
+	unset req.http.Cookie;
 	}
 
 }
