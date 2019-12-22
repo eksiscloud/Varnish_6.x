@@ -1,7 +1,7 @@
 vcl 4.1;
 
 probe bottisondi {
-				.url = "/ads.txt";
+				.url = "/ads.txt";  # must be a real url, not made by wordpress
 				.timeout = 1s;
 				.interval = 5s;
 				.window = 5;
