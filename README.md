@@ -12,6 +12,7 @@ The stack is:
 I'm using Fail2ban to ban IP of bots too. Overkill?
 
 jail.local:
+
 [varnish-403]
 port = http,https
 filter = varnish-403
@@ -22,6 +23,7 @@ bantime = -1
 enabled = true
 
 filter:
+
 [Definition]
 failregex = ^<HOST> - .* "(GET|POST|HEAD).*HTTP.*" 403 .*$
 
