@@ -1,7 +1,11 @@
 sub bad_bot_detection {
 
+## I have to set user agent to find out in 404 monitoring of Wordpress who is getting 404.
+## There is no point what so ever to start fixing 404s by bots and harvesters
+## Fix only real users and Google etc.
+
     if (
-		# Key word harvesting and useless SEO
+		# Keyword harvesting and useless SEO
 		   req.http.User-Agent ~ "libwww-perl"
 		|| req.http.User-Agent ~ "Wget"
 				# #
@@ -122,12 +126,12 @@ sub bad_bot_detection {
 			} 
 
 	elseif ( req.http.User-Agent == "^$" || req.http.User-Agent == "-") {
-			set req.http.User-Agent = "Potatoehead";
+			set req.http.User-Agent = "Potatoehead"; # you actually don't need this UA
 			return (synth(403, "Empty User Agent"));
 			}
 		
 	elseif (
-		  req.http.User-Agent == "KatiskaWarmer"
+		  req.http.User-Agent == "KatiskaWarmer" # this is wget
 		# Google
 		||req.http.User-Agent ~ "APIs-Google"
 		|| req.http.User-Agent ~ "Mediapartners-Google"
@@ -180,7 +184,6 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "WhatsApp"
 		) {
 			set req.http.User-Agent = "Good guy";
-			#return(pipe);
 			}
 	
 	elseif (
@@ -195,9 +198,6 @@ sub bad_bot_detection {
 			}
 			
 	else {
-	# Let's save User-Agent, but not cache using it 
-		#set req.http.X-Agent = req.http.User-Agent;
-		#unset req.http.User-Agent;
 		set req.http.User-Agent = "Others";
 		}
 	
