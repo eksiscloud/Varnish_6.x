@@ -1,33 +1,27 @@
-
-
 ## Wordpress (Woocommerce) ##
 sub vcl_recv {
   if (req.http.host == "store.katiska.info") {
-	#set req.backend_hint = katiska;
+		set req.backend_hint = default;
 
-	# Your lifeline: Turn OFF cache
-	# For caching keep this commented
+	# Your lifelines: 
+	# Turn off cache
+	# or make Varnish act like dumb proxy
 	#return(pass);
-	
-	# If you are using SSL and it doesn't forward http to https when URL is given without protocol
-#	if ( req.http.X-Forwarded-Proto !~ "(?i)https" ) {
-#		set req.http.X-Redir-Url = "https://" + req.http.host + req.url;
-#	return ( synth( 750 ));
-#	}
-	
-#	set req.http.X-Forwarded-Proto = "https";
-	
+	#return(pipe);
+
+
+	# I don't need this two because I'm using Fail2ban, but this is more like a safetynet
 	if(vsthrottle.is_denied(req.http.X-Forwarded-For, 2, 1s) && (req.url ~ "xmlrpc|wp-login.php|\?s\=")) {
-	return (synth(429, "Too Many Requests"));
-	# Use shield vmod to reset connection
-#	shield.conn_reset();
+		return (synth(429, "Too Many Requests"));
+		# Use shield vmod to reset connection
+		#shield.conn_reset();
 	}
 
-#Prevent users from making excessive POST requests that aren't for admin-ajax
-if(vsthrottle.is_denied(req.http.X-Forwarded-For, 15, 10s) && ((!req.url ~ "\/wp-admin\/|(xmlrpc|admin-ajax)\.php") && (req.method == "POST"))){
-	return (synth(429, "Too Many Requests"));
-	# Use shield vmod to reset connection
-#	shield.conn_reset();
+	#Prevent users from making excessive POST requests that aren't for admin-ajax
+	if(vsthrottle.is_denied(req.http.X-Forwarded-For, 15, 10s) && ((!req.url ~ "\/wp-admin\/|(xmlrpc|admin-ajax)\.php") && (req.method == "POST"))){
+		return (synth(429, "Too Many Requests"));
+		# Use shield vmod to reset connection
+		#shield.conn_reset(); #this isn't working anymore
 	}
 
 	# drops stage site
@@ -35,9 +29,14 @@ if(vsthrottle.is_denied(req.http.X-Forwarded-For, 15, 10s) && ((!req.url ~ "\/wp
 		return (pass);
 	}
 
-	# drops amp
+	# drops amp; IDK if really needed, but there is no point even try because Google is caching AMP-pages
 	if (req.url ~ "/amp/") {
 		return (pass);
+	}
+
+	# Needed for Monit
+	if (req.url ~ "/pong") {
+	return (pipe);
 	}
 
 	# Allow purging from ACL
@@ -139,11 +138,6 @@ if(vsthrottle.is_denied(req.http.X-Forwarded-For, 15, 10s) && ((!req.url ~ "\/wp
 	return (pass);
 	}
 	
-	# Check the Cookies for wordpress-comment items I reckon
-	if (req.http.Cookie ~ "comment_") {
-	unset req.http.Cookie;
-	}
-	
 	#Hit everything else
 	if (!req.url ~ "/wp-(login|admin|cron)|logout|lost-password|wc-api|cart|my-account|checkout|addons|administrator|resetpass") {
 	unset req.http.Cookie;
@@ -154,7 +148,7 @@ if(vsthrottle.is_denied(req.http.X-Forwarded-For, 15, 10s) && ((!req.url ~ "\/wp
 	# Large static files are delivered directly to the end-user without
 	# waiting for Varnish to fully read the file first.
 	# Varnish 4 fully supports Streaming, so see do_stream in vcl_backend_response() to witness the glory.
-	if (req.url ~ "^[^?]*\.(mp[34]|rar|tar|tgz|wav|zip|bz2|xz|7z|avi|mov|ogm|mpe?g|mk[av])(\?.*)?$") {
+	if (req.url ~ "^[^?]*\.(mp[34]|wav)(\?.*)?$") {
 	unset req.http.Cookie;
 	return (hash);
 	}
@@ -162,15 +156,9 @@ if(vsthrottle.is_denied(req.http.X-Forwarded-For, 15, 10s) && ((!req.url ~ "\/wp
 	# Cache all static files by Removing all Cookies for static files
 	# Remember, do you really need to cache static files that don't cause load? Only if you have memory left.
 	# Here I decide to cache these static files. For me, most of them are handled by the CDN anyway.
-	if (req.url ~ "^[^?]*\.(bmp|bz2|css|doc|eot|flv|gif|ico|jpeg|jpg|js|less|pdf|png|rtf|swf|txt|woff|xml)(\?.*)?$") {
-	unset req.http.Cookie;
-	return (hash);
-	}
-	
-	# Cache all static files by Removing all Cookies for static files.
-	if (req.url ~ "^[^?]*\.(html|htm|gz)(\?.*)?$") {
-	unset req.http.Cookie;
-	return (hash);
+	if (req.url ~ "^[^?]*\.(ico|txt|xml|mp3|html|htm)(\?.*)?$") {
+		unset req.http.Cookie;
+		return (hash);
 	}
 	
 	# Do not cache HTTP authentication and HTTP Cookie
