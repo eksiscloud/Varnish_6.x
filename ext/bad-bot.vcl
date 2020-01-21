@@ -1,13 +1,14 @@
 sub bad_bot_detection {
 
 ## I have to set user agent to find out in 404 monitoring of Wordpress who is getting 404.
-## There is no point what so ever to start fixing 404s by bots and harvesters
-## Fix only real users and Google etc.
+## There is no point what so ever to start fixing 404s getting by bots and harvesters
+## Fix only real things that are issues for users and Google etc.
+## All this have been visiting or still trying at my sites.
 
-    if (
-		# Keyword harvesting and useless SEO
-		   req.http.User-Agent ~ "libwww-perl"
-		|| req.http.User-Agent ~ "Wget"
+	if (
+		# Rogues, keyword harvesting and useless SEO
+		   req.http.User-Agent ~ "libwww-perl" 	#you might want to comment this, but this not stops from localhost
+		|| req.http.User-Agent ~ "Wget" 		#same here
 				# #
 		|| req.http.User-Agent ~ "360Spider"
 		|| req.http.User-Agent ~ "2345Explorer"
@@ -15,28 +16,41 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "AdAuth"
 		|| req.http.User-Agent ~ "AdsTxtCrawler"
 		|| req.http.User-Agent ~ "AhrefsBot"
+		|| req.http.User-Agent ~ "AltaVista"
 		|| req.http.User-Agent ~ "America Online Browser"
 		|| req.http.User-Agent ~ "Apache-HttpClient"
 		|| req.http.User-Agent ~ "ApiTool"
+		|| req.http.User-Agent ~ "AVSearch"
 		# B
 		|| req.http.User-Agent ~ "Baidu"
 		|| req.http.User-Agent ~ "Baiduspider"
+		|| req.http.User-Agent ~ "BDCbot"
 		|| req.http.User-Agent ~ "bidswitchbot"
 		|| req.http.User-Agent ~ "Blackboard Safeassign"
+		|| req.http.User-Agent ~ "BLEXBot"
 		|| req.http.User-Agent ~ "botify"
 		|| req.http.User-Agent ~ "Buck"
 		# C
+		|| req.http.User-Agent ~ "CatchBot"
 		|| req.http.User-Agent ~ "CCBot"
 		|| req.http.User-Agent ~ "Cliqzbot"
 		|| req.http.User-Agent ~ "Cloud mapping experiment"
+		|| req.http.User-Agent ~ "CMS Crawler"
 		|| req.http.User-Agent ~ "coccocbot"
 		|| req.http.User-Agent ~ "cortex"
 		# D
 		|| req.http.User-Agent ~ "Dalvik"
 		|| req.http.User-Agent ~ "Daum"
+		|| req.http.User-Agent ~ "deepcrawl.com"
+		|| req.http.User-Agent ~ "digincore"
+		|| req.http.User-Agent ~ "Domnutch"
 		|| req.http.User-Agent ~ "DotBot"
 		# E
+		|| req.http.User-Agent ~ "EnigmaBot"
 		|| req.http.User-Agent ~ "Exabot"
+		|| req.http.User-Agent ~ "Ezooms"
+		# F
+		|| req.http.User-Agent ~ "fr-crawler"
 		# G
 		|| req.http.User-Agent ~ "Go-http-client"
 		|| req.http.User-Agent ~ "GotSiteMonitor"
@@ -44,26 +58,39 @@ sub bad_bot_detection {
 		# H
 		|| req.http.User-Agent ~ "Hello"
 		# I
+		|| req.http.User-Agent ~ "import.io"
+		|| req.http.User-Agent ~ "InfoSeek"
+		|| req.http.User-Agent ~ "INGRID/0.1"
 		|| req.http.User-Agent ~ "istellabot"
 		# J
 #		|| req.http.User-Agent ~ "Jakarta Commons-HttpClient"  # iTunes?
 		|| req.http.User-Agent ~ "Java/"
 		|| req.http.User-Agent ~ "Jersey"
 		|| req.http.User-Agent ~ "jetmon"
+		|| req.http.User-Agent ~ "Jetpack by WordPress.com"
 		|| req.http.User-Agent ~ "Jetty"
 		# K
 		|| req.http.User-Agent ~ "Kinza"
 		# L
 		|| req.http.User-Agent ~ "LieBaoFast"
+		|| req.http.User-Agent ~ "linkdexbot"
+		|| req.http.User-Agent ~ "linklooker"
+		|| req.http.User-Agent ~ "Lycos"
 		# M
+		|| req.http.User-Agent ~ "magpie-crawler"
+		|| req.http.User-Agent ~ "Mail.RU_Bot"
 		|| req.http.User-Agent ~ "masscan"
 		|| req.http.User-Agent ~ "MegaIndex.ru"
+		|| req.http.User-Agent ~ "Mercator"
 		|| req.http.User-Agent ~ "Mb2345Browser"
 		|| req.http.User-Agent ~ "MJ12bot"
 		# N
 		|| req.http.User-Agent ~ "NetcraftSurveyAgent"
+		|| req.http.User-Agent ~ "NetSeer"
 		|| req.http.User-Agent ~ "newspaper"
 		|| req.http.User-Agent ~ "Nutch"
+		# O
+		|| req.http.User-Agent ~ "oncrawl.com"
 		# P
 		|| req.http.User-Agent ~ "PaperLiBot"
 		|| req.http.User-Agent ~ "Photon"
@@ -76,9 +103,12 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "R6_"
 		|| req.http.User-Agent ~ "RawVoice Generator"
 #		|| req.http.User-Agent ~ "RED"
+		|| req.http.User-Agent ~ "RogerBot"
 		|| req.http.User-Agent ~ "Rome Client"
 		|| req.http.User-Agent ~ "Ruby"
 		# S
+		|| req.http.User-Agent ~ "SafetyNet"
+		|| req.http.User-Agent ~ "Scooter"
 		|| req.http.User-Agent ~ "Scrapy"
 		|| req.http.User-Agent ~ "Screaming Frog SEO Spider"
 		|| req.http.User-Agent ~ "SE 2.X MetaSr 1.0"
@@ -87,8 +117,10 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "serpstatbot"
 		|| req.http.User-Agent ~ "SeznamBot"
 		|| req.http.User-Agent ~ "SimplePie"
+		|| req.http.User-Agent ~ "SiteBot"
 		|| req.http.User-Agent ~ "Slurp"
 		|| req.http.User-Agent ~ "Sogou"
+		|| req.http.User-Agent ~ "ssearch_bot"
 		|| req.http.User-Agent ~ "SurdotlyBot"
 		# T
 		|| req.http.User-Agent ~ "tapai"
@@ -102,14 +134,18 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "TweetmemeBot"
 		# U
 		|| req.http.User-Agent ~ "UCBrowser"
+		|| req.http.User-Agent ~ "UltraSeek"
 		|| req.http.User-Agent ~ "um-LN"
 		|| req.http.User-Agent ~ "UniversalFeedParser"
 		# V
 		|| req.http.User-Agent ~ "VelenPublicWebCrawler"
 		# W
 		|| req.http.User-Agent ~ "WebZIP"
+		# X
+		|| req.http.User-Agent ~ "XoviBot"
 		# Y
 		|| req.http.User-Agent ~ "YaBrowser"
+		|| req.http.User-Agent ~ "YahooSeeker"
 		|| req.http.User-Agent ~ "YaK"
 		|| req.http.User-Agent ~ "Yandex"
 		|| req.http.User-Agent ~ "YisouSpider"
@@ -126,12 +162,12 @@ sub bad_bot_detection {
 			} 
 
 	elseif ( req.http.User-Agent == "^$" || req.http.User-Agent == "-") {
-			set req.http.User-Agent = "Potatoehead"; # you actually don't need this UA
+			set req.http.User-Agent = "Potatoehead";
 			return (synth(403, "Empty User Agent"));
 			}
 		
 	elseif (
-		  req.http.User-Agent == "KatiskaWarmer" # this is wget
+		  req.http.User-Agent == "KatiskaWarmer"
 		# Google
 		||req.http.User-Agent ~ "APIs-Google"
 		|| req.http.User-Agent ~ "Mediapartners-Google"
@@ -184,6 +220,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "WhatsApp"
 		) {
 			set req.http.User-Agent = "Good guy";
+			#return(pipe);
 			}
 	
 	elseif (
@@ -198,9 +235,21 @@ sub bad_bot_detection {
 			}
 			
 	else {
+	# Let's save User-Agent, but not cache using it 
+		#set req.http.X-Agent = req.http.User-Agent;
+		#unset req.http.User-Agent;
 		set req.http.User-Agent = "Others";
 		}
 	
+	# Some a-hole knockers
+	if (
+	req.http.Referer ~ "http://site.ru"
+	) {
+		return(synth(429, "Forbidden URL"));
+		}
+	
+	#unset req.http.User-Agent;		#if I will stop caching by user-agent then uncomment
+	
 		# That's all folk.
-				
+		
 }    
