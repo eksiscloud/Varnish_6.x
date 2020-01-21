@@ -557,11 +557,12 @@ sub vcl_synth {
 	}
 
 	# because of force to https - or something 
-	if (resp.status == 750) {
-		set resp.status = 301;
-		set resp.http.Location = req.http.X-Redir-Url;
-		return(deliver);
-	}
+	# I don't need this because Nginx at front of Varnish is redirecting 80 > 443
+#	if (resp.status == 750) {
+#		set resp.status = 301;
+#		set resp.http.Location = req.http.X-Redir-Url;
+#		return(deliver);
+#	}
 	
 	# Custom errors
 	set resp.http.Content-Type = "text/html; charset=utf-8";
