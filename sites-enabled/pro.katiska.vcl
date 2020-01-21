@@ -1,23 +1,39 @@
 ## Moodle
 sub vcl_recv {
   if (req.http.host == "pro.katiska.info") {
+		set req.backend_hint = default;
 	
-	# Your lifeline: Turn OFF cache
-	# For caching keep this commented
+	# Your lifelines: 
+	# Turn off cache
+	# or make Varnish act like dumb proxy
 	#return(pass);
+	return(pipe);
 	
-	# No cache, no fixed headers, no nothing
-	return (pipe);
+	## Followind doesn't work, because of something @ default.vcl
+	# That's why piping and no cache, no fixed headers, no nothing
 	
-	# If you are using SSL and it doesn't forward http to https when URL is given without protocol
-	#if ( req.http.X-Forwarded-Proto !~ "(?i)https" ) {
-	#	set req.http.X-Redir-Url = "https://" + req.http.host + req.url;
-	#return ( synth( 750 ));
-	#}
-	
-	#set req.http.X-Forwarded-Proto = "https";
-	
-	## Followind doesn't work
+	# Allow purging from ACL
+	if (req.method == "PURGE") {
+	if (!client.ip ~ purge) {
+		 return(synth(405, "This IP is not allowed to send PURGE requests."));
+	}
+	# If allowed, do a cache_lookup -> vlc_hit() or vlc_miss()
+	return (purge);
+	}
+
+	# Only deal with "normal" types
+	if (req.method != "GET" &&
+	req.method != "HEAD" &&
+	req.method != "PUT" &&
+	req.method != "POST" &&
+	req.method != "TRACE" &&
+	req.method != "OPTIONS" &&
+	req.method != "PATCH" &&
+	req.method != "DELETE") {
+	# Non-RFC2616 or CONNECT which is weird. */
+	# Why send the packet upstream, while the visitor is using a non-valid HTTP method? */
+	return (synth(404, "Non-valid HTTP method!"));
+	}
 	
 	if (req.url ~ "^/(theme|pix)/") { 
 		unset req.http.Cookie; 
