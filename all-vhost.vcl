@@ -6,3 +6,6 @@ include "sites-enabled/store.katiska.vcl";
 include "sites-enabled/ymparistosuunnittelija.com.vcl";
 include "sites-enabled/tuituin.fi.vcl";
 include "sites-enabled/eksis.one.vcl";
+include "sites-enabled/pro.eksis.one.vcl";
+include "sites-enabled/store.eksis.one.vcl";
+include "sites-enabled/matomo.vcl";
