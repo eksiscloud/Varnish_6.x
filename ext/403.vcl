@@ -238,7 +238,7 @@ sub stop_pages {
 #	|| req.url ~ "sftp.json"
 	|| req.url ~ "^/shop/"
 	|| req.url ~ "^/site/"
-	|| req.url ~ "^/staging/
+	|| req.url ~ "^/staging/"
 	|| req.url ~ "^/store"
 	|| req.url ~ "^/.svn/"
 	|| req.url ~ "^/.sql"
