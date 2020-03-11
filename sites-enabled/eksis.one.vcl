@@ -1,5 +1,4 @@
-
-## Wordpress (Woocommerce) ##
+## Wordpress ##
 sub vcl_recv {
   if (req.http.host == "eksis.one" || req.http.host == "www.eksis.one") {
 		set req.backend_hint = default;
@@ -8,7 +7,7 @@ sub vcl_recv {
 	# Turn off cache
 	# or make Varnish act like dumb proxy
 	#return(pass);
-	#return(pipe);
+	return(pipe);
 
 
 	# drops stage site totally
@@ -18,14 +17,14 @@ sub vcl_recv {
 	
 	# I don't need this two because I'm using Fail2ban, but this is more like a safetynet
 	if(vsthrottle.is_denied(req.http.X-Forwarded-For, 2, 1s) && (req.url ~ "xmlrpc|wp-login.php|\?s\=")) {
-		return (synth(429, "Too Many Requests"));
+		return (synth(413, "Too Damn Much"));
 		# Use shield vmod to reset connection
 		#shield.conn_reset();
 	}
 
 	#Prevent users from making excessive POST requests that aren't for admin-ajax
 	if(vsthrottle.is_denied(req.http.X-Forwarded-For, 15, 10s) && ((!req.url ~ "\/wp-admin\/|(xmlrpc|admin-ajax)\.php") && (req.method == "POST"))){
-		return (synth(429, "Too Many Requests"));
+		return (synth(413, "Too Damn Much"));
 		# Use shield vmod to reset connection
 		#shield.conn_reset(); #this isn't working anymore
 	}
@@ -46,7 +45,7 @@ sub vcl_recv {
 
 	# drops stage site
 	if (req.url ~ "/stage") {
-		return (pass);
+		return (pipe);
 	}
 
 	# drops Mailster
@@ -56,8 +55,13 @@ sub vcl_recv {
 
 	# Needed for Monit
 	if (req.url ~ "/pong") {
-	return (pipe);
+		return (pipe);
 	}
+	
+	# AWStats
+#	if (req.url ~ "cgi-bin/awsstats.pl") {
+#		return (pass);
+#	}
 
 	# Allow purging from ACL
 	if (req.method == "PURGE") {
@@ -164,4 +168,3 @@ sub vcl_recv {
 
   }
 }
-
