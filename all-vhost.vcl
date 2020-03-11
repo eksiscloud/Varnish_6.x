@@ -7,5 +7,5 @@ include "sites-enabled/tuituin.fi.vcl";
 include "sites-enabled/eksis.one.vcl";
 include "sites-enabled/pro.eksis.one.vcl";  # Moodle, I'm piping in the begining of default.vcl
 include "sites-enabled/store.eksis.one.vcl";
-inclue "sites-enabled/eksis.eu.vcl";
+include "sites-enabled/eksis.eu.vcl";
 # include "sites-enabled/matomo.vcl";  # I'm letting Matomo directly from Nginx, so I get user-agents
