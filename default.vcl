@@ -1,7 +1,7 @@
 ## Jakke Lehtonen
 ## from several sources
 ## Heads up! There is errors for sure
-## 'cos I'm just another copypaster
+## I'm just another copypaster
 ##
 ## Varnish 6.1.1 default.vcl for multiple virtual hosts
 ## 
@@ -14,12 +14,10 @@
 vcl 4.1;
 
 import directors;	# Load the vmod_directors
-import std;			# Load the std, not STD for god sake
+import std;		# Load the std, not STD for god sake
 import vsthrottle;	# throttling by rate
-#import shield;		# resets the connection
 
 # Let's Encrypt
-# this is for Hitch I don't use anymore
 include "/etc/varnish/ext/letsencrypt.vcl";
 
 # Monit
@@ -31,6 +29,8 @@ include "/etc/varnish/ext/bad-bot.vcl";
 # Stop knocking
 include "/etc/varnish/ext/403.vcl";
 
+# Global redirecting
+include "/etc/varnish/ext/404.vcl";
 
 probe sondi {
     #.url = "/index.html";  # or you can use just an url
@@ -46,14 +46,14 @@ probe sondi {
 	.threshold = 3;
 }
 
-backend default {				# use your servers instead default if you have more than just one
+backend default {					# use your servers instead default if you have more than just one
 	.host = "127.0.0.1";			# IP or Hostname of backend
-	.port = "81";				# Apache or whatever is listening
+	.port = "81";					# Apache or whatever is listening
 	.max_connections = 800;			# That's it enough 
 	.first_byte_timeout = 300s;		# How long to wait before we receive a first byte from our backend?
 	.connect_timeout = 300s;		# How long to wait for a backend connection?
-	.between_bytes_timeout = 300s;		# How long to wait between bytes received from our backend?
-	.probe = sondi;				# We have chance to recycle the probe 
+	.between_bytes_timeout = 300s;	# How long to wait between bytes received from our backend?
+	.probe = sondi;					# We have chance to recycle the probe 
 }
 
 # Only allow purging from specific IPs
@@ -65,7 +65,7 @@ acl purge {
 acl whitelist {
 	"localhost";
 	"127.0.0.1";
-	"personal.ip.address";
+	"your.ip.here";
 }
 
 # just an example, I use 403.vcl together fail2ban
@@ -75,8 +75,7 @@ acl forbidden {
 }
 
 #################### vcl_init ##################
-# Called when VCL is loaded, before any requests pass through it. Typically used to initialize VMODs.
-# You have to define server at backend definition too.
+# #
 
 sub vcl_init {
 
@@ -85,7 +84,8 @@ sub vcl_init {
 
 ############### vcl_recv #################
 ## We should have here only statments without return(...)
-## 
+## unless such goes over virtual hosts
+
 sub vcl_recv {
 	
 	### pass/pipe here are varnish-wide
@@ -107,6 +107,7 @@ sub vcl_recv {
 	
 	# Who can do BAN, PURGE and REFRESH
 	# Remember to use capitals when doing, size matters...
+	
 	if (req.method == "BAN") {
 		if (!client.ip ~ purge) {
 			return (synth(405, "Banning not allowed for " + client.ip));
@@ -126,29 +127,46 @@ sub vcl_recv {
 	
 	if (req.method == "REFRESH") {
 		if (!client.ip ~ purge) {
-			return (synth(405, "Refreshing not allowed for " + client.ip));
+			return(synth(405, "Refreshing not allowed for " + client.ip));
 		}
 		set req.method = "GET";
 		set req.hash_always_miss = true;
 	}
 	
-	# Fix Wordpress visual editor issues, must be the first one to work
+	# Fix Wordpress visual editor issues, must be the first one as url requests to work
 	if (req.url ~ "/wp-(login|admin|comments-post.php|cron)" || req.url ~ "preview=true") {
 	return (pass);
 	}
 	
 	# Let's clean up some trashes
-	call bad_bot_detection;
-	call stop_pages;
-	
-	# Starting state
+		# If you follow robots.txt you aren't a rotten one and Fail2ban doesn't ban you
+		if (req.url ~ "^/robots.txt") {
+			return(pass);
+		}
+		# robots.txt offers a honey pot to fail2ban, let's serve it
+		if (req.url ~ "^/private-wallet/") {
+			return(pipe);
+		}
+		# Extra layer of security to xmlrpc.php 
+		if (req.method == "GET|POST" && req.url ~ "^/xmlrpc.php" && !client.ip ~ whitelist) {
+			return(synth(666, "Post not allowed for " + client.ip));
+		}
+		# I need curl every now and then, others not
+		if (req.http.User-Agent ~ "curl/" && !client.ip ~ whitelist) {
+			return(synth(666, "Forbidden Method"));
+		}
+		# now we stop known useless ones
+		call bad_bot_detection;
+		call stop_pages;
+		
+	# Starting state for grace perios
 	set req.http.grace = "For you? No!";
 	
 	if (std.healthy(req.backend_hint)) {
 		# change the behavior for healthy backends: Cap grace to 10s
 		set req.grace = 10s;
-     }
-	 
+	}
+	
 	# Normalize the header, remove the port (in case you're testing this on various TCP ports)
 	set req.http.host = regsub(req.http.host, ":[0-9]+", "");
 	
@@ -162,13 +180,17 @@ sub vcl_recv {
 		}
 	}
 	
-	## Giving a pipeline to sites that I doesn't want to be under influence of Varnish
+	# Giving a pipeline to sites that I doesn't want to be under influence of Varnish (except killing the bots)
+	# - Moodle dislike Varnish (I have some cookie issues) and Moodle has its own system to cache things
+	# - When a Woocommerce is small and there isn't any real content, Varnish will give only headache
+	# - Matomo is quite dynamic and because there is no other users, Varnish doesn't help a bit
 	if (
-		   req.http.host == "pro.eksis.one" 	# Moodle
-		|| req.http.host == "pro.katiska.info" 	# Moodle
-		|| req.http.host == "stats.eksis.eu"	# Matomo
+		   req.http.host == "pro.eksis.one" 		# Moodle
+		|| req.http.host == "pro.katiska.info" 		# Moodle
+		|| req.http.host == "store.katiska.info"	# Woocommerce
+		|| req.http.host == "stats.eksis.eu"		# Matomo
 		) {
-		return(pipe);
+			return(pipe);
 	}
 	
 	# Awstats needs the host 
@@ -198,8 +220,8 @@ sub vcl_recv {
 	unset req.http.Accept-Language;
 	
 	# Normalize Accept-Encoding header and compression
-	# We don't need rules for compress/uncompress in vhosts, Varnish will do it automatic
-	# Actually general unset req.http.Accept-Encoding; should be enough
+	# We don't need compress/uncompress even in vhosts, Varnish will do it automatic
+	# Actually general unset req.http.Accept-Encoding; should be enough?
 	if (req.http.Accept-Encoding) {
 		# Do no compress compressed files...
 		if (req.url ~ "\.(jpg|png|gif|gz|tgz|bz2|tbz|mp3|mp4|ogg|jpeg|rar|zip|exe|flv|mov|wma|avi|swf|mpg|mpeg|mp4|webm|webp|pdf)$") {
@@ -211,6 +233,9 @@ sub vcl_recv {
 	# Note: Placing this above the "do not cache" section breaks some WP theme elements and admin functionality.
 	# Well, this is above most of those...
 	set req.url = std.querysort(req.url);
+	
+	# Global handling of 404 and 410
+	call global-redirect;
 
 	# Send Surrogate-Capability headers to announce ESI support to backend
 	set req.http.Surrogate-Capability = "key=ESI/1.0";
@@ -221,7 +246,8 @@ sub vcl_recv {
 
 
 ##############vcl_pipe################
-#
+##
+
 sub vcl_pipe {
   
 	# set bereq.http.Connection = "Close";
@@ -236,7 +262,8 @@ sub vcl_pipe {
 
 
 ################vcl_pass################
-#
+##
+
 sub vcl_pass {
 
 
@@ -244,7 +271,8 @@ sub vcl_pass {
 
 
 ################vcl_hash##################
-#
+##
+
 sub vcl_hash {
 
 	hash_data(req.url);
@@ -278,7 +306,8 @@ sub vcl_hash {
 
 
 ###################vcl_hit#########################
-#
+##
+
 sub vcl_hit {
 
 	# a pure unadultered hit, deliver it
@@ -314,7 +343,8 @@ sub vcl_hit {
 
 
 ###################vcl_miss#########################
-#
+##
+
 sub vcl_miss {
 
 	return (fetch);
@@ -322,7 +352,8 @@ sub vcl_miss {
 
 
 ###################vcl_backend_response#############
-#
+##
+
 sub vcl_backend_response {
 
 
@@ -333,7 +364,7 @@ sub vcl_backend_response {
 	#if ( beresp.status != 200 && beresp.status != 204) {
 	#	set beresp.uncacheable = true;
 	#	set beresp.ttl = 120s;
-	#	return (deliver);
+	#	return(deliver);
 	#}
 	
 	# Sometimes, a 301 or 302 redirect formed via Apache's mod_rewrite can mess with the HTTP port that is being passed along.
@@ -351,14 +382,43 @@ sub vcl_backend_response {
 	if (beresp.status == 301 && beresp.http.Location ~ "^https?://[^/]+/") {
 		set bereq.http.host = regsuball(beresp.http.Location, "^https?://([^/]+)/.*", "\1");
 		set bereq.url = regsuball(beresp.http.Location, "^https?://([^/]+)", "");
-		return (retry);
+		return(retry);
 	}
 	
+	# Conditionally 404 redirect: empty archive pages 
+	# 404 monitor still gets error but is is covered now - if bots upadate theirs records
+#	if (beresp.status == 404 && bereq.url ~ "/page/") {
+#		set beresp.ttl = 86400s;
+#		set beresp.status = 301;
+#		set beresp.http.Location = "https://" + bereq.http.host + "/page/";
+#		return(deliver);
+#	}
+
+	# Conditionally 404 redirect
+	if (beresp.status == 404 && (
+			   bereq.url ~ "/wp-content/cache/"	# old WP Rocket cache files that Bing can't handle
+			|| bereq.url ~ "^/?cat="			# null category
+			|| bereq.url ~ "/page/"			# empty archive pages of WP
+			)) {
+		set beresp.ttl = 86400s;
+		set beresp.status = 410;
+		return(deliver);
+	}
+
+	# Conditionally 404 redirect: malicious wordpress-knockers
+	# wp-include etc has protected by Nginx
+	# 404 monitor still gets error but is covered now - if bots upadate theirs records
+	if (beresp.status == 404 && (bereq.url ~ "^/wp-admin/" || bereq.url ~ "^/wp-content/themes" || bereq.url ~ "^/wp-content/plugins" || bereq.url ~ ".js")) {
+		set beresp.status = 666;
+		set beresp.ttl = 86400s;
+		return(deliver);
+	}
+
 	# Don't cache 404 respons
 	if (beresp.status == 404) {
 		set beresp.ttl = 120s;
 		set beresp.uncacheable = true;
-		return (deliver);
+		return(deliver);
 	}
 	
 	## Don't cache 410 responses
@@ -366,18 +426,18 @@ sub vcl_backend_response {
 	#if (beresp.status == 410) {
 	#	set beresp.ttl = 120s;
 	#	set beresp.uncacheable = true;
-	#	return (deliver);
+	#	return(deliver);
 	#}
 	
 	# Stop cache insertion when backend is down
 	if (beresp.status >= 500 && bereq.is_bgfetch) {
-		return (abandon);
+		return(abandon);
 	}
 	
 	# Don't cache 50x responses
 	# Is this same as earlier beresp.status >= 500 && bereq.is_bgfetch? IDK.
 	if (beresp.status == 500 || beresp.status == 502 || beresp.status == 503 || beresp.status == 504) {
-		return (abandon);
+		return(abandon);
 	}
 	
 	# ban & purge
@@ -420,7 +480,7 @@ sub vcl_backend_response {
 		set beresp.http.magicmarker = "1";
 		
 		# This is useless because we have cache-control,
-		# but if you want to keep Pingdom happy, you have to set expires at least 180 d
+		# but if you want to keep Pingdom happy, you have to set expires
 		#set beresp.http.x-obj-ttl = 180 + "d";
 		
 	}
@@ -466,7 +526,7 @@ sub vcl_backend_response {
 	# Large static files are delivered directly to the end-user without
 	# waiting for Varnish to fully read the file first.
 	# Varnish 4 fully supports Streaming, so use streaming here to avoid locking.
-	# IRL I stream only podcast-MP3s from my server.
+	# I stream only podcast-MP3s from my server.
 	if (bereq.url ~ "^[^?]*\.(mp[34]|wav)(\?.*)?$") {
 		unset beresp.http.set-Cookie;
 		set beresp.do_stream = true;  # Check memory usage it'll grow in fetch_chunksize blocks (128k by default) if the backend doesn't send a Content-Length header, so only enable it for big objects
@@ -477,28 +537,34 @@ sub vcl_backend_response {
 	if ( bereq.method == "POST" || bereq.http.Authorization ) {
 		set beresp.uncacheable = true;
 		set beresp.ttl = 120s;
-		return (deliver);
+		return(deliver);
 	}
 
 	# Don't cache search results
 	if ( bereq.url ~ "\?s=" ){
 		set beresp.uncacheable = true;
 		set beresp.ttl = 120s;
-		return (deliver);
+		return(deliver);
 	}
 
-	return (deliver);
+	return(deliver);
 
 }
 
 
 #######################vcl_deliver#####################
-#
+##
+
 sub vcl_deliver {
 
 	# damn, backend is down
 	if (resp.status == 503) {
 		return(restart);
+	}
+
+	# We put wordpress-knockers in the black hole
+	if (resp.status == 666) {
+		return(synth(666, "Bot access denied"));
 	}
 
 	# Origin
@@ -526,7 +592,7 @@ sub vcl_deliver {
 
 	# Show hit counts (per objecthead)
 	# Same here, something like X-total-hits is just boring
-	set resp.http.X-CO2-metric_tons = (obj.hits);
+	set resp.http.X-CO2-metric-tons = (obj.hits);
 
 	# Earlier we set something like 1 year for Varnish and 3 months for client. Now it will finished
 	if (resp.http.magicmarker) {
@@ -535,7 +601,7 @@ sub vcl_deliver {
 		# By definition we have a fresh object
 		set resp.http.age = "0";
 		
-		# and now Expires if you allowed it earlier, and this in just for Pingdom
+		# and now Expires if you earlier allowed it, and just for Pingdom
 #		if (resp.http.x-obj-ttl) {
 #			set resp.http.Expires = "" + (now + std.duration(resp.http.x-obj-ttl, 180d));
 #			unset resp.http.x-obj-ttl;
@@ -573,7 +639,8 @@ sub vcl_deliver {
 
 
 #################vcl_purge######################
-#
+##
+
 sub vcl_purge {
 
 #	return (synth(200, "Purged"));
@@ -590,6 +657,8 @@ sub vcl_purge {
 
 
 ##################vcl_synth######################
+##
+
 sub vcl_synth {
 
 	if (resp.status == 720) {
@@ -597,10 +666,10 @@ sub vcl_synth {
 	# To use this, call the following from anywhere in vcl_recv: return (synth(720, "http://host/new.html"));
 		set resp.http.Location = resp.reason;
 		set resp.status = 301;
-		return (deliver);
+		return(deliver);
 	} elseif (resp.status == 721) {
 	# And we use error status 721 to force redirects with a 302 (temporary) redirect
-	# To use this, call the following from anywhere in vcl_recv: return (synth(720, "http://host/new.html"));
+	# To use this, call the following from anywhere in vcl_recv: return (synth(721, "http://host/new.html"));
 		set resp.http.Location = resp.reason;
 		set resp.status = 302;
 		return(deliver);
@@ -610,7 +679,7 @@ sub vcl_synth {
 	# I don't need this because Nginx at front of Varnish is redirecting 80 > 443
 #	if (resp.status == 750) {
 #		set resp.status = 301;
-#	set resp.http.Location = req.http.X-Redir-Url;
+#		set resp.http.Location = req.http.X-Redir-Url;
 #		return(deliver);
 #	}
 	
@@ -666,6 +735,7 @@ sub vcl_synth {
 
 ####################### vcl_fini #######################
 #
+
 sub vcl_fini {
 
   # Called when VCL is discarded only after all requests have exited the VCL.
@@ -675,8 +745,6 @@ sub vcl_fini {
 }
 
 
-### Vhosts, needed when multiple virtual hosts in use
+# Vhosts, needed when multiple virtual hosts in use
 include "all-vhost.vcl";
 include "all-common.vcl";
-
-
