@@ -1,5 +1,3 @@
-
-
 ## Wordpress ##
 sub vcl_recv {
   if (req.http.host == "katiska.info" || req.http.host == "www.katiska.info") {
@@ -12,25 +10,21 @@ sub vcl_recv {
 	#return(pipe);
 	
 	## just an example. For me Nginx is doing this.
-	# If you are using SSL and it doesn't forward http to https when URL is given without protocol
+	## If you are using SSL and it doesn't forward http to https when URL is given without protocol
 	#if ( req.http.X-Forwarded-Proto !~ "(?i)https" ) {
 	#	set req.http.X-Redir-Url = "https://" + req.http.host + req.url;
-	#return ( synth( 750 ));
+	#	return ( synth( 750 ));
 	#}
 	#set req.http.X-Forwarded-Proto = "https";
 	
-	# I don't need this two because I'm using Fail2ban, but this is more like a safetynet
-	if(vsthrottle.is_denied(req.http.X-Forwarded-For, 2, 1s) && (req.url ~ "xmlrpc|wp-login.php|\?s\=")) {
-		return (synth(429, "Too Many Requests"));
-		# Use shield vmod to reset connection
-		#shield.conn_reset();
-	}
+	# I don't need this because I'm using Fail2ban, but this can be used more like a safetynet
+#	if(vsthrottle.is_denied(req.http.X-Forwarded-For, 2, 1s) && (req.url ~ "xmlrpc|wp-login.php|\?s\=")) {
+#		return (synth(413, "Too Damn Much"));
+#	}
 
 	# Prevent users from making excessive POST requests that aren't for admin-ajax
 	if(vsthrottle.is_denied(req.http.X-Forwarded-For, 15, 10s) && ((!req.url ~ "\/wp-admin\/|(xmlrpc|admin-ajax)\.php") && (req.method == "POST"))){
-		return (synth(429, "Too Many Requests"));
-		# Use shield vmod to reset connection
-		#shield.conn_reset(); #this isn't working anymore
+		return (synth(413, "Too Damn Much"));
 	}
 	
 	# Normalize hostname to avoid double caching
@@ -42,10 +36,10 @@ sub vcl_recv {
 		return (pass);
 	}
 	
-	# drops stage site
-	if (req.url ~ "/stage") {
-		return (pass);
-	}
+	# drops stage site totally
+#	if (req.url ~ "/stage") {
+#		return (pipe);
+#	}
 
 	# drops Mailster
 	if (req.url ~ "/postilista/") {
@@ -54,16 +48,21 @@ sub vcl_recv {
 
 	# Needed for Monit
 	if (req.url ~ "/pong") {
-	return (pipe);
+		return (pipe);
 	}
+	
+	# AWStats
+#	if (req.url ~ "cgi-bin/awsstats.pl") {
+#		return (pass);
+#	}
 
 	# Allow purging from ACL
 	if (req.method == "PURGE") {
-	if (!client.ip ~ purge) {
-		 return(synth(405, "This IP is not allowed to send PURGE requests."));
-	}
+		if (!client.ip ~ purge) {
+			return(synth(405, "This IP is not allowed to send PURGE requests."));
+		}
 	# If allowed, do a cache_lookup -> vlc_hit() or vlc_miss()
-	return (purge);
+		return(purge);
 	}
 
 	# Only deal with "normal" types
@@ -77,89 +76,58 @@ sub vcl_recv {
 	req.method != "DELETE") {
 	# Non-RFC2616 or CONNECT which is weird. */
 	# Why send the packet upstream, while the visitor is using a non-valid HTTP method? */
-	return (synth(404, "Non-valid HTTP method!"));
+		return(synth(405, "Non-valid HTTP method!"));
 	}
 
 	# Implementing websocket support (https://www.varnish-cache.org/docs/4.0/users-guide/vcl-example-websockets.html)
 	if (req.http.Upgrade ~ "(?i)websocket") {
-	return (pipe);
+		return(pipe);
 	}
 
-	### Do not Cache: special cases ###
+	## Do not Cache: special cases ##
 
 	# Do not cache AJAX requests.
 	if (req.http.X-Requested-With == "XMLHttpRequest") {
-	return(pass);
+		return(pass);
 	}
 
 	# Post requests will not be cached
 	if (req.http.Authorization || req.method == "POST") {
-	return (pass);
+		return(pass);
 	}
 	
 	# Pass Let's Encrypt
 	if (req.url ~ "^/\.well-known/acme-challenge/") {
-	return (pass);
+		return (pass);
 	}
-
-	## Wordpress etc ##
+	
+	## Wordpress ##
 
 	# Don't cache post and edit pages
 	if (req.url ~ "/wp-(post.php|edit.php)") {
-	return(pass);
+		return(pass);
 	}
 
 	# Don't cache logged-in user
 	if ( req.http.Cookie ~ "wordpress_logged_in|resetpass" ) {
-	return( pass );
+		return(pass);
 	}
 	
-	# Page of contact form
-	if (req.url ~ "/(tiedustelut)") {
-	return (pass);
-	}
-
-	# Did not cache the RSS feed
-	if (req.url ~ "/feed") {
-	return (pass);
-	}
-
-	# Must Use plugins I reckon
-	if (req.url ~ "/mu-.*") {
-	return (pass);
+	# Pass contact form, RSS feed and must use plugins of Wordpress
+	if (req.url ~ "/(tiedustelut|feed|mu-)") {
+		return(pass);
 	}
 
 	#Hit everything else
 	if (!req.url ~ "/wp-(login|admin|cron)|logout|administrator|resetpass") {
-	unset req.http.Cookie;
-	}
-	
-	## General filtering
-
-	# Large static files are delivered directly to the end-user without
-	# waiting for Varnish to fully read the file first.
-	# Varnish 4 fully supports Streaming, so see do_stream in vcl_backend_response() to witness the glory.
-	if (req.url ~ "^[^?]*\.(mp[34]|wav)(\?.*)?$") {
-	unset req.http.Cookie;
-	return (hash);
-	}
-
-	# Cache all static files by Removing all Cookies for static files
-	# Remember, do you really need to cache static files that don't cause load? Only if you have memory left.
-	# Here I decide to cache these static files. For me, most of them are handled by the CDN anyway.
-	if (req.url ~ "^[^?]*\.(ico|txt|xml|mp3|html|htm)(\?.*)?$") {
 		unset req.http.Cookie;
-		return (hash);
+		return(hash);
 	}
 	
-	# Do not cache HTTP authentication and HTTP Cookie
-	if (req.http.Authorization || req.http.Cookie) {
-		return (pass);
-	}
+	## Everything else ##
 	
 	# Cache all others requests if they reach this point
-	return (hash);
+	return(hash);
 
   }
 }
-
