@@ -13,9 +13,9 @@ I'm using Fail2ban to ban IP of bots too. Overkill?
 
 jail.local:
 
-[varnish-403]
+[varnish-666]
 port = http,https
-filter = varnish-403
+filter = varnish-666
 logpath  = /var/log/varnish/varnishncsa.log
 maxretry = 1
 findtime = 24h
@@ -25,6 +25,6 @@ enabled = true
 filter:
 
 [Definition]
-failregex = ^<HOST> - .* "(GET|POST|HEAD).*HTTP.*" 403 .*$
+failregex = ^<HOST> - .* "(GET|POST|HEAD).*HTTP.*" 666 .*$
 
 ignoreregex =
