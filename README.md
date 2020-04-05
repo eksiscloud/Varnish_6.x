@@ -25,6 +25,6 @@ enabled = true
 filter:
 
 [Definition]
-failregex = ^<HOST> - .* "(GET|POST|HEAD).*HTTP.*" 666 .*$
+failregex = ^<HOST>\, .*  - - .* "(GET|POST|HEAD).*HTTP.*" 666 .* .* .*$
 
 ignoreregex =
