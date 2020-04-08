@@ -1,4 +1,3 @@
-
 ## Wordpress (podcasting, photos, instagram, twitter) ##
 sub vcl_recv {
   if (req.http.host == "jagster.fi" || req.http.host == "www.jagster.fi") {
@@ -13,16 +12,12 @@ sub vcl_recv {
 
 # I don't need this two because I'm using Fail2ban, but this is more like a safetynet
 	if(vsthrottle.is_denied(req.http.X-Forwarded-For, 2, 1s) && (req.url ~ "xmlrpc|wp-login.php|\?s\=")) {
-		return (synth(429, "Too Many Requests"));
-		# Use shield vmod to reset connection
-		#shield.conn_reset();
+		return (synth(413, "Too Damn Much"));
 	}
 
 	#Prevent users from making excessive POST requests that aren't for admin-ajax
 	if(vsthrottle.is_denied(req.http.X-Forwarded-For, 15, 10s) && ((!req.url ~ "\/wp-admin\/|(xmlrpc|admin-ajax)\.php") && (req.method == "POST"))){
-		return (synth(429, "Too Many Requests"));
-		# Use shield vmod to reset connection
-		#shield.conn_reset(); #this isn't working anymore
+		return (synth(413, "Too Damn Much"));
 	}
 	
 	# Limit logins by acl whitelist
@@ -46,33 +41,6 @@ sub vcl_recv {
 	
 	# Needed for Monit
 	if (req.url ~ "/pong") {
-	return (pipe);
-	}
-
-	# Allow purging from ACL
-	if (req.method == "PURGE") {
-	if (!client.ip ~ purge) {
-		 return(synth(405, "This IP is not allowed to send PURGE requests."));
-	}
-	return (purge);
-	}
-
-	# Only deal with "normal" types
-	if (req.method != "GET" &&
-	req.method != "HEAD" &&
-	req.method != "PUT" &&
-	req.method != "POST" &&
-	req.method != "TRACE" &&
-	req.method != "OPTIONS" &&
-	req.method != "PATCH" &&
-	req.method != "DELETE") {
-	# Non-RFC2616 or CONNECT which is weird. */
-	# Why send the packet upstream, while the visitor is using a non-valid HTTP method? */
-	return (synth(404, "Non-valid HTTP method!"));
-	}
-
-	# Implementing websocket support (https://www.varnish-cache.org/docs/4.0/users-guide/vcl-example-websockets.html)
-	if (req.http.Upgrade ~ "(?i)websocket") {
 	return (pipe);
 	}
 
@@ -103,6 +71,11 @@ sub vcl_recv {
 	# Don't cache logged-in user
 	if ( req.http.Cookie ~ "wordpress_logged_in|resetpass" ) {
 	return( pass );
+	}
+
+	# REST API
+	if ( !req.http.Cookie ~ "wordpress_logged_in" && req.url ~ "/wp-json/wp/v2/" ) {
+		return(synth(403, "Unauthorized request"));
 	}
 
 	# Did not cache the RSS feed
