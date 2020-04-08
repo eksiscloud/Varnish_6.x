@@ -65,7 +65,7 @@ acl purge {
 acl whitelist {
 	"localhost";
 	"127.0.0.1";
-	"85.76.11.121";
+	"your.personal.ip";
 }
 
 # just an example, I use 403.vcl together fail2ban
