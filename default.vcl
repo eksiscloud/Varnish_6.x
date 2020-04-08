@@ -14,7 +14,7 @@
 vcl 4.1;
 
 import directors;	# Load the vmod_directors
-import std;		# Load the std, not STD for god sake
+import std;			# Load the std, not STD for god sake
 import vsthrottle;	# throttling by rate
 
 # Let's Encrypt
@@ -65,7 +65,7 @@ acl purge {
 acl whitelist {
 	"localhost";
 	"127.0.0.1";
-	"your.ip.here";
+	"85.76.11.121";
 }
 
 # just an example, I use 403.vcl together fail2ban
@@ -75,7 +75,8 @@ acl forbidden {
 }
 
 #################### vcl_init ##################
-# #
+# Called when VCL is loaded, before any requests pass through it. Typically used to initialize VMODs.
+# You have to define server at backend definition too.
 
 sub vcl_init {
 
@@ -132,7 +133,26 @@ sub vcl_recv {
 		set req.method = "GET";
 		set req.hash_always_miss = true;
 	}
-	
+
+	# Only deal with "normal" types
+	if (req.method != "GET" &&
+	req.method != "HEAD" &&
+	req.method != "PUT" &&
+	req.method != "POST" &&
+	req.method != "TRACE" &&
+	req.method != "OPTIONS" &&
+	req.method != "PATCH" &&
+	req.method != "DELETE") {
+	# Non-RFC2616 or CONNECT which is weird. */
+	# Why send the packet upstream, while the visitor is using a non-valid HTTP method? */
+		return(synth(405, "Non-valid HTTP method!"));
+	}
+
+	# Implementing websocket support (https://www.varnish-cache.org/docs/4.0/users-guide/vcl-example-websockets.html)
+	if (req.http.Upgrade ~ "(?i)websocket") {
+		return(pipe);
+	}
+
 	# Fix Wordpress visual editor issues, must be the first one as url requests to work
 	if (req.url ~ "/wp-(login|admin|comments-post.php|cron)" || req.url ~ "preview=true") {
 	return (pass);
@@ -140,17 +160,21 @@ sub vcl_recv {
 	
 	# Let's clean up some trashes
 		# If you follow robots.txt you aren't a rotten one and Fail2ban doesn't ban you
-		if (req.url ~ "^/robots.txt") {
-			return(pass);
-		}
+		# This bypasses bad bot detection and lets every bots read robots.txt
+		# Commented because Nginx cleans up bots for me and only few useful gets through
+#		if (req.url ~ "^/robots.txt") {
+#			return(pass);
+#		}
 		# robots.txt offers a honey pot to fail2ban, let's serve it
 		if (req.url ~ "^/private-wallet/") {
 			return(pipe);
 		}
 		# Extra layer of security to xmlrpc.php 
-		if (req.method == "GET|POST" && req.url ~ "^/xmlrpc.php" && !client.ip ~ whitelist) {
-			return(synth(666, "Post not allowed for " + client.ip));
-		}
+		# Now I can use xmlrpc.php
+		# Commented because Nginx do this for me
+#		if (req.url ~ "^/xmlrpc.php" && !client.ip ~ whitelist) {
+#			return(synth(666, "Post not allowed for " + client.ip));
+#		}
 		# I need curl every now and then, others not
 		if (req.http.User-Agent ~ "curl/" && !client.ip ~ whitelist) {
 			return(synth(666, "Forbidden Method"));
@@ -246,8 +270,7 @@ sub vcl_recv {
 
 
 ##############vcl_pipe################
-##
-
+#
 sub vcl_pipe {
   
 	# set bereq.http.Connection = "Close";
@@ -262,8 +285,7 @@ sub vcl_pipe {
 
 
 ################vcl_pass################
-##
-
+#
 sub vcl_pass {
 
 
@@ -271,7 +293,7 @@ sub vcl_pass {
 
 
 ################vcl_hash##################
-##
+#
 
 sub vcl_hash {
 
@@ -306,7 +328,7 @@ sub vcl_hash {
 
 
 ###################vcl_hit#########################
-##
+#
 
 sub vcl_hit {
 
@@ -343,7 +365,7 @@ sub vcl_hit {
 
 
 ###################vcl_miss#########################
-##
+#
 
 sub vcl_miss {
 
@@ -352,7 +374,7 @@ sub vcl_miss {
 
 
 ###################vcl_backend_response#############
-##
+#
 
 sub vcl_backend_response {
 
@@ -386,19 +408,22 @@ sub vcl_backend_response {
 	}
 	
 	# Conditionally 404 redirect: empty archive pages 
-	# 404 monitor still gets error but is is covered now - if bots upadate theirs records
+	# 404 monitor still gets error but is is covered now
+	# When ^/page/ canonical redirection of WP + SEO-plugins will override this and does 301 to frontpage
+	# It shows as 200 OK with Varnish. If you do pipe you'll get original 301 and header x-redirect-by: WordPress
 #	if (beresp.status == 404 && bereq.url ~ "/page/") {
 #		set beresp.ttl = 86400s;
 #		set beresp.status = 301;
-#		set beresp.http.Location = "https://" + bereq.http.host + "/page/";
+#		set bereq.url = "/archive/";
 #		return(deliver);
 #	}
 
 	# Conditionally 404 redirect
 	if (beresp.status == 404 && (
-			   bereq.url ~ "/wp-content/cache/"	# old WP Rocket cache files that Bing can't handle
-			|| bereq.url ~ "^/?cat="			# null category
-			|| bereq.url ~ "/page/"			# empty archive pages of WP
+			   bereq.url ~ "/wp-content/cache/"		# old WP Rocket cache files that Bing can't handle
+			|| bereq.url ~ "\?cat\="				# null category
+			|| bereq.url ~ "/page/"					# empty archive pages of WP; canonical 301 of WP + SEO plugins may override this
+			|| bereq.url ~ "/feed/"					# old RSS-feed
 			)) {
 		set beresp.ttl = 86400s;
 		set beresp.status = 410;
@@ -407,7 +432,7 @@ sub vcl_backend_response {
 
 	# Conditionally 404 redirect: malicious wordpress-knockers
 	# wp-include etc has protected by Nginx
-	# 404 monitor still gets error but is covered now - if bots upadate theirs records
+	# 404 monitor still gets error but is covered now
 	if (beresp.status == 404 && (bereq.url ~ "^/wp-admin/" || bereq.url ~ "^/wp-content/themes" || bereq.url ~ "^/wp-content/plugins" || bereq.url ~ ".js")) {
 		set beresp.status = 666;
 		set beresp.ttl = 86400s;
@@ -553,8 +578,7 @@ sub vcl_backend_response {
 
 
 #######################vcl_deliver#####################
-##
-
+#
 sub vcl_deliver {
 
 	# damn, backend is down
@@ -639,8 +663,7 @@ sub vcl_deliver {
 
 
 #################vcl_purge######################
-##
-
+#
 sub vcl_purge {
 
 #	return (synth(200, "Purged"));
@@ -657,8 +680,6 @@ sub vcl_purge {
 
 
 ##################vcl_synth######################
-##
-
 sub vcl_synth {
 
 	if (resp.status == 720) {
@@ -748,3 +769,5 @@ sub vcl_fini {
 # Vhosts, needed when multiple virtual hosts in use
 include "all-vhost.vcl";
 include "all-common.vcl";
+
+
