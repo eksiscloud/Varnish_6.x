@@ -50,11 +50,13 @@ sub stop_pages {
 	|| req.url ~ "^/doc.php"
 	|| req.url ~ "^/downloader$"
 		# E
-	|| req.url ~ "^/ec-js/"
+	|| req.url ~ "^/ec-js"
+	|| req.url ~ "^/EcNg"
 	|| req.url ~ "^/edd-api"
 	|| req.url ~ "/eksis-cloud/"
 	|| req.url ~ "/.env"
 		# F
+	|| req.url ~ "/fckeditor/"
 	|| req.url ~ "/feed/wp-admin/"
 	|| req.url ~ "/feed/wp-includes/"
 	|| req.url ~ "^/_finance_doubledown"
@@ -66,7 +68,7 @@ sub stop_pages {
 	|| req.url ~ "^/functions.php"
 		# G
 	|| req.url ~ "^/.git/"
-	|| req.url ~ "^/graphql$"
+	|| req.url ~ "^/graphql"
 		# H
 	|| req.url ~ "^/heibing"
 	|| req.url ~ "^/home/"
@@ -120,6 +122,7 @@ sub stop_pages {
 	|| req.url ~ "magento_version"
 	|| req.url ~ "^/main/"
 	|| req.url ~ "mainfunction.cgi"
+	|| req.url ~ "^/manager/"
 	|| req.url ~ "matomo.php"
 	|| req.url ~ "^/medias$"
 	|| req.url ~ "^/myadmin/print.css"
@@ -131,6 +134,7 @@ sub stop_pages {
 	|| req.url ~ "^/.old"
 	|| req.url ~ "^/old/"
 	|| req.url ~ "^/OLD/"
+	|| req.url ~ "^/oo.aspx"
 	|| req.url ~ ".orig"
 	|| req.url ~ ".original"
 		# P
@@ -195,12 +199,13 @@ sub stop_pages {
 	|| req.url ~ "^/unzipper.php"
 	|| req.url ~ "^/urlreplace.php"
 	|| req.url ~ "^/user/"
-	|| req.url ~ "^/wp-json/wp/v2/users"
+#	|| req.url ~ "^/wp-json/wp/v2/users"
 		# V
 	|| req.url ~ "^/v[1-9]/"
 	|| req.url ~ "^/validate.php"
 	|| req.url ~ "VMobile Cheque DayBAKIT"
-	|| req.url ~ "^/vuln.htm"
+	|| req.url ~ "/vuln.htm"
+	|| req.url ~ "/vuln.php"
 		# /vendors/
 	|| req.url ~ "/vendors/animate-css/"
 	|| req.url ~ "/vendors/counter-up/"
