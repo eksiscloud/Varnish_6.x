@@ -1,4 +1,4 @@
-## Wordpress ##
+## Wordpress (Woocommerce) ##
 sub vcl_recv {
   if (req.http.host == "eksis.one" || req.http.host == "www.eksis.one") {
 		set req.backend_hint = default;
@@ -7,7 +7,7 @@ sub vcl_recv {
 	# Turn off cache
 	# or make Varnish act like dumb proxy
 	#return(pass);
-	return(pipe);
+	#return(pipe);
 
 
 	# drops stage site totally
@@ -18,15 +18,11 @@ sub vcl_recv {
 	# I don't need this two because I'm using Fail2ban, but this is more like a safetynet
 	if(vsthrottle.is_denied(req.http.X-Forwarded-For, 2, 1s) && (req.url ~ "xmlrpc|wp-login.php|\?s\=")) {
 		return (synth(413, "Too Damn Much"));
-		# Use shield vmod to reset connection
-		#shield.conn_reset();
 	}
 
 	#Prevent users from making excessive POST requests that aren't for admin-ajax
 	if(vsthrottle.is_denied(req.http.X-Forwarded-For, 15, 10s) && ((!req.url ~ "\/wp-admin\/|(xmlrpc|admin-ajax)\.php") && (req.method == "POST"))){
 		return (synth(413, "Too Damn Much"));
-		# Use shield vmod to reset connection
-		#shield.conn_reset(); #this isn't working anymore
 	}
 	
 	# Limit logins by acl whitelist
@@ -63,33 +59,6 @@ sub vcl_recv {
 #		return (pass);
 #	}
 
-	# Allow purging from ACL
-	if (req.method == "PURGE") {
-	if (!client.ip ~ purge) {
-		 return(synth(405, "This IP is not allowed to send PURGE requests."));
-	}
-	return (purge);
-	}
-
-	# Only deal with "normal" types
-	if (req.method != "GET" &&
-	req.method != "HEAD" &&
-	req.method != "PUT" &&
-	req.method != "POST" &&
-	req.method != "TRACE" &&
-	req.method != "OPTIONS" &&
-	req.method != "PATCH" &&
-	req.method != "DELETE") {
-	# Non-RFC2616 or CONNECT which is weird. */
-	# Why send the packet upstream, while the visitor is using a non-valid HTTP method? */
-	return (synth(404, "Non-valid HTTP method!"));
-	}
-
-	# Implementing websocket support (https://www.varnish-cache.org/docs/4.0/users-guide/vcl-example-websockets.html)
-	if (req.http.Upgrade ~ "(?i)websocket") {
-	return (pipe);
-	}
-
 	### Do not Cache: special cases ###
 
 	# Do not cache AJAX requests.
@@ -118,7 +87,12 @@ sub vcl_recv {
 	if ( req.http.Cookie ~ "wordpress_logged_in|resetpass" ) {
 	return( pass );
 	}
-	
+
+	# REST API
+	if ( !req.http.Cookie ~ "wordpress_logged_in" && req.url ~ "/wp-json/wp/v2/" ) {
+		return(synth(403, "Unauthorized request"));
+	}
+
 	# Page of contact form
 	if (req.url ~ "/(tiedustelut)") {
 	return (pass);
@@ -168,3 +142,4 @@ sub vcl_recv {
 
   }
 }
+
