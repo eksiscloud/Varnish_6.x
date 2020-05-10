@@ -6,7 +6,7 @@ And because of same reason I have some solution that suits for me, but surely no
 
 Always be really carefully when you do copy&paste from anywhere.
 
-##The stack
+## The stack
 
 The stack is:
 - Nginx listening 80 and 443, redirecting from 80 to 443
@@ -14,7 +14,7 @@ The stack is:
 - Varnish is listening port 8080
 - Apache2 is listening port 81
 
-##The setup of Varnish
+## The setup of Varnish
 
 - default.vcl is doing general things
 - all-common.vcl is cleaning cookies etc.
