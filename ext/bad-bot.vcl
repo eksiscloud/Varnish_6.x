@@ -15,6 +15,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "Python"
 		|| req.http.User-Agent ~ "Wget"
 		|| req.http.User-Agent ~ "zgrab/"
+		|| req.http.User-Agent ~ "Facebot Twitterbot"
 		) {
 			return(synth(402, "Denied"));
 		}
@@ -67,7 +68,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "Cliqzbot"						# bad
 		|| req.http.User-Agent ~ "Cloud mapping experiment"
 		|| req.http.User-Agent ~ "CMS Crawler"
-		|| req.http.User-Agent ~ "coccocbot"					# good
+		|| req.http.User-Agent ~ "coccocbot"					# bad, uses "normal" UA at same time
 		|| req.http.User-Agent ~ "crawler4j"
 		# D
 		|| req.http.User-Agent ~ "datagnionbot"
@@ -77,6 +78,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "deepcrawl.com"
 		|| req.http.User-Agent ~ "digincore"
 		|| req.http.User-Agent ~ "Discordbot"
+		|| req.http.User-Agent ~ "Dispatch"
 		|| req.http.User-Agent ~ "DomainStatsBot"
 		|| req.http.User-Agent ~ "Domnutch"
 		|| req.http.User-Agent ~ "DotBot"
@@ -88,7 +90,6 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "Exabot"
 		|| req.http.User-Agent ~ "Ezooms"
 		# F
-		|| req.http.User-Agent ~ "Facebot Twitterbot"
 		|| req.http.User-Agent ~ "fr-crawler"
 		|| req.http.User-Agent ~ "fyeo-crawler"
 		# G
@@ -98,11 +99,13 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "GrapeshotCrawler"				# bad
 		# H
 		|| req.http.User-Agent ~ "Hello"
+		|| req.http.User-Agent ~ "htInEdin"
 		|| req.http.User-Agent ~ "HTTP Banner Detection"
 		# I
 		|| req.http.User-Agent ~ "IAB ATQ"
-		|| req.http.User-Agent ~ "IAS crawler"					# good
+		|| req.http.User-Agent ~ "IAS crawler"					# bad
 		|| req.http.User-Agent ~ "import.io"
+		|| req.http.User-Agent ~ "Incutio"
 		|| req.http.User-Agent ~ "InfoSeek"
 		|| req.http.User-Agent ~ "INGRID/0.1"
 		|| req.http.User-Agent ~ "Internet-structure-research-project-bot"
@@ -113,13 +116,14 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "JobboerseBot"
 		# K
 		|| req.http.User-Agent ~ "Kinza"
+		|| req.http.User-Agent ~ "KOCMOHABT"
 		|| req.http.User-Agent ~ "Kraphio"
 		|| req.http.User-Agent ~ "kubectl"						# malicious
 		# L
 		|| req.http.User-Agent ~ "LieBaoFast"					# bad
 		|| req.http.User-Agent ~ "LightspeedSystemsCrawler"
 		|| req.http.User-Agent ~ "linkdexbot"
-		|| req.http.User-Agent ~ "LinkedInBot"					# bad
+#		|| req.http.User-Agent ~ "LinkedInBot"					# bad
 		|| req.http.User-Agent ~ "linklooker"
 		|| req.http.User-Agent ~ "Lycos"
 		# M
@@ -139,7 +143,8 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "NetSeer"
 		|| req.http.User-Agent ~ "newspaper"
 		|| req.http.User-Agent ~ "Nimbostratus-Bot"				# bad
-		|| req.http.User-Agent ~ "node-fetch"
+		|| req.http.User-Agent ~ "Nmap Scripting Engine"
+		|| req.http.User-Agent ~ "node-fetch"					# malicious
 		|| req.http.User-Agent ~ "Nutch"
 		# O
 		|| req.http.User-Agent ~ "oBot"
@@ -147,6 +152,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "oncrawl.com"
 		|| req.http.User-Agent ~ "OwlTail"
 		# P
+		|| req.http.User-Agent ~ "panscient.com"
 		|| req.http.User-Agent ~ "PaperLiBot"
 		|| req.http.User-Agent ~ "PhantomJS"
 		|| req.http.User-Agent ~ "Photon/"  				# Automattic
@@ -182,12 +188,16 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "SemanticScholarBot"
 		|| req.http.User-Agent ~ "SemrushBot/1.0~bm"		# bad
 		|| req.http.User-Agent ~ "SemrushBot/6~bl"			# good
+		|| req.http.User-Agent ~ "SemrushBot-BA"
 		|| req.http.User-Agent ~ "SEMrushBot"
+		|| req.http.User-Agent ~ "SEOkicks"
 		|| req.http.User-Agent ~ "serpstatbot"
 		|| req.http.User-Agent ~ "SeznamBot"
+		|| req.http.User-Agent ~ "Sidetrade"
 		|| req.http.User-Agent ~ "SimplePie"
 		|| req.http.User-Agent ~ "SiteBot"
 		|| req.http.User-Agent ~ "Slurp"
+		|| req.http.User-Agent ~ "SMTBot"
 		|| req.http.User-Agent ~ "Sodes/"					# podcaster IP 209.6.245.67
 		|| req.http.User-Agent ~ "Sogou"
 		|| req.http.User-Agent ~ "socialmediascanner"
@@ -195,6 +205,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "SurdotlyBot"				# bad
 		# T
 		|| req.http.User-Agent ~ "Talous"
+		|| req.http.User-Agent ~ "tamarasdartsoss.nl"
 		|| req.http.User-Agent ~ "tapai"
 #		|| req.http.User-Agent ~ "TelegramBot"
 		|| req.http.User-Agent ~ "temnos.com"
@@ -228,7 +239,7 @@ sub bad_bot_detection {
 		# X
 		|| req.http.User-Agent ~ "XoviBot"
 		# Y
-		|| req.http.User-Agent ~ "YaBrowser"
+		|| req.http.User-Agent ~ "YaBrowser"				# bad
 		|| req.http.User-Agent ~ "YahooSeeker"
 		|| req.http.User-Agent ~ "YaK"						# bad
 		|| req.http.User-Agent ~ "Yandex"					# bad
@@ -241,6 +252,7 @@ sub bad_bot_detection {
 		## Others
 		## CFNetwork, Darwin are always bots, but some are useful. 2345Explorer same thing, but practically always harmful
 		## Dalvik is VM of android
+		|| req.http.User-Agent ~ "eSobiSubscriber"
 		|| req.http.User-Agent ~ "Opera/9.80 (Windows NT 6.1; WOW64) Presto/2.12.388 Version/12.18"
 		|| req.http.User-Agent ~ "Opera/9.80 (Windows NT 5.1; U; en) Presto/2.10.289 Version/12.01"
 		|| req.http.User-Agent ~ "Safari/14608.5.12 CFNetwork/978.2 Darwin/18.7.0 (x86_64)" #Maybe Apple, it is checking out mostly only touch-icon.png
@@ -254,7 +266,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "Mozilla/4.0"
 		|| req.http.User-Agent ~ "Windows NT 5.1; ru;"
 		|| req.http.User-Agent ~ "Windows NT 5.2"
-		|| req.http.User-Agent ~ "(Windows NT 6.0)"
+#		|| req.http.User-Agent ~ "(Windows NT 6.0)"
 		|| req.http.Uset-Agent == "Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko"
 		|| req.http.User-Agent == "'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.121 Safari/537.36'"
 		|| req.http.User-Agent ~ "Mozilla/5.1 (Windows NT 6.0; WOW64)"

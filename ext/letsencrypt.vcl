@@ -1,11 +1,20 @@
 vcl 4.1;
 
 probe bottisondi {
-				.url = "/ads.txt";  # must be a real url, not made by wordpress
-				.timeout = 1s;
-				.interval = 5s;
-				.window = 5;
-				.threshold = 3;
+    .request =
+      "HEAD / HTTP/1.1"
+      "Host: www.katiska.info"
+      "Connection: close"
+      "User-Agent: Varnish Health Probe";
+	.timeout = 3s;
+	.interval = 5s;
+	.window = 5;
+	.threshold = 3;
+#				.url = "/ads.txt";
+#				.timeout = 1s;
+#				.interval = 5s;
+#				.window = 5;
+#				.threshold = 3;
 }
 
 backend certbot {

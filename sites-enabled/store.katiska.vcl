@@ -39,35 +39,6 @@ sub vcl_recv {
 	return (pipe);
 	}
 
-	# Allow purging from ACL
-	if (req.method == "PURGE") {
-	# If not allowed then a error 405 is returned
-	if (!client.ip ~ purge) {
-		 return(synth(405, "This IP is not allowed to send PURGE requests."));
-	}
-	# If allowed, do a cache_lookup -> vlc_hit() or vlc_miss()
-	return (purge);
-	}
-
-	# Only deal with "normal" types
-	if (req.method != "GET" &&
-	req.method != "HEAD" &&
-	req.method != "PUT" &&
-	req.method != "POST" &&
-	req.method != "TRACE" &&
-	req.method != "OPTIONS" &&
-	req.method != "PATCH" &&
-	req.method != "DELETE") {
-	# Non-RFC2616 or CONNECT which is weird. */
-	# Why send the packet upstream, while the visitor is using a non-valid HTTP method? */
-	return (synth(404, "Non-valid HTTP method!"));
-	}
-
-	# Implementing websocket support (https://www.varnish-cache.org/docs/4.0/users-guide/vcl-example-websockets.html)
-	if (req.http.Upgrade ~ "(?i)websocket") {
-	return (pipe);
-	}
-
 	### Do not Cache: special cases ###
 
 
@@ -96,6 +67,11 @@ sub vcl_recv {
 	# Don't cache logged-in user and cart
 	if ( req.http.Cookie ~ "wordpress_logged_in|resetpass" ) {
 	return( pass );
+	}
+	
+	# REST API
+	if ( !req.http.Cookie ~ "wordpress_logged_in" && req.url ~ "/wp-json/wp/v2/users" ) {
+		return(synth(403, "Unauthorized request"));
 	}
 
 	#fixed non AJAX cart problem

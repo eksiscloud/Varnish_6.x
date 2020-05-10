@@ -49,7 +49,7 @@ probe sondi {
 backend default {					# use your servers instead default if you have more than just one
 	.host = "127.0.0.1";			# IP or Hostname of backend
 	.port = "81";					# Apache or whatever is listening
-	.max_connections = 800;			# That's it enough 
+#	.max_connections = 800;			# That's it enough 
 	.first_byte_timeout = 300s;		# How long to wait before we receive a first byte from our backend?
 	.connect_timeout = 300s;		# How long to wait for a backend connection?
 	.between_bytes_timeout = 300s;	# How long to wait between bytes received from our backend?
@@ -60,12 +60,14 @@ backend default {					# use your servers instead default if you have more than j
 acl purge {
 	"localhost";
 	"127.0.0.1";
+	"46.101.98.116";
 }
 
 acl whitelist {
 	"localhost";
 	"127.0.0.1";
-	"your.personal.ip";
+	"46.101.98.116";
+	"85.76.113.91";
 }
 
 # just an example, I use 403.vcl together fail2ban
@@ -133,6 +135,11 @@ sub vcl_recv {
 		set req.method = "GET";
 		set req.hash_always_miss = true;
 	}
+	
+	# Fix Wordpress visual editor issues, must be the first one as url requests to work
+	if (req.url ~ "/wp-(login|admin|comments-post.php|cron)" || req.url ~ "preview=true") {
+	return (pass);
+	}
 
 	# Only deal with "normal" types
 	if (req.method != "GET" &&
@@ -152,11 +159,6 @@ sub vcl_recv {
 	if (req.http.Upgrade ~ "(?i)websocket") {
 		return(pipe);
 	}
-
-	# Fix Wordpress visual editor issues, must be the first one as url requests to work
-	if (req.url ~ "/wp-(login|admin|comments-post.php|cron)" || req.url ~ "preview=true") {
-	return (pass);
-	}
 	
 	# Let's clean up some trashes
 		# If you follow robots.txt you aren't a rotten one and Fail2ban doesn't ban you
@@ -173,11 +175,11 @@ sub vcl_recv {
 		# Now I can use xmlrpc.php
 		# Commented because Nginx do this for me
 #		if (req.url ~ "^/xmlrpc.php" && !client.ip ~ whitelist) {
-#			return(synth(666, "Post not allowed for " + client.ip));
+#			return(synth(423, "Post not allowed for " + client.ip));
 #		}
 		# I need curl every now and then, others not
 		if (req.http.User-Agent ~ "curl/" && !client.ip ~ whitelist) {
-			return(synth(666, "Forbidden Method"));
+			return(synth(423, "Forbidden Method"));
 		}
 		# now we stop known useless ones
 		call bad_bot_detection;
@@ -204,6 +206,27 @@ sub vcl_recv {
 		}
 	}
 	
+	## Wordpress REST API
+	if (req.url ~ "/wp-json/wp/v2/") {
+		# Whitelisted IP will pass
+		if (client.ip ~ whitelist) {
+			return(pass);
+		}
+		# Must be logged in
+		elseif (!req.http.Cookie ~ "wordpress_logged_in") {
+			return(synth(403, "Unauthorized request"));
+		}
+	}
+		
+		# Whitelisted IP is allowed; needed for MoodleBot etc. local services
+#		if (client.ip ~ whitelist && req.url ~ "/wp-json/wp/v2/") {
+#			return(pass);
+#		}
+		# Must be logged in or from whitelisted ip
+#		if (!req.http.Cookie ~ "wordpress_logged_in" && req.url ~ "/wp-json/wp/v2/") {
+#			return(synth(403, "Unauthorized request"));
+#		}
+	
 	# Giving a pipeline to sites that I doesn't want to be under influence of Varnish (except killing the bots)
 	# - Moodle dislike Varnish (I have some cookie issues) and Moodle has its own system to cache things
 	# - When a Woocommerce is small and there isn't any real content, Varnish will give only headache
@@ -215,7 +238,7 @@ sub vcl_recv {
 		|| req.http.host == "stats.eksis.eu"		# Matomo
 		) {
 			return(pipe);
-	}
+		}
 	
 	# Awstats needs the host 
 	# You must add something like this in systemctl edit --full varnishncsa at line StartExec:
@@ -263,6 +286,11 @@ sub vcl_recv {
 
 	# Send Surrogate-Capability headers to announce ESI support to backend
 	set req.http.Surrogate-Capability = "key=ESI/1.0";
+	
+	# Needed for Monit
+	if (req.url ~ "/pong") {
+		return(pipe);
+	}
 	
 	## At this point we jump to all-common.vcl
 
@@ -420,10 +448,11 @@ sub vcl_backend_response {
 
 	# Conditionally 404 redirect
 	if (beresp.status == 404 && (
-			   bereq.url ~ "/wp-content/cache/"		# old WP Rocket cache files that Bing can't handle
-			|| bereq.url ~ "\?cat\="				# null category
-			|| bereq.url ~ "/page/"					# empty archive pages of WP; canonical 301 of WP + SEO plugins may override this
-			|| bereq.url ~ "/feed/"					# old RSS-feed
+			   bereq.url ~ "/wp-content/cache/"				# old WP Rocket cache files that Bing can't handle
+			|| bereq.url ~ "^/wp-content/plugins/"			# there is no such plugin anymore
+			|| bereq.url ~ "\?cat\="						# null category
+			|| bereq.url ~ "/page/"							# empty archive pages of WP; canonical 301 of WP + SEO plugins may override this
+			|| bereq.url ~ "/feed/"							# old RSS-feed
 			)) {
 		set beresp.ttl = 86400s;
 		set beresp.status = 410;
@@ -433,9 +462,21 @@ sub vcl_backend_response {
 	# Conditionally 404 redirect: malicious wordpress-knockers
 	# wp-include etc has protected by Nginx
 	# 404 monitor still gets error but is covered now
-	if (beresp.status == 404 && (bereq.url ~ "^/wp-admin/" || bereq.url ~ "^/wp-content/themes" || bereq.url ~ "^/wp-content/plugins" || bereq.url ~ ".js")) {
-		set beresp.status = 666;
-		set beresp.ttl = 86400s;
+#	if (beresp.status == 404 && (
+#			   bereq.url ~ "^/wp-admin/"
+#			|| bereq.url ~ "^/wp-includes/"
+#			|| bereq.url ~ "^/wp-content/themes" 
+#			|| bereq.url ~ "^/wp-content/plugins" 
+#			|| bereq.url ~ ".js"
+#		)) {
+#		set beresp.status = 530;
+#		set beresp.ttl = 86400s;
+#		return(deliver);
+#	}
+
+	# One customer who doesn't fix 404s so let's give 410 instead
+	if (beresp.status == 404 && bereq.http.host ~ "tuituin.fi") {
+		set beresp.status = 410;
 		return(deliver);
 	}
 

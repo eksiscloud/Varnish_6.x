@@ -19,42 +19,41 @@ sub vcl_recv {
 	
 	# I don't need this because I'm using Fail2ban, but this can be used more like a safetynet
 #	if(vsthrottle.is_denied(req.http.X-Forwarded-For, 2, 1s) && (req.url ~ "xmlrpc|wp-login.php|\?s\=")) {
-#		return (synth(413, "Too Damn Much"));
+#		return(synth(413, "Too Damn Much"));
 #	}
 
 	# Prevent users from making excessive POST requests that aren't for admin-ajax
 	if(vsthrottle.is_denied(req.http.X-Forwarded-For, 15, 10s) && ((!req.url ~ "\/wp-admin\/|(xmlrpc|admin-ajax)\.php") && (req.method == "POST"))){
-		return (synth(413, "Too Damn Much"));
+		return(synth(413, "Too Damn Much"));
 	}
 	
 	# Normalize hostname to avoid double caching
 	set req.http.host = regsub(req.http.host,
 	"^katiska\.info$", "www.katiska.info");
 
+#	if (!req.url ~ "/kirjoittaja/(adurodiel|atmini|jagster|katiska|mkarulinna|osmaja|sinituulia|sumppu|tehtailija)") {
+#		return(synth(410, "Gone"));
+#	}
+
 	# drops amp; IDK if really needed, but there is no point even try because Google is caching AMP-pages
 	if (req.url ~ "/amp/") {
-		return (pass);
+		return(pass);
 	}
 	
 	# drops stage site totally
 #	if (req.url ~ "/stage") {
-#		return (pipe);
+#		return(pipe);
 #	}
 
 	# drops Mailster
 	if (req.url ~ "/postilista/") {
-		return (pass);
-	}
-
-	# Needed for Monit
-	if (req.url ~ "/pong") {
-		return (pipe);
+		return(pass);
 	}
 	
 	# AWStats
-#	if (req.url ~ "cgi-bin/awsstats.pl") {
-#		return (pass);
-#	}
+	if (req.url ~ "cgi-bin/awsstats.pl") {
+		return(pass);
+	}
 
 	## Do not Cache: special cases ##
 
@@ -70,7 +69,7 @@ sub vcl_recv {
 	
 	# Pass Let's Encrypt
 	if (req.url ~ "^/\.well-known/acme-challenge/") {
-		return (pass);
+		return(pass);
 	}
 	
 	## Wordpress ##
@@ -84,12 +83,7 @@ sub vcl_recv {
 	if ( req.http.Cookie ~ "wordpress_logged_in|resetpass" ) {
 		return(pass);
 	}
-	
-	# REST API
-	if ( !req.http.Cookie ~ "wordpress_logged_in" && req.url ~ "/wp-json/wp/v2/" ) {
-		return(synth(403, "Unauthorized request"));
-	}
-	
+
 	# Pass contact form, RSS feed and must use plugins of Wordpress
 	if (req.url ~ "/(tiedustelut|feed|mu-)") {
 		return(pass);

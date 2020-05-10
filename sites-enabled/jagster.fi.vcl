@@ -1,3 +1,4 @@
+
 ## Wordpress (podcasting, photos, instagram, twitter) ##
 sub vcl_recv {
   if (req.http.host == "jagster.fi" || req.http.host == "www.jagster.fi") {
