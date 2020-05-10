@@ -28,5 +28,5 @@ The stack is:
 
 I'm using Fail2ban to ban IP of bots too. Overkill?
 
-I've tried comment everything but everything is quite basic thigs and self explaining. Some doesn't work or do weird things.
+I've tried comment everything but all I've done are quite basic things and self explaining. Some doesn't work or do weird things.
 
