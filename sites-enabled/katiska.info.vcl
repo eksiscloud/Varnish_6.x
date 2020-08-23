@@ -17,16 +17,6 @@ sub vcl_recv {
 	#}
 	#set req.http.X-Forwarded-Proto = "https";
 	
-	# I don't need this because I'm using Fail2ban, but this can be used more like a safetynet
-#	if(vsthrottle.is_denied(req.http.X-Forwarded-For, 2, 1s) && (req.url ~ "xmlrpc|wp-login.php|\?s\=")) {
-#		return(synth(413, "Too Damn Much"));
-#	}
-
-	# Prevent users from making excessive POST requests that aren't for admin-ajax
-	if(vsthrottle.is_denied(req.http.X-Forwarded-For, 15, 10s) && ((!req.url ~ "\/wp-admin\/|(xmlrpc|admin-ajax)\.php") && (req.method == "POST"))){
-		return(synth(413, "Too Damn Much"));
-	}
-	
 	# Normalize hostname to avoid double caching
 	set req.http.host = regsub(req.http.host,
 	"^katiska\.info$", "www.katiska.info");

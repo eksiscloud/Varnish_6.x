@@ -7,7 +7,7 @@ sub vcl_recv {
 	# Turn off cache
 	# or make Varnish act like dumb proxy
 	#return(pass);
-	#return(pipe);
+	return(pipe);
 
 
 	# I don't need this two because I'm using Fail2ban, but this is more like a safetynet

@@ -2,14 +2,19 @@
 ##
 sub vcl_recv {
 
+	#return(pipe);
 	
 	# Enable smart refreshing
 	# Remember your header Cache-Control must be set something else than no-cache
-	# Otherwise everythiong will miss
+	# Otherwise everything will miss
 	if (req.http.Cache-Control ~ "no-cache" && client.ip ~ purge) {
 		set req.hash_always_miss = true;
 	}
 	
+	## This section is really unreliable.
+	## I don't understand what's happening here
+	## Somebody wiser should write a clean and easy to understand article
+
 	# Some generic URL manipulation, useful for all templates that follow
 	# First remove the Google Analytics added parameters, useless for our backend
 	if (req.url ~ "(\?|&)(utm_source|utm_medium|utm_campaign|utm_content|gclid|cx|ie|cof|siteurl)=") {
@@ -17,30 +22,32 @@ sub vcl_recv {
 		set req.url = regsuball(req.url, "\?(utm_source|utm_medium|utm_campaign|utm_content|gclid|cx|ie|cof|siteurl)=([A-z0-9_\-\.%25]+)", "?");
 		set req.url = regsub(req.url, "\?&", "?");
 		set req.url = regsub(req.url, "\?$", "");
-  }
+	}
 
 	# Some generic URL manipulation, useful for all templates that follow
 	# First remove URL parameters used to track effectiveness of online marketing campaigns
-#	if (req.url ~ "(\?|&)(utm_[a-z]+|gclid|cx|ie|cof|siteurl|fbclid)=") {
-#		set req.url = regsuball(req.url, "(utm_[a-z]+|gclid|cx|ie|cof|siteurl|fbclid)=[-_A-z0-9+()%.]+&?", "");
-#		set req.url = regsub(req.url, "[?|&]+$", "");
-#	}
+	#if (req.url ~ "(\?|&)(utm_[a-z]+|gclid|cx|ie|cof|siteurl|fbclid)=") {
+	#	set req.url = regsuball(req.url, "(utm_[a-z]+|gclid|cx|ie|cof|siteurl|fbclid)=[-_A-z0-9+()%.]+&?", "");
+	#	set req.url = regsub(req.url, "[?|&]+$", "");
+	#}
 	
 	## Cookies
-	#Cookie notice
-#	set req.http.Cookie = regsuball(req.http.Cookie, "Cookie_notice_accepted=[^;]+(; )?", "");
+	# Cookie notice
+	# I'm using this, so it can't be removed?
+	# Really, I don't a clue what removing here even means
+	#set req.http.Cookie = regsuball(req.http.Cookie, "Cookie_notice_accepted=[^;]+(; )?", "");
 
 	# Remove the "has_js" Cookie
 	set req.http.Cookie = regsuball(req.http.Cookie, "has_js=[^;]+(; )?", "");
 
 	# Remove any Google Analytics based Cookies
-#	set req.http.Cookie = regsuball(req.http.Cookie, "__utm.=[^;]+(; )?", "");
-#	set req.http.Cookie = regsuball(req.http.Cookie, "_ga=[^;]+(; )?", "");
-#	set req.http.Cookie = regsuball(req.http.Cookie, "_gali=[^;]+(; )?", "");
-#	set req.http.Cookie = regsuball(req.http.Cookie, "_gid=[^;]+(; )?", "");
-#	set req.http.Cookie = regsuball(req.http.Cookie, "utmctr=[^;]+(; )?", "");
-#	set req.http.Cookie = regsuball(req.http.Cookie, "utmcmd.=[^;]+(; )?", "");
-#	set req.http.Cookie = regsuball(req.http.Cookie, "utmccn.=[^;]+(; )?", "");
+	#set req.http.Cookie = regsuball(req.http.Cookie, "__utm.=[^;]+(; )?", "");
+	#set req.http.Cookie = regsuball(req.http.Cookie, "_ga=[^;]+(; )?", "");
+	#set req.http.Cookie = regsuball(req.http.Cookie, "_gali=[^;]+(; )?", "");
+	#set req.http.Cookie = regsuball(req.http.Cookie, "_gid=[^;]+(; )?", "");
+	#set req.http.Cookie = regsuball(req.http.Cookie, "utmctr=[^;]+(; )?", "");
+	#set req.http.Cookie = regsuball(req.http.Cookie, "utmcmd.=[^;]+(; )?", "");
+	#set req.http.Cookie = regsuball(req.http.Cookie, "utmccn.=[^;]+(; )?", "");
 
 	# Remove Caos, locally stored GA
 	set req.http.Cookie = regsuball(req.http.Cookie, "caosLocalGA=[^;]+(; )?", "");
@@ -77,25 +84,30 @@ sub vcl_recv {
 	set req.http.Cookie = regsuball(req.http.Cookie, "wp_woocommerce_session_=[^;]+(; )?", "");
 
 	# Remove PMPro
-#	set req.http.Cookie = regsuball(req.http.Cookie, "pmpro_visit=[^;]+(; )?", "");
+	#set req.http.Cookie = regsuball(req.http.Cookie, "pmpro_visit=[^;]+(; )?", "");
 
 	# _wp_session
 	set req.http.Cookie = regsuball(req.http.Cookie, "_wp_session=[^;]+(; )?", "");
 	
-	# Moodle, this doesn't work
-#	set req.http.Cookie = regsuball(req.http.Cookie, "MoodleSession=[^;]+(; )?", "");
-#	set req.http.Cookie = regsuball(req.http.Cookie, "MoodleTest=[^;]+(; )?", "");
-#	set req.http.Cookie = regsuball(req.http.Cookie, "MOODLEID=[^;]+(; )?", "");
+	# Moodle, this doesn't work and that's one reason why Moodle doesn't come along with Varnish
+	#set req.http.Cookie = regsuball(req.http.Cookie, "MoodleSession=[^;]+(; )?", "");
+	#set req.http.Cookie = regsuball(req.http.Cookie, "MoodleTest=[^;]+(; )?", "");
+	#set req.http.Cookie = regsuball(req.http.Cookie, "MOODLEID=[^;]+(; )?", "");
 
-	# Do not pass other Cookies
-	if (!req.http.Cookie) {
-		unset req.http.Cookie;
-	}
+	# Something my Wordpress-setups set up
 	
 	if (req.http.Cookie ~ "__distillery") {
 		unset req.http.Cookie; 
 	}
-	if (req.http.Cookie ~ "_mixpanel") {
+	if (req.http.Cookie ~ "mp_") {
+		unset req.http.Cookie;
+	}
+	
+	if (req.http.Cookie ~ "basepress") {
+		unset req.http.Cookie;
+	}
+	
+	if (req.http.Cookie ~ "_pk_") {
 		unset req.http.Cookie;
 	}
 
@@ -115,6 +127,11 @@ sub vcl_recv {
 		# cache the page. Pass it on to Apache directly.
 			return (pass);
 		}
+
+	# Do not pass other Cookies
+        if (!req.http.Cookie) {
+                unset req.http.Cookie;
+        }
 
 	## Now we do everything per domains which are declared in all-vhost.vcl
 
