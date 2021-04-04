@@ -1,6 +1,6 @@
 ## Wordpress ##
 sub vcl_recv {
-  if (req.http.host == "katiska.info" || req.http.host == "www.katiska.info") {
+  if (req.http.host == "polle.katiska.info") {
 		set req.backend_hint = default;
 
 	## just for this virtual host
@@ -17,19 +17,6 @@ sub vcl_recv {
 	#}
 	#set req.http.X-Forwarded-Proto = "https";
 	
-	# Normalize hostname to avoid double caching
-	set req.http.host = regsub(req.http.host,
-	"^katiska\.info$", "www.katiska.info");
-	
-	# Fix Wordpress visual editor issues, must be the first one as url requests to work
-	if (req.url ~ "/wp-(login|admin|comments-post.php|cron)" || req.url ~ "preview=true") {
-	return (pass);
-	}
-
-#	if (req.url ~ "adurodiel|atmini|jagster|katiska|mkarulinna|osmaja|sinituulia|sumppu|tehtailija") {
-#		return(synth(410, "Gone"));
-#	}
-	
 	# drops stage site totally
 	if (req.url ~ "/stage") {
 		return(pipe);
@@ -37,11 +24,6 @@ sub vcl_recv {
 
 	# drops Mailster
 	if (req.url ~ "/postilista/") {
-		return(pass);
-	}
-	
-	# AWStats
-	if (req.url ~ "cgi-bin/awsstats.pl") {
 		return(pass);
 	}
 

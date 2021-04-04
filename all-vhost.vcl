@@ -1,12 +1,19 @@
-## Just a list of hosts using Varnish
 include "sites-enabled/jagster.fi.vcl";
 include "sites-enabled/katiska.info.vcl";
+include "sites-enabled/humaani.katiska.vcl";
+include "sites-enabled/katti.katiska.vcl";
 include "sites-enabled/selko.katiska.vcl";
+include "sites-enabled/polle.katiska.vcl";
 include "sites-enabled/proto.katiska.vcl";
 include "sites-enabled/ymparistosuunnittelija.com.vcl";
-include "sites-enabled/tuituin.fi.vcl";
 include "sites-enabled/eksis.one.vcl";
+include "sites-enabled/git.eksis.one.vcl";
 include "sites-enabled/eksis.eu.vcl";
-include "sites-enabled/eksis.xyz.vcl";
 include "sites-enabled/eksis.dev.vcl";
+#include "sites-enabled/eksis.xyz.vcl";
+#include "sites-enabled/www.koiranravitsemus.fi.vcl";
+#include "sites-enabled/wiki.koiranterveys.fi.vcl";
+#include "sites-enabled/meta.katiska.vcl";
+#include "sites-enabled/duuni.eksis.xyz.vcl";
 #include "sites-enabled/store.katiska.vcl";
+#include "sites-enabled/tuituin.fi.vcl";
