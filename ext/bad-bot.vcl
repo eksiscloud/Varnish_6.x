@@ -1,15 +1,19 @@
 sub bad_bot_detection {
 
 ## I have to set user agent to find out in 404 monitoring of Wordpress who is getting 404.
-## There is no point what so ever to start fixing 404s by bots and harvesters
+## So, I'll store user agent in X-User-Agent and it will be restored after hashing.
+##
+## There is no point what so ever to start fixing 404s made by bots and harvesters
 ## Fix only real things that are issues for users and Google etc.
-## All this have been visited or are still trying to my sites.
+##
+## All these have been visited or are still trying to my sites.
 ## Shows 404s: awk '($9 ~ /404/)' /var/log/nginx/access.log | awk '{print $7}' | sort | uniq -c | sort -rn
 ## Shows user agents: awk -F'"' '/GET/ {print $6}' /var/log/nginx/access.log | cut -d' ' -f1 | sort | uniq -c | sort -rn
-
+#
 # True bots, spiders and harvesters; Rogues, keyword harvesting and useless SEO
-# These are mostly handled by Nginx giving error 499
-# So, this is more or less just backup
+# These are mostly handled by Nginx giving error 444
+# So, this vcl is more or less just backup. 
+#
 	if (
 		   req.http.User-Agent == "^$"							# Nginx is passing these two
 		|| req.http.User-Agent == "-"							# because I couldn't success with LUA
@@ -31,11 +35,13 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "aiohttp"
 		|| req.http.User-Agent ~ "akka-http/"					# malicious - done
 		|| req.http.User-Agent ~ "Amazon CloudFront"			# malicious - done
+		|| req.http.User-Agent == "AmazonMusic"
 		|| req.http.User-Agent ~ "amp-wp"
 		|| req.http.User-Agent ~ "Anchorage DMP"				# bad		- done
 		|| req.http.User-Agent ~ "AndroidDownloadManager"
 		|| req.http.User-Agent ~ "Apache-HttpClient"			# malicious - done
 		|| req.http.User-Agent ~ "ApiTool"
+		|| req.http.User-Agent ~ "Aranea"
 		|| req.http.User-Agent ~ "aria2"
 		|| req.http.User-Agent ~ "Asana"
 		|| req.http.User-Agent ~ "AspiegelBot"					# good
@@ -118,12 +124,14 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "GarlikCrawler"
 		|| req.http.User-Agent ~ "GetIntent"
 		|| req.http.User-Agent ~ "GetPodcast"
+		|| req.http.User-Agent ~ "GigablastOpenSource"
 		|| req.http.User-Agent ~ "gdnplus"
 		|| req.http.User-Agent ~ "gobyus"
 		|| req.http.User-Agent ~ "Go-http-client"				# bad, the most biggest issue and mostly from China and arabic countries
 		|| req.http.User-Agent ~ "^got "
 		|| req.http.User-Agent ~ "GotSiteMonitor"
 		|| req.http.User-Agent ~ "GrapeshotCrawler"				# bad
+		|| req.http.User-Agent ~ "GRequests"
 		|| req.http.User-Agent ~ "GT-C3595"
 		|| req.http.User-Agent ~ "GuzzleHttp"
 		# H
@@ -170,6 +178,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "LieBaoFast"					# bad
 		|| req.http.User-Agent ~ "LightSpeed"
 		|| req.http.User-Agent ~ "LightspeedSystemsCrawler"
+		|| req.http.User-Agent ~ "Linguee"
 		|| req.http.User-Agent ~ "linkdexbot"
 #		|| req.http.User-Agent ~ "LinkedInBot"					# bad
 		|| req.http.User-Agent ~ "linklooker"
@@ -190,6 +199,7 @@ sub bad_bot_detection {
 #		|| req.http.User-Agent ~ "MozacFetch"
 		|| req.http.User-Agent ~ "MTRobot"
 		|| req.http.User-Agent ~ "MyTuner-ExoPlayerAdapter"
+		|| req.http.User-Agent ~ "My User Agent"
 		# N
 		|| req.http.User-Agent ~ "Needle"
 		|| req.http.User-Agent ~ "NetcraftSurveyAgent"			# bad
@@ -206,7 +216,7 @@ sub bad_bot_detection {
 		# O
 		|| req.http.User-Agent ~ "oBot"
 		|| req.http.User-Agent ~ "observer"
-		|| req.http.User-Agent ~ "okhttp"
+#		|| req.http.User-Agent ~ "okhttp"
 		|| req.http.User-Agent ~ "oncrawl.com"
 		|| req.http.User-Agent ~ "OwlTail"
 		# P
@@ -299,6 +309,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "SSL Labs"
 		|| req.http.User-Agent ~ "SurdotlyBot"					# bad
 		|| req.http.User-Agent ~ "Synapse"
+		|| req.http.User-Agent ~ "syncify"
 		# T
 		|| req.http.User-Agent ~ "Talous"
 		|| req.http.User-Agent ~ "tamarasdartsoss.nl"
@@ -325,6 +336,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "UltraSeek"
 		|| req.http.User-Agent ~ "um-IC"						# bad
 		|| req.http.User-Agent ~ "um-LN"
+		|| req.http.User-Agent ~ "UMichBot"
 		|| req.http.User-Agent ~ "User-Agent"
 		|| req.http.User-Agent ~ "UniversalFeedParser"			# bad
 		# V
@@ -343,6 +355,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent == "Wordpress"					# malicious
 		|| req.http.User-Agent ~ "Wordpress.com"
 		|| req.http.User-Agent ~ "wp.com"
+		|| req.http.User-Agent ~ "WWW-Mechanize"
 		# X
 		|| req.http.User-Agent ~ "XenForo"
 		|| req.http.User-Agent ~ "XoviBot"
@@ -389,7 +402,6 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "Mozlila"
 		|| req.http.User-Agent == "Moza"
 		) {
-			set req.http.User-Agent = "Bad Bad Bot";
 			return(synth(666, "Forbidden Bot"));
 		} 
 

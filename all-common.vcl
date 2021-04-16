@@ -45,6 +45,7 @@ sub vcl_recv {
 	set req.http.Cookie = regsuball(req.http.Cookie, "wordpress_test_Cookie=[^;]+(; )?", "");
 
 	# Remove the phpBB Cookie. This will help us cache bots and anonymous users.
+	# I don't use phpBB forum so commented
 	#set req.http.Cookie = regsuball(req.http.Cookie, "style_Cookie=[^;]+(; )?", "");
 	#set req.http.Cookie = regsuball(req.http.Cookie, "phpbb3_psyfx_track=[^;]+(; )?", "");
 
@@ -58,17 +59,19 @@ sub vcl_recv {
 	set req.http.Cookie = regsuball(req.http.Cookie, "__atuv.=[^;]+(; )?", "");
 
 	# Remove Woocommerce Cookies, all three
-	set req.http.Cookie = regsuball(req.http.Cookie, "woocommerce_cart_hash=[^;]+(; )?", "");
-	set req.http.Cookie = regsuball(req.http.Cookie, "woocommerce_items_in_cart=[^;]+(; )?", "");
-	set req.http.Cookie = regsuball(req.http.Cookie, "wp_woocommerce_session_=[^;]+(; )?", "");
+	# I don't have Woocommerce behind Varnish right now, so commented
+	#set req.http.Cookie = regsuball(req.http.Cookie, "woocommerce_cart_hash=[^;]+(; )?", "");
+	#set req.http.Cookie = regsuball(req.http.Cookie, "woocommerce_items_in_cart=[^;]+(; )?", "");
+	#set req.http.Cookie = regsuball(req.http.Cookie, "wp_woocommerce_session_=[^;]+(; )?", "");
 
 	# Remove PMPro
+	# I don't use PMPro either
 	#set req.http.Cookie = regsuball(req.http.Cookie, "pmpro_visit=[^;]+(; )?", "");
 
 	# _wp_session
 	set req.http.Cookie = regsuball(req.http.Cookie, "_wp_session=[^;]+(; )?", "");
 	
-	# Moodle, this doesn't work
+	# Moodle, but this doesn't work so I'm piping Moodle backends
 	#set req.http.Cookie = regsuball(req.http.Cookie, "MoodleSession=[^;]+(; )?", "");
 	#set req.http.Cookie = regsuball(req.http.Cookie, "MoodleTest=[^;]+(; )?", "");
 	#set req.http.Cookie = regsuball(req.http.Cookie, "MOODLEID=[^;]+(; )?", "");
@@ -77,17 +80,27 @@ sub vcl_recv {
 	set req.http.Cookie = regsuball(req.http.Cookie, "i_like_gitea=[^;]+(; )?", "");
 	set req.http.Cookie = regsuball(req.http.Cookie, "_csrf=[^;]+(; )?", "");
 	
+	# Discourse
+	# Normalizing these is a bad idea
+	#set req.http.Cookie = regsuball(req.http.Cookie, "__profilin=[^;]+(; )?", "");
+	#set req.http.Cookie = regsuball(req.http.Cookie, "_forum_session=[^;]+(; )?", "");
+	#set req.http.Cookie = regsuball(req.http.Cookie, "_t=[^;]+(; )?", "");
+	#set req.http.Cookie = regsuball(req.http.Cookie, "_ws=[^;]+(; )?", "");
+	
 	# Let's kill some cookies 
 
 	if (req.http.Cookie ~ "__distillery") {
 		unset req.http.Cookie; 
 	}
+	
 	if (req.http.Cookie ~ "mp_") {
 		unset req.http.Cookie;
 	}
+	
 	if (req.http.Cookie ~ "basepress") {
 		unset req.http.Cookie;
 	}
+	
 	if (req.http.Cookie ~ "_pk_") {
 		unset req.http.Cookie;
 	}
@@ -104,7 +117,7 @@ sub vcl_recv {
 	set req.http.Cookie-Backup = req.http.Cookie;
 	unset req.http.Cookie;
 	
-	#### We are ready wuth cookies now ####
+	#### We are ready with cookies now ####
 
 
 	## Now we do everything per domains which are declared in all-vhost.vcl

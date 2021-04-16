@@ -68,10 +68,26 @@ backend default {					# use your servers instead default if you have more than j
 	.probe = sondi;					# We have chance to recycle the probe 
 }
 
+## REMEMBER: You can not do pipe or pass before domain.vcl 
+## If you do so, the backend can't be founded and all you get is your very first domain in alphabetically
+
+# git.eksis.one by Gitea
 backend gitea {
 	.path = "/run/gitea/gitea.sock";
 	#.host = "localhost";
 	#.port = "3000";					# Gitea
+}
+
+# proto.eksis.one by Discourse
+# Served by Nginx because my VCLs have something wrong
+backend proto {
+	.path = "/var/discourse/shared/proto/nginx.http.sock";
+}
+
+# kaffein.jagster.fi by Discourse
+# Served by Nginx because my VCLs have something wrong
+backend kaffein {
+	.path = "/var/discourse/shared/jagster/nginx.http.sock";
 }
 
 # Only allow purging from specific IPs
@@ -85,7 +101,7 @@ acl whitelist {
 	"localhost";
 	"netti.link";
 	"127.0.0.1";
-	"84.231.3.137";
+	"84.231.164.255";
 	"104.248.141.204";
 	"64.225.73.149";
 	"138.68.111.130";
@@ -127,6 +143,9 @@ sub vcl_recv {
 	## Your last hope: a dumb TCP termination
 	## It passes everything right thru Varnish
 	# return(pipe);
+	
+	
+	### the work starts here
 	
 	## I have strange redirection issue with all wordpresses
 	## Must be a problem with cookies but can't solve it out
@@ -198,7 +217,7 @@ sub vcl_recv {
 
 	# Fix Wordpress visual editor issues, must be the first one as url requests to work
 	if (req.url ~ "/wp-(login|admin|comments-post.php|cron)" || req.url ~ "preview=true") {
-	return (pass);
+		return (pass);
 	}
 	
 	# Let's help MediaWiki cache by responsive skins
@@ -225,11 +244,10 @@ sub vcl_recv {
 			|| req.http.User-Agent ~ "UptimeRobot"
 			|| req.http.User-Agent ~ "Matomo"
 			) {
-				#set req.http.User-Agent = "Probes";
 				return(pipe);
 			}
 		
-		# These are nice bots, so let them through but with the very same user-agent
+		# These are nice bots, so let them through using nice-bot.vcl
 		call cute_bot_allowance;
 		
 		# If you follow robots.txt you aren't a rotten one and Fail2ban doesn't ban you
@@ -277,36 +295,30 @@ sub vcl_recv {
 		
 		## Special cases
 
-		# These are using same IP-space every now and then than real users, so I can't ban the IP.
-		# Error 420 doesn't trigger Fail2ban here
+		# Bots in 420.vcl are using same IP-space every now and then than real users, so I can't ban the IP.
+		# Error 402 doesn't trigger Fail2ban here
 		if (!client.ip ~ whitelist) {
 			call foreign_agents;
 		}
 		
-		# Nice ones who doesn't follow limits of robots.txt		
+		# Googlebot-Image doesn't follow limits of robots.txt		
 		if (req.http.User-Agent ~ "Googlebot-Image") {
 			if (!req.url ~ "/uploads/|/images/") {
 				return(synth(403, "Forbidden"));
 			} 
-			set req.http.User-Agent = "Nozy one";
 		}
 		
-		# Now we stop known useless ones who's not from whitelisted IPs
+		# Now we stop known useless ones who's not from whitelisted IPs using bad-bot.vcl
+		# This should not be active if Nginx do what it should do
 		if (!client.ip ~ whitelist) {
 			call bad_bot_detection;
 		}
 		
-		# Seeking holes
+		# Stop bots and knockers seeking holes using 403.vcl
 		call stop_pages;
 
-		# That's it, all others can go on, but with same User-Agent
-		if (
-			req.http.User-Agent != "Bad Bad Bot" &&
-			req.http.User-Agent != "Good guy" &&
-			req.http.User-Agent != "Nozy one"
-			) {
-				set req.http.User-Agent = "User";
-			}
+		# That's it, no more filtering by user-agent
+		unset req.http.User-Agent;
 
 	## Normalize the header, remove the port (in case you're testing this on various TCP ports)
 	set req.http.host = regsub(req.http.host, ":[0-9]+", "");
@@ -344,7 +356,6 @@ sub vcl_recv {
 		|| req.http.host == "store.katiska.info"		# Woocommerce
 		|| req.http.host == "stats.eksis.eu"			# Matomo
 		|| req.http.host == "graph.eksis.eu"			# Munit
-		|| req.http.host == "proto.eksis.one"			# Discourse
 		) {
 			return(pipe);
 		}
@@ -432,12 +443,6 @@ sub vcl_pass {
 #
 sub vcl_hash {
 
-	if (req.http.Cookie-Backup) {
-		# restore the cookies before the lookup if any
-		set req.http.Cookie = req.http.Cookie-Backup;
-		unset req.http.Cookie-Backup;
-	}
-
 	hash_data(req.url);
 
 	if (req.http.host) {
@@ -467,24 +472,15 @@ sub vcl_hash {
 		unset req.http.X-COOKIE;
 	}
 	
-	## hash User-Agent for requests that have them
-	if (req.http.User-Agent) {
-		hash_data(req.http.User-Agent);
+	if (req.http.Cookie-Backup) {
+		# restore the cookies before the lookup if any
+		set req.http.Cookie = req.http.Cookie-Backup;
+		unset req.http.Cookie-Backup;
 	}
-	
-	## fix flexible ssl css
-	if (req.http.X-Forwarded-Proto) {
-		hash_data(req.http.X-Forwarded-Proto);
-	}
-	
-	## Cache the mobile version of MediaWiki pages separately.
-	# NOTE: x-wap header should only have one value (if it exists), therefore vcl_recv() should remove user-supplied X-WAP header.
-	# I don't have MediaWiki behind Varnish nowadays
-	# hash_data(req.http.x-wap);
+
 
 	## The end
 	return (lookup);
-
 
 }
 
@@ -494,6 +490,7 @@ sub vcl_hash {
 sub vcl_hit {
 
 	## Varnish has now built-in grace, so there is no need to adjust grace times by yourself
+	## Still... I do it on vcl_backend_response
 	return(deliver);
 
 }
@@ -510,6 +507,7 @@ sub vcl_miss {
 	#if (object needs ESI processing) {
 	#	unset req.http.accept-encoding;
 	#}
+
 
 	## Last call
 	return (fetch);
@@ -550,7 +548,7 @@ sub vcl_backend_response {
 		set beresp.http.cache-control = "max-age=31536000s";
 		set beresp.ttl = 1y; 
 	}
-
+	
 
 	## We are at the end
 	return(deliver);
