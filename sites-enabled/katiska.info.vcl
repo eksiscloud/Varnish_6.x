@@ -20,6 +20,18 @@ sub vcl_recv {
 	# Normalize hostname to avoid double caching
 	set req.http.host = regsub(req.http.host,
 	"^katiska\.info$", "www.katiska.info");
+
+	# Wordpress REST API
+	if (req.url ~ "/wp-json/wp/v2/") {
+		# Whitelisted IP will pass
+		if (client.ip ~ whitelist) {
+			return(pass);
+		}
+		# Must be logged in
+		elseif (!req.http.Cookie ~ "wordpress_logged_in") {
+			return(synth(403, "Unauthorized request"));
+		}
+	}
 	
 	# Fix Wordpress visual editor issues, must be the first one as url requests to work
 	if (req.url ~ "/wp-(login|admin|comments-post.php|cron)" || req.url ~ "preview=true") {

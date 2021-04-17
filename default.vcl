@@ -333,18 +333,6 @@ sub vcl_recv {
 		}
 	}
 	
-	## Wordpress REST API
-	if (req.url ~ "/wp-json/wp/v2/") {
-		# Whitelisted IP will pass
-		if (client.ip ~ whitelist) {
-			return(pass);
-		}
-		# Must be logged in
-		elseif (!req.http.Cookie ~ "wordpress_logged_in") {
-			return(synth(403, "Unauthorized request"));
-		}
-	}
-
 	## Giving a pipeline to sites that I doesn't want to be under influence of Varnish (except killing the bots)
 	# - Moodle dislike Varnish (I have some cookie issues) and Moodle has its own system to cache things
 	# - When a Woocommerce is small and there isn't any real content, Varnish will give only headache

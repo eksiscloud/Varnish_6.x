@@ -19,6 +19,18 @@ sub vcl_recv {
 	# Normalize hostname as www. to avoid double caching
 	set req.http.host = regsub(req.http.host,
 	"^eksis\.dev$", "www.eksis.dev");
+
+	# Wordpress REST API
+	if (req.url ~ "/wp-json/wp/v2/") {
+		# Whitelisted IP will pass
+		if (client.ip ~ whitelist) {
+			return(pass);
+		}
+		# Must be logged in
+		elseif (!req.http.Cookie ~ "wordpress_logged_in") {
+			return(synth(403, "Unauthorized request"));
+		}
+	}
 	
 	# drops amp; IDK if really needed, but there is no point even try because Google is caching AMP-pages
 	if (req.url ~ "/amp/") {

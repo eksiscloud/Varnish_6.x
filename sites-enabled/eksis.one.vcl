@@ -25,6 +25,18 @@ sub vcl_recv {
 	set req.http.host = regsub(req.http.host,
 	"^eksis\.one$", "www.eksis.one");
 
+	# Wordpress REST API
+	if (req.url ~ "/wp-json/wp/v2/") {
+		# Whitelisted IP will pass
+		if (client.ip ~ whitelist) {
+			return(pass);
+		}
+		# Must be logged in
+		elseif (!req.http.Cookie ~ "wordpress_logged_in") {
+			return(synth(403, "Unauthorized request"));
+		}
+	}
+
 	# drops amp; IDK if really needed, but there is no point even try because Google is caching AMP-pages
 	if (req.url ~ "/amp/") {
 		return (pass);

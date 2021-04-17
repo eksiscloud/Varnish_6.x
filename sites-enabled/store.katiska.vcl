@@ -24,6 +24,18 @@ sub vcl_recv {
 		#shield.conn_reset(); #this isn't working anymore
 	}
 
+	# Wordpress REST API
+	if (req.url ~ "/wp-json/wp/v2/") {
+		# Whitelisted IP will pass
+		if (client.ip ~ whitelist) {
+			return(pass);
+		}
+		# Must be logged in
+		elseif (!req.http.Cookie ~ "wordpress_logged_in") {
+			return(synth(403, "Unauthorized request"));
+		}
+	}
+
 	# drops stage site
 	if (req.url ~ "/stage") {
 		return (pass);
