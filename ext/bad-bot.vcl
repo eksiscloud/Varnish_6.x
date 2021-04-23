@@ -218,6 +218,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "observer"
 #		|| req.http.User-Agent ~ "okhttp"
 		|| req.http.User-Agent ~ "oncrawl.com"
+		|| req.http.User-Agent ~ "Orucast"
 		|| req.http.User-Agent ~ "OwlTail"
 		# P
 		|| req.http.User-Agent ~ "PageThing"

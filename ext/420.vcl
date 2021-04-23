@@ -24,28 +24,37 @@ sub foreign_agents {
 # Allowed only from whitelisted IP, but no bans by Fail2ban either
 # Works only when user agent has not been changed
 
-		if (req.http.User-Agent ~ "curl") {
-			if (!client.ip ~ whitelist) {
-				return (synth(402, "Access Denied" + client.ip));
-			}
+	if (req.http.User-Agent ~ "curl") {
+		if (!client.ip ~ whitelist) {
+			return (synth(402, "Access Denied" + client.ip));
 		}
+	}
 
-		if (req.http.User-Agent ~ "wget") {
-			if (!client.ip ~ whitelist) {
-				return (synth(402, "Access Denied" + client.ip));
-			}
+	if (req.http.User-Agent ~ "wget") {
+		if (!client.ip ~ whitelist) {
+			return (synth(402, "Access Denied" + client.ip));
 		}
+	}
 
-		if (req.http.User-Agent ~ "libwww-perl") {
-			if (!client.ip ~ whitelist) {
-				return (synth(402, "Access Denied" + client.ip));
-			}
+	if (req.http.User-Agent ~ "libwww-perl") {
+		if (!client.ip ~ whitelist) {
+			return (synth(402, "Access Denied" + client.ip));
 		}
+	}
 		
-		if (req.http.User-Agent ~ "Ruby") {
-			if (!client.ip ~ whitelist) {
-				return (synth(402, "Access Denied" + client.ip));
-			}
+	if (req.http.User-Agent ~ "Ruby") {
+		if (!client.ip ~ whitelist) {
+			return (synth(402, "Access Denied" + client.ip));
 		}
+	}
+	
+# Script kiddies are knocking
+# comment if in use
+	
+	if (req.http.url ~ "/themes/twenty(ten|eleven|thirteen|fourteen|fifteen|sixteen|seventeen|nineteen|twenty)") {
+		return (synth(402, "Access Denied" + client.ip));
+	}
+	
+	
 	# And here is the end
 }

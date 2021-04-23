@@ -156,83 +156,8 @@ sub vcl_recv {
 		) {
 			return(pipe);
 		}
-	
-	# More or less just an example here. 
-	# I'm cleaning bots and knockers using bad bot and 403 VCLs plus Fail2ban
-	#if (client.ip ~ forbidden) {
-	#	return(synth(403, "Forbidden IP"));
-	#}
-	
-	# Who can do BAN, PURGE and REFRESH
-	# Remember to use capitals when doing, size matters...
-	
-	if (req.method == "BAN") {
-		if (!client.ip ~ purge) {
-			return (synth(405, "Banning not allowed for " + client.ip));
-		}
-		ban("obj.http.x-url ~ " + req.http.x-ban-url +
-			" && obj.http.x-host ~ " + req.http.x-ban-host);
-		# Throw a synthetic page so the request won't go to the backend.
-		return(synth(200, "Ban added"));
-	}
-	
-	if (req.method == "PURGE") {
-		if (!client.ip ~ purge) {
-			return (synth(405, "Purging not allowed for " + client.ip));
-		}
-		return (purge);
-	}
-	
-	if (req.method == "REFRESH") {
-		if (!client.ip ~ purge) {
-			return(synth(405, "Refreshing not allowed for " + client.ip));
-		}
-		set req.method = "GET";
-		set req.hash_always_miss = true;
-	}
-
-	# Only deal with "normal" types
-	if (req.method != "GET" &&
-	req.method != "HEAD" &&
-	req.method != "PUT" &&
-	req.method != "POST" &&
-	req.method != "TRACE" &&
-	req.method != "OPTIONS" &&
-	req.method != "PATCH" &&
-	req.method != "DELETE") {
-	# Non-RFC2616 or CONNECT which is weird. */
-	# Why send the packet upstream, while the visitor is using a non-valid HTTP method? */
-		return(synth(405, "Non-valid HTTP method!"));
-	}
-
-	# Implementing websocket support
-	if (req.http.Upgrade ~ "(?i)websocket") {
-		return(pipe);
-	}
-	
-	# Let's tune up a bit behavior for healthy backends: Cap grace to 5 min
-	if (std.healthy(req.backend_hint)) {
-		set req.grace = 300s;
-	}
-
-	# Fix Wordpress visual editor issues, must be the first one as url requests to work
-	if (req.url ~ "/wp-(login|admin|comments-post.php|cron)" || req.url ~ "preview=true") {
-		return (pass);
-	}
-	
-	# Let's help MediaWiki cache by responsive skins
-	# I don't have MediaWiki on backend nowadays
-	#unset req.http.x-wap; # Requester shouldn't be allowed to supply arbitrary X-WAP header
-	#if(req.http.User-Agent ~ "(?i)^(lg-|sie-|nec-|lge-|sgh-|pg-)|(mobi|240x240|240x320|320x320|alcatel|android|audiovox|bada|benq|blackberry|cdm-|compal-|docomo|ericsson|hiptop|htc[-_]|huawei|ipod|kddi-|kindle|meego|midp|mitsu|mmp\/|mot-|motor|ngm_|nintendo|opera.m|palm|panasonic|philips|phone|playstation|portalmmm|sagem-|samsung|sanyo|sec-|sendo|sharp|softbank|symbian|teleca|up.browser|webos)") {
-	#	set req.http.x-wap = "no";
-	#}
-	#if(req.http.Cookie ~ "mf_useformat=") {
-		# This means user clicked on Toggle link "Mobile view" in the footer.
-		# Inform vcl_hash() that this should be cached as mobile page.
-	#	set req.http.x-wap = "no";
-	#}
-
-	## Let's clean up some trashes
+		
+	## Before anything else we clean up some trashes
 	
 		# Technical probes, so let them at large
 		# These are useful and we want to know if backend is working etc.
@@ -316,6 +241,81 @@ sub vcl_recv {
 		
 		# Stop bots and knockers seeking holes using 403.vcl
 		call stop_pages;
+	
+		# More or less just an example here. 
+		# I'm cleaning bots and knockers using bad bot and 403 VCLs plus Fail2ban
+		#if (client.ip ~ forbidden) {
+		#	return(synth(403, "Forbidden IP"));
+		#}
+	
+	# Who can do BAN, PURGE and REFRESH
+	# Remember to use capitals when doing, size matters...
+	
+	if (req.method == "BAN") {
+		if (!client.ip ~ purge) {
+			return (synth(405, "Banning not allowed for " + client.ip));
+		}
+		ban("obj.http.x-url ~ " + req.http.x-ban-url +
+			" && obj.http.x-host ~ " + req.http.x-ban-host);
+		# Throw a synthetic page so the request won't go to the backend.
+		return(synth(200, "Ban added"));
+	}
+	
+	if (req.method == "PURGE") {
+		if (!client.ip ~ purge) {
+			return (synth(405, "Purging not allowed for " + client.ip));
+		}
+		return (purge);
+	}
+	
+	if (req.method == "REFRESH") {
+		if (!client.ip ~ purge) {
+			return(synth(405, "Refreshing not allowed for " + client.ip));
+		}
+		set req.method = "GET";
+		set req.hash_always_miss = true;
+	}
+
+	# Only deal with "normal" types
+	if (req.method != "GET" &&
+	req.method != "HEAD" &&
+	req.method != "PUT" &&
+	req.method != "POST" &&
+	req.method != "TRACE" &&
+	req.method != "OPTIONS" &&
+	req.method != "PATCH" &&
+	req.method != "DELETE") {
+	# Non-RFC2616 or CONNECT which is weird. */
+	# Why send the packet upstream, while the visitor is using a non-valid HTTP method? */
+		return(synth(405, "Non-valid HTTP method!"));
+	}
+
+	# Implementing websocket support
+	if (req.http.Upgrade ~ "(?i)websocket") {
+		return(pipe);
+	}
+	
+	# Let's tune up a bit behavior for healthy backends: Cap grace to 5 min
+	if (std.healthy(req.backend_hint)) {
+		set req.grace = 300s;
+	}
+
+	# Fix Wordpress visual editor issues, must be the first one as url requests to work
+	if (req.url ~ "/wp-(login|admin|comments-post.php|cron)" || req.url ~ "preview=true") {
+		return (pass);
+	}
+	
+	# Let's help MediaWiki cache by responsive skins
+	# I don't have MediaWiki on backend nowadays
+	#unset req.http.x-wap; # Requester shouldn't be allowed to supply arbitrary X-WAP header
+	#if(req.http.User-Agent ~ "(?i)^(lg-|sie-|nec-|lge-|sgh-|pg-)|(mobi|240x240|240x320|320x320|alcatel|android|audiovox|bada|benq|blackberry|cdm-|compal-|docomo|ericsson|hiptop|htc[-_]|huawei|ipod|kddi-|kindle|meego|midp|mitsu|mmp\/|mot-|motor|ngm_|nintendo|opera.m|palm|panasonic|philips|phone|playstation|portalmmm|sagem-|samsung|sanyo|sec-|sendo|sharp|softbank|symbian|teleca|up.browser|webos)") {
+	#	set req.http.x-wap = "no";
+	#}
+	#if(req.http.Cookie ~ "mf_useformat=") {
+		# This means user clicked on Toggle link "Mobile view" in the footer.
+		# Inform vcl_hash() that this should be cached as mobile page.
+	#	set req.http.x-wap = "no";
+	#}
 
 		# That's it, no more filtering by user-agent
 		unset req.http.User-Agent;
@@ -337,7 +337,6 @@ sub vcl_recv {
 	# - Moodle dislike Varnish (I have some cookie issues) and Moodle has its own system to cache things
 	# - When a Woocommerce is small and there isn't any real content, Varnish will give only headache
 	# - Matomo is quite dynamic and because there is no other users, Varnish doesn't help a bit
-	
 	if (
 		   req.http.host == "pro.eksis.one" 			# Moodle
 		|| req.http.host == "pro.katiska.info" 			# Moodle
@@ -537,6 +536,30 @@ sub vcl_backend_response {
 		set beresp.ttl = 1y; 
 	}
 	
+	# Old wp-json leak'ish of users
+	if (beresp.status == 404 && bereq.url ~ "/kirjoittaja/") {
+		set beresp.status = 410;
+	}
+	
+	# Stupid knockers
+	# This watches only the root directory and I could use 403.vcl too, but there are just too many incidents
+	# Too bad, but these shows up on logs as 404. not_found_log directive in Nginx doesn't work because of custom 404 page.
+	if (beresp.status == 404 && bereq.url ~ "^\/([a-z0-9_\.-]+).(asp|aspx|php|js|jsp|rar|zip|tar|gz)") {
+		set beresp.status = 666;
+	}
+	
+	# 301 and 410 are quite steady, so let Varnish cache resuls from backend
+	if (beresp.status == 301 && beresp.http.location ~ "^https?://[^/]+/") {
+		set bereq.http.host = regsuball(beresp.http.location, "^https?://([^/]+)/.*", "\1");
+		set bereq.url = regsuball(beresp.http.location, "^https?://([^/]+)", "");
+		return (retry);
+	}
+	
+	if (beresp.status == 410 && beresp.http.location ~ "^https?://[^/]+/") {
+		set bereq.http.host = regsuball(beresp.http.location, "^https?://([^/]+)/.*", "\1");
+		set bereq.url = regsuball(beresp.http.location, "^https?://([^/]+)", "");
+		return (retry);
+	}
 
 	## We are at the end
 	return(deliver);
@@ -551,6 +574,11 @@ sub vcl_deliver {
 	## Damn, backend is down (or the request is not allowed; almost same thing)
 	if (resp.status == 503) {
 		return(restart);
+	}
+	
+	## Knockers with 404 will get error 666
+	if (resp.status == 666) {
+		return(synth(666, "The site is frozen"));
 	}
 
 	## Origin

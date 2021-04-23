@@ -33,15 +33,6 @@ sub vcl_recv {
 		}
 	}
 	
-	# Fix Wordpress visual editor issues, must be the first one as url requests to work
-	if (req.url ~ "/wp-(login|admin|comments-post.php|cron)" || req.url ~ "preview=true") {
-	return (pass);
-	}
-
-#	if (req.url ~ "adurodiel|atmini|jagster|katiska|mkarulinna|osmaja|sinituulia|sumppu|tehtailija") {
-#		return(synth(410, "Gone"));
-#	}
-	
 	# drops stage site totally
 	if (req.url ~ "/stage") {
 		return(pipe);

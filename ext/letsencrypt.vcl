@@ -25,9 +25,11 @@ backend certbot {
 
 sub vcl_recv {
     if (req.url ~ "^/\.well-known/acme-challenge/") {
-        set req.backend_hint = certbot;
-        return(pipe);
-    }
+		if (req.http.User-Agent ~ "Let\'s Encrypt validation server") {
+			set req.backend_hint = certbot;
+			return(pipe);
+		}
+	}
 }
 
 sub vcl_pipe {

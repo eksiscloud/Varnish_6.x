@@ -12,6 +12,7 @@ include "sites-enabled/git.eksis.one.vcl";
 include "sites-enabled/proto.eksis.one.vcl";
 include "sites-enabled/eksis.eu.vcl";
 include "sites-enabled/eksis.dev.vcl";
+include "sites-enabled/sumppu.info.vcl";
 #include "sites-enabled/eksis.xyz.vcl";
 #include "sites-enabled/www.koiranravitsemus.fi.vcl";
 #include "sites-enabled/wiki.koiranterveys.fi.vcl";
