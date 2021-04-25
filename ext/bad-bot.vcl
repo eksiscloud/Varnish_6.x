@@ -99,6 +99,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "Discordbot"
 #		|| req.http.User-Agent ~ "DisqusAdstxtCrawler"
 		|| req.http.User-Agent ~ "Dispatch"
+		|| req.http.User-Agent ~ "DNSResearchBot"
 		|| req.http.User-Agent ~ "DomainStatsBot"
 		|| req.http.User-Agent ~ "Domnutch"
 		|| req.http.User-Agent ~ "DotBot"

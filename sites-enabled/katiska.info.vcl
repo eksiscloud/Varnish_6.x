@@ -9,13 +9,6 @@ sub vcl_recv {
 	# for dumb TCL-proxy uncomment
 	#return(pipe);
 	
-	## just an example. For me Nginx is doing this.
-	## If you are using SSL and it doesn't forward http to https when URL is given without protocol
-	#if ( req.http.X-Forwarded-Proto !~ "(?i)https" ) {
-	#	set req.http.X-Redir-Url = "https://" + req.http.host + req.url;
-	#	return ( synth( 750 ));
-	#}
-	#set req.http.X-Forwarded-Proto = "https";
 	
 	# Normalize hostname to avoid double caching
 	set req.http.host = regsub(req.http.host,
@@ -61,6 +54,7 @@ sub vcl_recv {
 	}
 	
 	# Pass Let's Encrypt
+	# This should not happend because I give a pipeline to UA Let's Encrypt
 	if (req.url ~ "^/\.well-known/acme-challenge/") {
 		return(pass);
 	}

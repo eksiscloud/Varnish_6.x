@@ -16,8 +16,8 @@ vcl 4.1;
 import directors;	# Load the vmod_directors
 import std;			# Load the std, not STD for god sake
 
-# Let's Encrypt
-include "/etc/varnish/ext/letsencrypt.vcl";
+# Let's Encrypt; this was just for Hitch and has nothing to do right now
+#include "/etc/varnish/ext/letsencrypt.vcl";
 
 # Monit
 include "/etc/varnish/ext/monit.vcl";
@@ -31,7 +31,10 @@ include "/etc/varnish/ext/nice-bot.vcl";
 # Stop knocking
 include "/etc/varnish/ext/403.vcl";
 
-# Global redirecting
+# Some will get error 444
+include "/etc/varnish/ext/404-444.vcl";
+
+# Global redirecting if any
 include "/etc/varnish/ext/404.vcl";
 
 # User agent is allowed only from whitelisted IP
@@ -168,6 +171,7 @@ sub vcl_recv {
 			|| req.http.User-Agent ~ "WP Rocket/"
 			|| req.http.User-Agent ~ "UptimeRobot"
 			|| req.http.User-Agent ~ "Matomo"
+			|| req.http.User-Agent ~ "Let's Encrypt validation server"
 			) {
 				return(pipe);
 			}
@@ -536,29 +540,25 @@ sub vcl_backend_response {
 		set beresp.ttl = 1y; 
 	}
 	
-	# Old wp-json leak'ish of users
+	# Old wp-json leak'ish of users/authors. I'm using this only to stop nagging from Bing.
 	if (beresp.status == 404 && bereq.url ~ "/kirjoittaja/") {
 		set beresp.status = 410;
 	}
 	
-	# Stupid knockers
-	# This watches only the root directory and I could use 403.vcl too, but there are just too many incidents
-	# Too bad, but these shows up on logs as 404. not_found_log directive in Nginx doesn't work because of custom 404 page.
-	if (beresp.status == 404 && bereq.url ~ "^\/([a-z0-9_\.-]+).(asp|aspx|php|js|jsp|rar|zip|tar|gz)") {
-		set beresp.status = 666;
-	}
-	
+	# Stupid knockers and 404-444.vcl
+	call endless_void;
+		
 	# 301 and 410 are quite steady, so let Varnish cache resuls from backend
 	if (beresp.status == 301 && beresp.http.location ~ "^https?://[^/]+/") {
 		set bereq.http.host = regsuball(beresp.http.location, "^https?://([^/]+)/.*", "\1");
 		set bereq.url = regsuball(beresp.http.location, "^https?://([^/]+)", "");
-		return (retry);
+		return(retry);
 	}
 	
 	if (beresp.status == 410 && beresp.http.location ~ "^https?://[^/]+/") {
 		set bereq.http.host = regsuball(beresp.http.location, "^https?://([^/]+)/.*", "\1");
 		set bereq.url = regsuball(beresp.http.location, "^https?://([^/]+)", "");
-		return (retry);
+		return(retry);
 	}
 
 	## We are at the end
@@ -576,9 +576,10 @@ sub vcl_deliver {
 		return(restart);
 	}
 	
-	## Knockers with 404 will get error 666
-	if (resp.status == 666) {
-		return(synth(666, "The site is frozen"));
+	## Knockers with 404 will get synthetic error 999
+	## They will be redirected to server IP and getting 444 from there
+	if (resp.status == 999) {
+		return(synth(999, "http://104.248.141.204" + req.url));
 	}
 
 	## Origin
@@ -650,27 +651,26 @@ sub vcl_purge {
 sub vcl_synth {
 
 	## 301/302 redirects using custom status
-	if (resp.status == 720) {
+	#if (resp.status == 720) {
 	# We use this special error status 720 to force redirects with 301 (permanent) redirects
 	# To use this, call the following from anywhere in vcl_recv: return(synth(720, "http://host/new.html"));
+	#	set resp.http.Location = resp.reason;
+	#	set resp.status = 301;
+	#	return(deliver);
+	#} elseif (resp.status == 721) {
+	# And we use error status 721 to force redirects with a 302 (temporary) redirect
+	# To use this, call the following from anywhere in vcl_recv: return(synth(721, "http://host/new.html"));
+	#	set resp.http.Location = resp.reason;
+	#	set resp.status = 302;
+	#	return(deliver);
+	#}
+	
+	if (resp.status == 999) {
+	# I use special error status 999 to force 301 redirects
 		set resp.http.Location = resp.reason;
 		set resp.status = 301;
 		return(deliver);
-	} elseif (resp.status == 721) {
-	# And we use error status 721 to force redirects with a 302 (temporary) redirect
-	# To use this, call the following from anywhere in vcl_recv: return(synth(721, "http://host/new.html"));
-		set resp.http.Location = resp.reason;
-		set resp.status = 302;
-		return(deliver);
 	}
-
-	## Let's force http to https 
-	# I don't need this because Nginx at front of Varnish is redirecting 80 > 443
-#	if (resp.status == 750) {
-#		set resp.status = 301;
-#		set resp.http.Location = req.http.X-Redir-Url;
-#		return(deliver);
-#	}
 	
 	## Custom errors
 		
