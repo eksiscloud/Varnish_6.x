@@ -9,6 +9,12 @@ sub vcl_recv {
 	#return(pass);
 	#return(pipe);
 
+	# Googlebot-Image doesn't follow limits of robots.txt		
+	if (req.http.User-Agent ~ "Googlebot-Image") {
+		if (!req.url ~ "/uploads/|/images/") {
+			return(synth(403, "Forbidden"));
+		} 
+	}
 	
 	# Limit logins by acl whitelist
 	if ( req.url ~ "^/wp-login.php" && !client.ip ~ whitelist ) {

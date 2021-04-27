@@ -1,5 +1,5 @@
 include "sites-enabled/jagster.fi.vcl";
-include "sites-enabled/kaffein.jagster.fi.vcl";
+#include "sites-enabled/kaffein.jagster.fi.vcl";
 include "sites-enabled/katiska.info.vcl";
 include "sites-enabled/humaani.katiska.vcl";
 include "sites-enabled/katti.katiska.vcl";
@@ -9,7 +9,7 @@ include "sites-enabled/proto.katiska.vcl";
 include "sites-enabled/ymparistosuunnittelija.com.vcl";
 include "sites-enabled/eksis.one.vcl";
 include "sites-enabled/git.eksis.one.vcl";
-include "sites-enabled/proto.eksis.one.vcl";
+#include "sites-enabled/proto.eksis.one.vcl";
 include "sites-enabled/eksis.eu.vcl";
 include "sites-enabled/eksis.dev.vcl";
 include "sites-enabled/sumppu.info.vcl";

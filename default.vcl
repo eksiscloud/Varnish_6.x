@@ -19,6 +19,9 @@ import std;			# Load the std, not STD for god sake
 # Let's Encrypt; this was just for Hitch and has nothing to do right now
 #include "/etc/varnish/ext/letsencrypt.vcl";
 
+# CORS
+include "/etc/varnish/ext/cors.vcl";
+
 # Monit
 include "/etc/varnish/ext/monit.vcl";
 
@@ -81,17 +84,22 @@ backend gitea {
 	#.port = "3000";					# Gitea
 }
 
+#backend wiki {
+#	.host = "127.0.0.1";
+#	.port = "82";
+#}
+
 # proto.eksis.one by Discourse
 # Served by Nginx because my VCLs have something wrong
-backend proto {
-	.path = "/var/discourse/shared/proto/nginx.http.sock";
-}
+#backend proto {
+#	.path = "/var/discourse/shared/proto/nginx.http.sock";
+#}
 
 # kaffein.jagster.fi by Discourse
 # Served by Nginx because my VCLs have something wrong
-backend kaffein {
-	.path = "/var/discourse/shared/jagster/nginx.http.sock";
-}
+#backend kaffein {
+#	.path = "/var/discourse/shared/jagster/nginx.http.sock";
+#}
 
 # Only allow purging from specific IPs
 acl purge {
@@ -148,7 +156,8 @@ sub vcl_recv {
 	# return(pipe);
 	
 	
-	### the work starts here
+	### The work starts here
+	
 	
 	## I have strange redirection issue with all wordpresses
 	## Must be a problem with cookies but can't solve it out
@@ -181,10 +190,9 @@ sub vcl_recv {
 		
 		# If you follow robots.txt you aren't a rotten one and Fail2ban doesn't ban you
 		# This bypasses bad bot detection and lets every bots read robots.txt
-		# Commented because Nginx cleans up bots for me and only few useful gets through
-		#if (req.url ~ "^/robots.txt") {
-		#	return(pass);
-		#}
+		if (req.url ~ "^/robots.txt") {
+			return(pass);
+		}
 		
 		# robots.txt offers a honey pot to fail2ban, let's serve it
 		# BTW, it has catched never ever anything
@@ -230,15 +238,8 @@ sub vcl_recv {
 			call foreign_agents;
 		}
 		
-		# Googlebot-Image doesn't follow limits of robots.txt		
-		if (req.http.User-Agent ~ "Googlebot-Image") {
-			if (!req.url ~ "/uploads/|/images/") {
-				return(synth(403, "Forbidden"));
-			} 
-		}
-		
 		# Now we stop known useless ones who's not from whitelisted IPs using bad-bot.vcl
-		# This should not be active if Nginx do what it should do
+		# This should not be active if Nginx do what it should do because I have bot filtering there
 		if (!client.ip ~ whitelist) {
 			call bad_bot_detection;
 		}
@@ -299,44 +300,6 @@ sub vcl_recv {
 		return(pipe);
 	}
 	
-	# Let's tune up a bit behavior for healthy backends: Cap grace to 5 min
-	if (std.healthy(req.backend_hint)) {
-		set req.grace = 300s;
-	}
-
-	# Fix Wordpress visual editor issues, must be the first one as url requests to work
-	if (req.url ~ "/wp-(login|admin|comments-post.php|cron)" || req.url ~ "preview=true") {
-		return (pass);
-	}
-	
-	# Let's help MediaWiki cache by responsive skins
-	# I don't have MediaWiki on backend nowadays
-	#unset req.http.x-wap; # Requester shouldn't be allowed to supply arbitrary X-WAP header
-	#if(req.http.User-Agent ~ "(?i)^(lg-|sie-|nec-|lge-|sgh-|pg-)|(mobi|240x240|240x320|320x320|alcatel|android|audiovox|bada|benq|blackberry|cdm-|compal-|docomo|ericsson|hiptop|htc[-_]|huawei|ipod|kddi-|kindle|meego|midp|mitsu|mmp\/|mot-|motor|ngm_|nintendo|opera.m|palm|panasonic|philips|phone|playstation|portalmmm|sagem-|samsung|sanyo|sec-|sendo|sharp|softbank|symbian|teleca|up.browser|webos)") {
-	#	set req.http.x-wap = "no";
-	#}
-	#if(req.http.Cookie ~ "mf_useformat=") {
-		# This means user clicked on Toggle link "Mobile view" in the footer.
-		# Inform vcl_hash() that this should be cached as mobile page.
-	#	set req.http.x-wap = "no";
-	#}
-
-		# That's it, no more filtering by user-agent
-		unset req.http.User-Agent;
-
-	## Normalize the header, remove the port (in case you're testing this on various TCP ports)
-	set req.http.host = regsub(req.http.host, ":[0-9]+", "");
-	
-	## Setting http headers for backend
-	if (req.restarts == 0) {
-		if (req.http.X-Forwarded-For) {
-			set req.http.X-Forwarded-For =
-			req.http.X-Forwarded-For + " " + client.ip;
-		} else {
-			set req.http.X-Forwarded-For = client.ip;
-		}
-	}
-	
 	## Giving a pipeline to sites that I doesn't want to be under influence of Varnish (except killing the bots)
 	# - Moodle dislike Varnish (I have some cookie issues) and Moodle has its own system to cache things
 	# - When a Woocommerce is small and there isn't any real content, Varnish will give only headache
@@ -350,6 +313,32 @@ sub vcl_recv {
 		) {
 			return(pipe);
 		}
+	
+	# Let's tune up a bit behavior for healthy backends: Cap grace to 5 min
+	if (std.healthy(req.backend_hint)) {
+		set req.grace = 300s;
+	}
+
+	# Fix Wordpress visual editor issues, must be the first one as url requests to work
+	if (req.url ~ "/wp-(login|admin|comments-post.php|cron)" || req.url ~ "preview=true") {
+		return (pass);
+	}
+
+	# That's it, no more filtering by user-agent
+	unset req.http.User-Agent;
+
+	## Normalize the header, remove the port (in case you're testing this on various TCP ports)
+	set req.http.host = regsub(req.http.host, ":[0-9]+", "");
+	
+	## Setting http headers for backend
+	if (req.restarts == 0) {
+		if (req.http.X-Forwarded-For) {
+			set req.http.X-Forwarded-For =
+			req.http.X-Forwarded-For + " " + client.ip;
+		} else {
+			set req.http.X-Forwarded-For = client.ip;
+		}
+	}
 	
 	## Awstats needs the host 
 	# You must add something like this in systemctl edit --full varnishncsa at line StartExec:
@@ -367,7 +356,8 @@ sub vcl_recv {
 		set req.url = regsub(req.url, "\?$", "");
 	}
 
-	## Save Origin in a custom header
+	## Save Origin (for CORS) in a custom header and 
+	## remove Origin from the request so that backend doesn’t add CORS headers.
 	set req.http.X-Saved-Origin = req.http.Origin;
 	unset req.http.Origin;
 
@@ -533,12 +523,20 @@ sub vcl_backend_response {
 		set beresp.keep = 6h;
 	}
 		
-	# I have an issue with one cache-control value 
+	# I have an issue with one cache-control value from WordPress
 	if (bereq.url ~ "/icons\.ttf\?pozjks") {
 		unset beresp.http.set-cookie;
 		set beresp.http.cache-control = "max-age=31536000s";
 		set beresp.ttl = 1y; 
 	}
+	
+	# I tried this with MediaWiki; it did something, but i couldn't put MediaWiki behind Varnish.
+	#if (bereq.http.host ~ "koiranravitsemus.fi") {
+	#	unset beresp.http.cache-control;
+	#	# max-age doesn't go through and I don't know why.
+	#	#set beresp.http.cache-control = "max-age=300s";
+	#	set beresp.ttl = 300s;
+	#}
 	
 	# Old wp-json leak'ish of users/authors. I'm using this only to stop nagging from Bing.
 	if (beresp.status == 404 && bereq.url ~ "/kirjoittaja/") {
@@ -582,17 +580,21 @@ sub vcl_deliver {
 		return(synth(999, "http://104.248.141.204" + req.url));
 	}
 
-	## Origin
+	## MediaWiki doesn't set vary as I want it; this has no point anyway
+	#if (req.http.host ~ "koiranravitsemus.fi") {
+	#	unset resp.http.vary;
+	#	set resp.http.vary = "X-Forwarded-Proto, Accept-Encoding";
+	#}
+
+	## Let's add the origin
+	call cors;
+	
+	# Origin should be in vary too
 	if (resp.http.Vary) {
 		set resp.http.Vary = resp.http.Vary + ",Origin";
 	} else {
 		set resp.http.Vary = "Origin";
 	}
-	
-	## We remove resp.http.x-* HTTP header fields,
-	# because the client doesn't need them
-	unset resp.http.x-url;
-	unset resp.http.x-host;
 
 	## HIT & MISS
 	if (obj.hits > 0) {
@@ -605,11 +607,8 @@ sub vcl_deliver {
 	## Show hit counts (per objecthead)
 	# Same here, something like X-total-hits is just boring
 	set resp.http.Footprint-of-CO2-metric-tons = (obj.hits);
-	
-	## Cookie hits
-    set resp.http.Eaten-ones = req.http.Cookie;
 
-	## Remove some headers:
+	## Remove some headers, because the client doesn't need them
 	unset resp.http.Server;	
 	unset resp.http.X-Powered-By;
 	unset resp.http.X-Varnish;
@@ -617,6 +616,12 @@ sub vcl_deliver {
 	unset resp.http.Via;
 	unset resp.http.Link;
 	unset resp.http.X-Generator;
+	unset resp.http.x-url;
+	unset resp.http.x-host;
+	# these were by MediaWiki
+	#unset resp.http.x-request-id;
+	#unset resp.http.x-frame-options;
+	#unset resp.http.x-content-type-options;
 
 	## Custom headers, not so serious thing 
 	call headers_x;
@@ -671,6 +676,8 @@ sub vcl_synth {
 		set resp.status = 301;
 		return(deliver);
 	}
+	
+	call cors;
 	
 	## Custom errors
 		

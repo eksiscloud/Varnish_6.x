@@ -25,7 +25,14 @@ sub vcl_recv {
 			return(synth(403, "Unauthorized request"));
 		}
 	}
-	
+
+	# Googlebot-Image doesn't follow limits of robots.txt		
+	if (req.http.User-Agent ~ "Googlebot-Image") {
+		if (!req.url ~ "/uploads/|/images/") {
+			return(synth(403, "Forbidden"));
+		} 
+	}
+
 	# drops stage site totally
 	if (req.url ~ "/stage") {
 		return(pipe);

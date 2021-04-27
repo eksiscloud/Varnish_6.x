@@ -18,10 +18,10 @@ sub vcl_recv {
 	# Remove the "has_js" Cookie
 	set req.http.Cookie = regsuball(req.http.Cookie, "has_js=[^;]+(; )?", "");
 
-	# Remove any Google Analytics based Cookies
+	# Remove any Google Analytics and Adsense based Cookies
 	set req.http.Cookie = regsuball(req.http.Cookie, "__utm.=[^;]+(; )?", "");
 	set req.http.Cookie = regsuball(req.http.Cookie, "_ga=[^;]+(; )?", "");
-	set req.http.Cookie = regsuball(req.http.Cookie, "_ga_XVK2PFXMLP=[^;]+(; )?", "");
+	set req.http.Cookie = regsuball(req.http.Cookie, "_ga_=[^;]+(; )?", "");
 	set req.http.Cookie = regsuball(req.http.Cookie, "_gali=[^;]+(; )?", "");
 	set req.http.Cookie = regsuball(req.http.Cookie, "_gid=[^;]+(; )?", "");
 	set req.http.Cookie = regsuball(req.http.Cookie, "utmctr=[^;]+(; )?", "");
@@ -54,6 +54,7 @@ sub vcl_recv {
 
 	# Remove DoubleClick offensive Cookies
 	set req.http.Cookie = regsuball(req.http.Cookie, "__gads=[^;]+(; )?", "");
+	set req.http.Cookie = regsuball(req.http.Cookie, "gadsTEST=[^;]+(; )?", "");
 
 	# Remove the AddThis Cookies
 	set req.http.Cookie = regsuball(req.http.Cookie, "__atuv.=[^;]+(; )?", "");
@@ -87,6 +88,13 @@ sub vcl_recv {
 	#set req.http.Cookie = regsuball(req.http.Cookie, "_t=[^;]+(; )?", "");
 	#set req.http.Cookie = regsuball(req.http.Cookie, "_ws=[^;]+(; )?", "");
 	
+	# MediaWiki
+	if(req.http.Cookie ~ "mf_useformat=") {
+		# This means user clicked on Toggle link "Mobile view" in the footer.
+		# Inform vcl_hash() that this should be cached as mobile page.
+		set req.http.x-wap = "no";
+	}
+	
 	# Let's kill some cookies 
 
 	if (req.http.Cookie ~ "__distillery") {
@@ -102,7 +110,7 @@ sub vcl_recv {
 	}
 	
 	if (req.http.Cookie ~ "_pk_") {
-		unset req.http.Cookie;
+			unset req.http.Cookie;
 	}
 
 	# Are there Cookies left with only spaces or that are empty?

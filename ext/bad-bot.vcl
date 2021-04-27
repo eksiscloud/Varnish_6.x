@@ -115,6 +115,8 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "Exabot"
 		|| req.http.User-Agent ~ "expanseinc"
 		|| req.http.User-Agent ~ "Ezooms"
+		|| req.http.User-Agent ~ "evc-batch"
+		
 		# F
 		|| req.http.User-Agent ~ "Faraday"
 		|| req.http.User-Agent ~ "Foregenix"
@@ -173,6 +175,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "Ktor"
 		|| req.http.User-Agent ~ "kubectl"						# malicious
 		# L
+		|| req.http.User-Agent ~ "l9explore"
 		|| req.http.User-Agent ~ "Lavf"
 		|| req.http.User-Agent ~ "Leap"
 		|| req.http.User-Agent ~ "Liana"
@@ -183,6 +186,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "linkdexbot"
 #		|| req.http.User-Agent ~ "LinkedInBot"					# bad
 		|| req.http.User-Agent ~ "linklooker"
+		|| req.http.User-Agent ~ "Linux Gnu"
 		|| req.http.User-Agent ~ "ListenNotes"
 		|| req.http.User-Agent ~ "Lycos"
 		# M
