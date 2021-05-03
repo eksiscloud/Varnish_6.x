@@ -7,7 +7,7 @@ sub vcl_recv {
 	# Enable smart refreshing
 	# Remember your header Cache-Control must be set something else than no-cache
 	# Otherwise everything will miss
-	if (req.http.Cache-Control ~ "no-cache" && client.ip ~ purge) {
+	if (req.http.Cache-Control ~ "no-cache" && (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ purge)) {
 		set req.hash_always_miss = true;
 	}
 	

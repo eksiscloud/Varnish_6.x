@@ -6,7 +6,7 @@ sub vcl_recv {
   # Change this URL to something that will NEVER be a real URL for the hosted
   # site, it will be effectively inaccessible.
 
-  if (req.url == "/monit-zxcvb") {
+  if (req.url == "^/monit-zxcvb") {
    return(synth(200, "OK"));
   }
 }

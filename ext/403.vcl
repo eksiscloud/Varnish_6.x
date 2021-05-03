@@ -10,7 +10,7 @@ sub stop_pages {
 	   req.url ~ "^//"
 	|| req.url ~ "^/[1-9]/"
 	|| req.url ~ "^/[1-9][1-9][1-9][1-9]/"
-	|| req.url ~ "^/[a-z]/"
+#	|| req.url ~ "^/[a-z]/"
 		# Plugins /wp-content/plugins
 	|| req.url ~ "/cherry-plugin/"
 	|| req.url ~ "/ct-ultimate-gdpr/"
@@ -22,6 +22,7 @@ sub stop_pages {
 	|| req.url ~ "/official-facebook-pixel/"
 	|| req.url ~ "/sf-booking/"
 	|| req.url ~ "/SimplePie/"
+	|| req.url ~ "/store-locator-le/"
 	|| req.url ~ "/super-forms/"
 	|| req.url ~ "/woocommerce-upload-files/"
 	|| req.url ~ "/worprees-plugin-bug-dar/"
@@ -76,8 +77,9 @@ sub stop_pages {
 	|| req.url ~ "\.aspx"
 	|| req.url ~ "Account/ValidateCode/"
 	|| req.url ~ "Account/LoginToIbo"
+	|| req.url ~ "^/actuator/"
 	|| req.url ~ "^/adform/"				# ad company, bot is using regular UA
-	|| req.url ~ "^/Admin/"
+	|| req.url ~ "^/Admin"
 	|| req.url ~ "^/administrator/"
 	|| req.url ~ "^/air-venturi-controls"
 	|| req.url ~ "^/ajax/"
@@ -86,7 +88,7 @@ sub stop_pages {
 	|| req.url ~ "^/app/"
 	|| req.url ~ "^/apply"
 	|| req.url ~ "^/archive/"
-	|| req.url ~ "^/assets/"
+#	|| req.url ~ "^/assets/"
 	|| req.url ~ "^/at-domino"
 	|| req.url ~ "^/at-grizzle-suvi-lehto"
 	|| req.url ~ "^/atutor"
@@ -102,6 +104,7 @@ sub stop_pages {
 	|| req.url ~ "^/blog/"
 	|| req.url ~ "^/blogs/"
 	|| req.url ~ "BlogTypeView.do"
+	|| req.url ~ "/boaform/"
 	|| req.url ~ "/brandfolder/"
 		# C
 	|| req.url ~ "^/cache/accesson.php"
@@ -109,6 +112,7 @@ sub stop_pages {
 	|| req.url ~ "/catalog/bedding-bed-bath.jsp"
 	|| req.url ~ "^/CFIDE/"
 	|| req.url ~ "^/cgi-bin/config.exp"
+	|| req.url ~ "^/checkout/"
 	|| req.url ~ "^/cgi-bin/test-cgi"
 	|| req.url ~ "^/cms/"
 	|| req.url ~ "^/codes$"
@@ -169,6 +173,7 @@ sub stop_pages {
 	|| req.url ~ "^/horde/"
 	|| req.url ~ "ht.access"
 	|| req.url ~ "/htmlV/"
+	|| req.url ~ "^/hudson"
 		# I
 	|| req.url ~ "^/i/"
 	|| req.url ~ "/_input_3_vuln.htm"
@@ -200,10 +205,13 @@ sub stop_pages {
 	|| req.url ~ "/themes/loader.php"
 	|| req.url ~ "^/\.local"
 	|| req.url ~ "login.action"
+	|| req.url ~ "login.asp"
 	|| req.url ~ "login.cgi"
 	|| req.url ~ "/login\?from"
+	|| req.url ~ "login.jsp"
 	|| req.url ~ "^/v/user/login"
 	|| req.url ~ "^/lostpassword"
+	|| req.url ~ "^/lucee/"
 	|| req.url ~ "/luci"
 	|| req.url ~ "^/lwes/"
 		# M
@@ -217,10 +225,11 @@ sub stop_pages {
 	|| req.url ~ "^/__media__//"
 	|| req.url ~ "^/medias$"
 	|| req.url ~ "/media-library-assistant/"
+	|| req.url ~ "/mifs/"
 	|| req.url ~ "^/misc/"
 	|| req.url ~ "^/modules/"
-	|| req.url ~ "^/myadmin/print.css"
-	|| req.url ~ "^/mysql/print.css"
+	|| req.url ~ "^/myadmin/"
+	|| req.url ~ "^/mysql/"
 	|| req.url ~ "mysql.sql"
 		# N
 	|| req.url ~ "^/new/"
@@ -248,6 +257,7 @@ sub stop_pages {
 	|| req.url ~ "/pomo/"
 	|| req.url ~ "/portal/"
 	|| req.url ~ "^/\.production"
+	|| req.url ~ "/PSIGW/"
 	|| req.url ~ "^/pub/"
 	|| req.url ~ "^/public/"
 	|| req.url ~ "^/public_html/"
@@ -292,7 +302,7 @@ sub stop_pages {
 	|| req.url ~ "^/shell"
 	|| req.url ~ "^/shop/"
 	|| req.url ~ "^/statics/"
-	|| req.url ~ "^/site/"
+#	|| req.url ~ "^/site/"
 	|| req.url ~ "/site.sql"
 	|| req.url ~ "^/sites/"
 	|| req.url ~ "^/skin/"
@@ -321,6 +331,7 @@ sub stop_pages {
 	|| req.url ~ "/theplus_elementor_addon/"
 	|| req.url ~ "^/tmp/"
 	|| req.url ~ "/toutu/"
+	|| req.url ~ "^/TP/"
 		# U
 	|| req.url ~ "/_ui/"
 	|| req.url ~ "/upgrade/myaccount/order_status_login.jsp"
@@ -339,6 +350,7 @@ sub stop_pages {
 	|| req.url ~ "^/webshop/"
 	|| req.url ~ "^/website/"
 	|| req.url ~ "\.well-known/autoconfig/mail/config-v1.1.xml"
+	|| req.url ~ "^/w00tw00t"
 	|| req.url ~ "^/wordpress/"
 	|| req.url ~ "/wordpress/wp-admin/"
 	|| req.url ~ "/wordpress/wp-login.php"
@@ -364,11 +376,15 @@ sub stop_pages {
 		# X 
 	|| req.url ~ "^/x.htm"
 		# Y
+	|| req.url ~ "^/YMfQ"
 	|| req.url ~ "^/yts/"
 		# Z
 	) {
-		return(synth(666, "The site is frozen"));
-		}
+	#if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ ipslist) {
+	#	return(synth(666, "The site is unreachable"));
+	#	}
+		return(synth(403, "Security issue"));
+	}
 		
 	# Fake referers
 	# These shouldn't be active, because nginx is taking care of them
@@ -415,8 +431,8 @@ sub stop_pages {
 		|| req.http.Referer ~ "almatatour.com"
 		|| req.http.Referer ~ "etrafika.net"
 		) {
-			return(synth(666, "The site is unreachable"));
-			}
+			return(synth(666, "The site is frozen"));
+		}
 
 
 ## These are per domain when I can't use generic ones

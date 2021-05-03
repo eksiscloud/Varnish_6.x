@@ -19,6 +19,9 @@ import std;			# Load the std, not STD for god sake
 # Let's Encrypt; this was just for Hitch and has nothing to do right now
 #include "/etc/varnish/ext/letsencrypt.vcl";
 
+# Probes and similar good stuff
+include "/etc/varnish/ext/probes.vcl";
+
 # CORS
 include "/etc/varnish/ext/cors.vcl";
 
@@ -97,14 +100,21 @@ backend gitea {
 
 # kaffein.jagster.fi by Discourse
 # Served by Nginx because my VCLs have something wrong
-#backend kaffein {
-#	.path = "/var/discourse/shared/jagster/nginx.http.sock";
-#}
+backend kaffein {
+	.path = "/var/discourse/shared/jagster/nginx.http.sock";
+}
+
+## ACLs: I can't use client.ip because it is alwaus 127.0.0.1 because of Nginx (or any proxy like Apache2)
+## It have to be like (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist)
 
 # Only allow purging from specific IPs
 acl purge {
 	"localhost";
 	"127.0.0.1";
+	"84.231.164.255";
+	"104.248.141.204";
+	"64.225.73.149";
+	"138.68.111.130";
 }
 
 # This can do almost everything
@@ -114,8 +124,81 @@ acl whitelist {
 	"127.0.0.1";
 	"84.231.164.255";
 	"104.248.141.204";
-	"64.225.73.149";
+	#"64.225.73.149";
 	"138.68.111.130";
+}
+
+# Mostly finnish ISPs that can't be banned by Fail2ban
+acl isplist {
+	#"84.231.164.255";
+	"37.33.128.0"/17;
+	"37.219.0.0"/17;
+	"37.219.128.0"/17;
+	"46.132.0.0"/17;
+	"66.220.144.0"/20;
+	"78.27.64.0"/19;
+	"80.220.0.0"/16;
+	"80.222.0.0"/15;
+	"83.245.224.0"/21;
+	"84.248.0.0"/15; 
+	"84.250.0.0"/15;
+	"84.253.192.0"/19;
+	"85.76.16.0"/21;
+	"85.76.40.0"/21;
+	"85.76.48.0"/21;
+	"85.76.72.0"/21;
+	"85.76.8.0"/21;
+	"85.76.32.0"/21;
+	"85.76.64.0"/21;
+	"85.76.104.0"/21;
+	"85.76.112.0"/21;
+	"85.76.128.0"/21;
+	"85.76.136.0"/21;
+	"85.76.144.0"/21;
+	"86.114.192.0"/18;
+	"87.95.0.0"/17;
+	"88.193.0.0"/16;
+	"89.27.96.0"/21;
+	"91.152.0.0"/16;
+	"91.155.0.0"/16;
+	"91.159.0.0"/16;
+	"93.106.0.0"/17;
+	"93.106.128.0"/18;
+	"95.214.64.0"/24;
+	"109.240.128.0"/17;
+	"176.93.128.0"/17;
+	"188.238.128.0"/17;
+	"194.111.82.0"/23;
+	"207.241.224.0"/20;
+}
+
+# UptimeRobot should be whitelisted
+acl uptime {
+	"69.162.124.224"/28;
+	"63.143.42.240"/28;
+	"216.245.221.80"/28;
+	"208.115.199.16"/28;
+	"104.131.107.63";
+	"122.248.234.23";
+	"128.199.195.156";
+	"138.197.150.151";
+	"139.59.173.249";
+	"146.185.143.14";
+	"159.203.30.41";
+	"159.89.8.111";
+	"165.227.83.148";
+	"178.62.52.237";
+	"18.221.56.27";
+	"167.99.209.234";
+	"216.144.250.150";
+	"34.233.66.117";
+	"46.101.250.135";
+	"46.137.190.132";
+	"52.60.129.180";
+	"54.64.67.106";
+	"54.67.10.127";
+	"54.79.28.129";
+	"54.94.142.218";
 }
 
 # I'm using this sometimes for testing purposes
@@ -158,9 +241,11 @@ sub vcl_recv {
 	
 	### The work starts here
 	
+	## You never know if this is needed
+	set req.http.X-Agent = req.http.User-Agent;
 	
-	## I have strange redirection issue with all wordpresses
-	## Must be a problem with cookies but can't solve it out
+	## I have strange redirection issue with all WordPresses
+	## Must be a problem with cookies but I can't solve it out
 	## So, I'm taking a short road here
 	if (
 		   req.url ~ "&_wpnonce"
@@ -169,27 +254,17 @@ sub vcl_recv {
 			return(pipe);
 		}
 		
-	## Before anything else we clean up some trashes
+	## Before anything I must clean up some trashes
 	
-		# Technical probes, so let them at large
-		# These are useful and we want to know if backend is working etc.
-		if (
-			   req.http.User-Agent == "KatiskaWarmer"
-			|| req.http.User-Agent == "Varnish Health Probe"
-			|| req.http.User-Agent ~ "Monit"
-			|| req.http.User-Agent ~ "WP Rocket/"
-			|| req.http.User-Agent ~ "UptimeRobot"
-			|| req.http.User-Agent ~ "Matomo"
-			|| req.http.User-Agent ~ "Let's Encrypt validation server"
-			) {
-				return(pipe);
-			}
+		# Technical probes, so let them at large using probes.vcl
+		# These are useful and I want to know if backend is working etc.
+		call tech_things;
 		
-		# These are nice bots, so let them through using nice-bot.vcl
+		# These are nice bots, so let them through using nice-bot.vcl and using just one UA
 		call cute_bot_allowance;
 		
 		# If you follow robots.txt you aren't a rotten one and Fail2ban doesn't ban you
-		# This bypasses bad bot detection and lets every bots read robots.txt
+		# This bypasses bad bot detection and lets every bots read robots.txt (if I wouldn't use Nginx...)
 		if (req.url ~ "^/robots.txt") {
 			return(pass);
 		}
@@ -203,53 +278,54 @@ sub vcl_recv {
 		# Extra layer of security to xmlrpc.php 
 		# Now I'm onlyone who can use xmlrpc.php
 		# Commented because Nginx does this for me
-		#if (req.url ~ "^/xmlrpc.php" && !client.ip ~ whitelist) {
-		#	return(synth(423, "Post not allowed for " + client.ip));
+		#if (req.url ~ "^/xmlrpc.php" && std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
+		#	return(synth(423, "Post not allowed for " + req.http.X-Real-IP));
 		#}
 
 		# I need curl every now and then, others not
 		# Commented, because 420.vcl is doing the job
-		#if (req.http.User-Agent ~ "curl/" && !client.ip ~ whitelist) {
+		#if (req.http.User-Agent ~ "curl/" && std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 		#	return(synth(420, "Forbidden Method"));
 		#}
 		
 		# I need libwww-perl too
 		# Commented, because 420.vcl is doing the job
-		#if (req.http.User-Agent ~ "libwww-perl" && !client.ip ~ whitelist) {
+		#if (req.http.User-Agent ~ "libwww-perl" && (req.http.x-ip !~ whitelist)) {
 		#	return(synth(420, "Forbidden Method"));
 		#}
 		
 		# Trying figure out some strange traffic
 		# Basicly, I'll try to find out which service will break down now
 		# case 1
-		if (client.ip ~ target && req.http.User-Agent == "Go-http-client/1.1") {
+		if (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ target && req.http.User-Agent == "Go-http-client/1.1") {
 			return(synth(402, "Denied Access"));
 		}
 		# case 2
-		if (client.ip ~ target && req.http.User-Agent == "^$") {
+		if (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ target && req.http.User-Agent == "^$") {
 			return(synth(402, "Denied Access"));
 		}
 		
 		## Special cases
 
-		# Bots in 420.vcl are using same IP-space every now and then than real users, so I can't ban the IP.
-		# Error 402 doesn't trigger Fail2ban here
-		if (!client.ip ~ whitelist) {
-			call foreign_agents;
-		}
+		# Bots in 420.vcl are using same IP-space every now and then than real users, so I can't ban the IPs.
+		call foreign_agents;
 		
 		# Now we stop known useless ones who's not from whitelisted IPs using bad-bot.vcl
 		# This should not be active if Nginx do what it should do because I have bot filtering there
-		if (!client.ip ~ whitelist) {
+		if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 			call bad_bot_detection;
 		}
 		
 		# Stop bots and knockers seeking holes using 403.vcl
-		call stop_pages;
+		# I don't let search agents and similar to forbidden urls. Otherwise Fail2ban would ban theirs IPs too.
+		# I get error for testing purposes, but Fail2ban has whitelisted my IP.
+		if (!req.http.User-Agent == "Nice bot") {
+			call stop_pages;
+		}
 	
 		# More or less just an example here. 
 		# I'm cleaning bots and knockers using bad bot and 403 VCLs plus Fail2ban
-		#if (client.ip ~ forbidden) {
+		#if (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ forbidden) {
 		#	return(synth(403, "Forbidden IP"));
 		#}
 	
@@ -257,8 +333,8 @@ sub vcl_recv {
 	# Remember to use capitals when doing, size matters...
 	
 	if (req.method == "BAN") {
-		if (!client.ip ~ purge) {
-			return (synth(405, "Banning not allowed for " + client.ip));
+		if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ purge) {
+			return (synth(405, "Banning not allowed for " + req.http.X-Real-IP));
 		}
 		ban("obj.http.x-url ~ " + req.http.x-ban-url +
 			" && obj.http.x-host ~ " + req.http.x-ban-host);
@@ -267,15 +343,15 @@ sub vcl_recv {
 	}
 	
 	if (req.method == "PURGE") {
-		if (!client.ip ~ purge) {
-			return (synth(405, "Purging not allowed for " + client.ip));
+		if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ purge) {
+			return (synth(405, "Purging not allowed for " + req.http.X-Real-IP));
 		}
 		return (purge);
 	}
 	
 	if (req.method == "REFRESH") {
-		if (!client.ip ~ purge) {
-			return(synth(405, "Refreshing not allowed for " + client.ip));
+		if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ purge) {
+			return(synth(405, "Refreshing not allowed for " + req.http.X-Real-IP));
 		}
 		set req.method = "GET";
 		set req.hash_always_miss = true;
@@ -334,9 +410,9 @@ sub vcl_recv {
 	if (req.restarts == 0) {
 		if (req.http.X-Forwarded-For) {
 			set req.http.X-Forwarded-For =
-			req.http.X-Forwarded-For + " " + client.ip;
+			req.http.X-Forwarded-For + " " + req.http.X-Real-IP;
 		} else {
-			set req.http.X-Forwarded-For = client.ip;
+			set req.http.X-Forwarded-For = req.http.X-Real-IP;
 		}
 	}
 	
@@ -386,11 +462,6 @@ sub vcl_recv {
 
 	## Send Surrogate-Capability headers to announce ESI support to backend
 	set req.http.Surrogate-Capability = "key=ESI/1.0";
-	
-	## Needed for Monit
-	if (req.url ~ "/pong") {
-		return(pipe);
-	}
 	
 	## At this point we jump to all-common.vcl
 
@@ -607,6 +678,10 @@ sub vcl_deliver {
 	## Show hit counts (per objecthead)
 	# Same here, something like X-total-hits is just boring
 	set resp.http.Footprint-of-CO2-metric-tons = (obj.hits);
+	
+	## Not too important one, but I use these sometimes for debugging
+	set resp.http.Your-Agent = req.http.X-Agent;
+	set resp.http.Your-IP = req.http.X-Real-IP;
 
 	## Remove some headers, because the client doesn't need them
 	unset resp.http.Server;	
@@ -670,13 +745,6 @@ sub vcl_synth {
 	#	return(deliver);
 	#}
 	
-	if (resp.status == 999) {
-	# I use special error status 999 to force 301 redirects
-		set resp.http.Location = resp.reason;
-		set resp.status = 301;
-		return(deliver);
-	}
-	
 	call cors;
 	
 	## Custom errors
@@ -698,18 +766,25 @@ sub vcl_synth {
 		synthetic(std.fileread("/etc/varnish/error/503.html"));
 		return (deliver);
 	} 
-	
+
+	if (resp.status == 999) {
+	# I use special error status 999 to force 301 redirects
+		set resp.http.Location = resp.reason;
+		set resp.status = 301;
+		return(deliver);
+	}
+
 	# all other errors if any
 	set resp.http.Content-Type = "text/html; charset=utf-8";
 	set resp.http.Retry-After = "5";
 	synthetic( {"<!DOCTYPE html>
 <html>
   <head>
-    <title>"} + resp.status + " " + resp.reason + {"</title>
+    <title>Error "} + resp.status + " " + resp.reason + {"</title>
   </head>
   <body>
     <h1>Error "} + resp.status + " " + resp.reason + {"</h1>
-    <p>"} + resp.reason + {"</p>
+    <p>"} + resp.reason + " for IP " + req.http.X-Real-IP + {"</p>
     <h3>Guru Meditation:</h3>
     <p>XID: "} + req.xid + {"</p>
     <hr>

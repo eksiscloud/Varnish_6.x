@@ -17,7 +17,7 @@ sub vcl_recv {
 	}
 	
 	# Limit logins by acl whitelist
-	if ( req.url ~ "^/wp-login.php" && !client.ip ~ whitelist ) {
+	if ( req.url ~ "^/wp-login.php" && (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) ) {
 		return(synth(403, "Forbidden."));
 	}
 

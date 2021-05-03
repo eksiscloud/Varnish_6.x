@@ -7,8 +7,13 @@ sub cors {
 	}
 	
 	unset req.http.X-Saved-Origin;
-
-
+	
+	# Discourse. Not behind Varnish.
+	#if (req.http.host == "kaffein.jagster.fi") {
+	#	set resp.http.Access-Control-Allow-Credentials = "true";
+	#	set resp.http.Access-Control-Allow-Headers = "Content-Type, Cache-Control, X-Requested-With, X-CSRF-Token, Discourse-Present, User-Api-Key, User-Api-Client-Id, Authorization";
+	#	set resp.http.Access-Control-Allow-Methods = "POST, PUT, GET, OPTIONS, DELETE";
+	#}
 
 		# just examples...
 

@@ -235,7 +235,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "PHist/"
 		|| req.http.User-Agent ~ "Photon/"  					# Automattic
 		|| req.http.User-Agent ~ "PHP/"
-		|| req.http.User-Agent ~ "PHP/{5|6|7}.{3|2}.{1|2|3|4|5|6|7|8|9|0}{1|2|3|4|5|6|7|8|9|0}"
+#		|| req.http.User-Agent ~ "PHP\/[5|6|7].[3|2].[1|2|3|4|5|6|7|8|9|0][1|2|3|4|5|6|7|8|9|0]"
 		|| req.http.User-Agent ~ "pimeyes.com"
 		|| req.http.User-Agent ~ "PocketCasts"
 		|| req.http.User-Agent ~ "Podalong"
@@ -257,7 +257,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "python"
 		|| req.http.User-Agent ~ "Python"
 		# Q
-		|| req.http.User-Agent ~ "Quantcastbot"
+		||req.http.User-Agent ~ "Quantcastbot"
 		|| req.http.User-Agent ~ "Qwantify"
 		# R
 		|| req.http.User-Agent ~ "R6_"
@@ -354,7 +354,6 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "weborama-fetcher"
 		|| req.http.User-Agent ~ "webtech"
 		|| req.http.User-Agent ~ "WebZIP"
-		|| req.http.User-Agent ~ "Wget"
 		|| req.http.User-Agent ~ "Who.is"
 		|| req.http.User-Agent ~ "willnorris"
 		|| req.http.User-Agent ~ "Windows Live Writter"			# malicious
@@ -382,6 +381,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "zoombot"
 		|| req.http.User-Agent ~ "ZoomBot"
 		|| req.http.User-Agent ~ "ZoominfoBot"
+		|| req.http.User-Agent == "Moza"
 		## Others
 		## CFNetwork, Darwin are always bots, but some are useful. 2345Explorer same thing, but practically always harmful
 		## Dalvik is VM of android
@@ -390,13 +390,14 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "Opera/9.80 (Windows NT 5.1; U; en) Presto/2.10.289 Version/12.01"
 #		|| req.http.User-Agent ~ "Safari/14608.5.12 CFNetwork/978.2 Darwin/18.7.0 (x86_64)" #Maybe Apple, it is checking out mostly only touch-icon.png
 		|| req.http.User-Agent ~ "Windows; U; MSIE 9.0; WIndows NT 9.0; de-DE"
+		|| req.http.User-Agent ~ "Mac / Chrome 34"
 #		|| req.http.User-Agent == "Mozilla/5.0(compatible;MSIE9.0;WindowsNT6.1;Trident/5.0)"
 #		|| req.http.User-Agent == "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1)"
 #		|| req.http.User-Agent == "Mozilla/5.0 (Windows NT 6.1; rv:3.4) Goanna/20180327 PaleMoon/27.8.3"
 #		|| req.http.User-Agent == "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.125 Safari/537.36"
 		|| req.http.User-Agent == "Mozilla/5.0 (Windows; U; MSIE 9.0; WIndows NT 9.0; de-DE)"
 #		|| req.http.User-Agent == "Mozilla/5.8"
-		|| req.http.User-Agent ~ "Mozilla/4.0"
+#		|| req.http.User-Agent ~ "Mozilla/4.0"	/* is in 420.vcl */
 		|| req.http.User-Agent ~ "Windows NT 5.1; ru;"
 		|| req.http.User-Agent ~ "Windows NT 5.2"
 #		|| req.http.User-Agent ~ "(Windows NT 6.0)"
@@ -406,10 +407,15 @@ sub bad_bot_detection {
 		|| req.http.User-Agent == "Linux Mozilla"
 		|| req.http.User-Agent ~ "x22Mozilla/5.0"
 		|| req.http.User-Agent ~ "Mozlila"
-		|| req.http.User-Agent == "Moza"
 		) {
-			return(synth(666, "Forbidden Bot"));
-		} 
+			# ISPs of real users can't be banned even somebody is trying funny things
+			# Everybody else will go to hands of Fail2ban
+			if (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ isplist) {
+				return(synth(403, "Forbidden Bot"));
+			} else {
+				return(synth(666, "Forbidden Bot"));
+			}
+		}
 
 		# That's all folk.
 

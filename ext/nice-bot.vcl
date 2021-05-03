@@ -68,9 +68,9 @@ sub cute_bot_allowance {
 		|| req.http.User-Agent ~ "Newsify"
 		) {
 			# For testing purposes I need to identify bots on backend every now and then
-			# set req.http.User-Agent = "Nice bot";
-			unset req.http.User-Agent;
-			}
+			set req.http.User-Agent = "Nice bot";
+			#unset req.http.User-Agent;
+		}
 
 	# That's it, folk
 }

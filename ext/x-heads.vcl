@@ -10,9 +10,9 @@ sub headers_x {
 	set resp.http.Callsign-DB = "Tiitu";
 	set resp.http.UX-Specialist = "Jakke Lehtonen";
 	set resp.http.UX-Home = "https://www.eksis.one/";
-        set resp.http.UX-Meme = "Keep calm and smoke your coffee and drink your smokes - it's just a user";
-        set resp.http.UX-101 = "Good web-pages will die young";
-	set resp.http.Site-Little-Code-Helper = "https://www.eksis.dev/";
+	set resp.http.UX-Meme = "Keep calm and smoke your coffee and drink your smokes - it's just a user";
+	set resp.http.UX-101 = "Good web-pages will die young";
+	set resp.http.Site-Little-Code-Helper = "https://git.eksis.one/";
 	set resp.http.Site-Dog-And-Food = "https://www.katiska.info/";
 	set resp.http.Site-Soft-And-Personal = "https://www.jagster.fi/";
 	set resp.http.Clacks-Overhead = "GNU Terry Pratchett";

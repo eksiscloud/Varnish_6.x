@@ -1,5 +1,5 @@
 include "sites-enabled/jagster.fi.vcl";
-#include "sites-enabled/kaffein.jagster.fi.vcl";
+include "sites-enabled/kaffein.jagster.fi.vcl";
 include "sites-enabled/katiska.info.vcl";
 include "sites-enabled/humaani.katiska.vcl";
 include "sites-enabled/katti.katiska.vcl";

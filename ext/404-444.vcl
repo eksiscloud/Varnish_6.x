@@ -36,7 +36,7 @@ sub endless_void {
 ## And the fun begins
 	
 # Because I'm so lousy at regex, 404-444.vcl will be triggered when this is requested: 
-	if (!bereq.url ~ "/wp-json/caos") {
+	if (!bereq.url ~ "/wp-json/") {
 
 		# This watches only the root directory and some file types
 		if (beresp.status == 404 && bereq.url ~ "^\/([a-z0-9_\.-]+).(asp|aspx|php|js|jsp|rar|zip|tar|gz)") {

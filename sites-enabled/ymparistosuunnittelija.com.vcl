@@ -20,7 +20,7 @@ sub vcl_recv {
 	# Wordpress REST API
 	if (req.url ~ "/wp-json/wp/v2/") {
 		# Whitelisted IP will pass
-		if (client.ip ~ whitelist) {
+		if (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ whitelist) {
 			return(pass);
 		}
 		# Must be logged in

@@ -10,12 +10,25 @@ sub vcl_recv {
 	#return(pass);
 	
 	# Must pipe, otherwise I just can't get Discourse work
-	return(pipe);
+	#return(pipe);
 
-	# Gives error 500
+	# Gives error 500 if pass
+	
+		if (req.url ~ "message-bus") {
+		return(pipe);
+	}
+	
+		# Post requests will not be cached
+	if (req.http.Authorization || req.method == "POST") {
+		return(pipe);
+	}
+	
+	if (req.url ~ "login") {
+		return(pipe);
+	}
 	
 	if (!(req.url ~ "(^/uploads/|^/assets/|^/user_avatar/)" )) {
-			return (pass);
+		return(pipe);
 	}
 	
 	# Something like this gives error 500 too
@@ -28,18 +41,13 @@ sub vcl_recv {
 		return(pass);
 	}
 
-	if (req.url ~ "message-bus") {
-		return(pass);
-	}
+
 
 	if (req.url ~ "review") {
 		return(pass);
 	}
 	
-	# Post requests will not be cached
-	if (req.http.Authorization || req.method == "POST") {
-		return(pass);
-	}
+
 	
 	# Do not cache AJAX requests.
 	if (req.http.X-Requested-With == "XMLHttpRequest") {
