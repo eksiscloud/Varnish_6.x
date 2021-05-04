@@ -57,6 +57,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "BDCbot"
 		|| req.http.User-Agent ~ "bidswitchbot"					# bad
 		|| req.http.User-Agent ~ "Bidtellect"
+		|| req.http.User-Agent ~ "BingPreview"
 		|| req.http.User-Agent ~ "Blackboard Safeassign"
 		|| req.http.User-Agent ~ "BLEXBot"
 		|| req.http.User-Agent ~ "Bloglines"
@@ -118,6 +119,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "evc-batch"
 		
 		# F
+		|| req.http.User-Agent ~ "Facebot Twitterbot"
 		|| req.http.User-Agent ~ "Faraday"
 		|| req.http.User-Agent ~ "Foregenix"
 		|| req.http.User-Agent ~ "fr-crawler"
@@ -200,6 +202,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "MixnodeCache"
 		|| req.http.User-Agent ~ "MJ12bot"						# good
 #		|| req.http.User-Agent ~ "ms-office"
+		|| req.http.User-Agent ~ "MSOffice 16"
 #		|| req.http.User-Agent ~ "MojeekBot"
 #		|| req.http.User-Agent ~ "MozacFetch"
 		|| req.http.User-Agent ~ "MTRobot"
@@ -221,7 +224,7 @@ sub bad_bot_detection {
 		# O
 		|| req.http.User-Agent ~ "oBot"
 		|| req.http.User-Agent ~ "observer"
-#		|| req.http.User-Agent ~ "okhttp"
+		|| req.http.User-Agent ~ "okhttp"
 		|| req.http.User-Agent ~ "oncrawl.com"
 		|| req.http.User-Agent ~ "Orucast"
 		|| req.http.User-Agent ~ "OwlTail"
@@ -391,6 +394,7 @@ sub bad_bot_detection {
 #		|| req.http.User-Agent ~ "Safari/14608.5.12 CFNetwork/978.2 Darwin/18.7.0 (x86_64)" #Maybe Apple, it is checking out mostly only touch-icon.png
 		|| req.http.User-Agent ~ "Windows; U; MSIE 9.0; WIndows NT 9.0; de-DE"
 		|| req.http.User-Agent ~ "Mac / Chrome 34"
+		|| req.http.User-Agent ~ "Mozilla \/4\.0"
 #		|| req.http.User-Agent == "Mozilla/5.0(compatible;MSIE9.0;WindowsNT6.1;Trident/5.0)"
 #		|| req.http.User-Agent == "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1)"
 #		|| req.http.User-Agent == "Mozilla/5.0 (Windows NT 6.1; rv:3.4) Goanna/20180327 PaleMoon/27.8.3"
@@ -398,7 +402,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent == "Mozilla/5.0 (Windows; U; MSIE 9.0; WIndows NT 9.0; de-DE)"
 #		|| req.http.User-Agent == "Mozilla/5.8"
 #		|| req.http.User-Agent ~ "Mozilla/4.0"	/* is in 420.vcl */
-		|| req.http.User-Agent ~ "Windows NT 5.1; ru;"
+		|| req.http.User-Agent ~ "Windows NT 5.1\; ru\;"
 		|| req.http.User-Agent ~ "Windows NT 5.2"
 #		|| req.http.User-Agent ~ "(Windows NT 6.0)"
 #		|| req.http.User-Agent == "Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko"
@@ -409,13 +413,27 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "Mozlila"
 		) {
 			# ISPs of real users can't be banned even somebody is trying funny things
-			# Everybody else will go to hands of Fail2ban
-			if (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ isplist) {
-				return(synth(403, "Forbidden Bot"));
+			# Everybody else will go to loving hands of Fail2ban
+			if ((std.ip(req.http.X-Real-IP, "0.0.0.0") ~ isplist) || (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ whitelist)) {
+				return(synth(403, "Access Denied " + req.http.X-Real-IP));
 			} else {
-				return(synth(666, "Forbidden Bot"));
+				return(synth(666, "Forbidden Bot " + req.http.X-Real-IP));
 			}
 		}
+		
+# Allowed only from whitelisted IP, but no bans by Fail2ban either
+# Works only when user agent has not been changed, so this will stop only easy ones
+	if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
+		if (
+			   req.http.User-Agent ~ "curl"
+			|| req.http.User-Agent ~ "wget"
+			|| req.http.User-Agent ~ "libwww-perl"
+			|| req.http.User-Agent ~ "Ruby"
+			) {
+				return (synth(403, "Access Denied " + req.http.X-Real-IP));
+		}
+	}
+
 
 		# That's all folk.
 

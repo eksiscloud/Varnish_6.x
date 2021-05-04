@@ -43,9 +43,6 @@ include "/etc/varnish/ext/404-444.vcl";
 # Global redirecting if any
 include "/etc/varnish/ext/404.vcl";
 
-# User agent is allowed only from whitelisted IP
-include "/etc/varnish/ext/420.vcl";
-
 # Cheshire cat at headers
 include "/etc/varnish/ext/cheshire_cat.vcl";
 
@@ -306,9 +303,6 @@ sub vcl_recv {
 		}
 		
 		## Special cases
-
-		# Bots in 420.vcl are using same IP-space every now and then than real users, so I can't ban the IPs.
-		call foreign_agents;
 		
 		# Now we stop known useless ones who's not from whitelisted IPs using bad-bot.vcl
 		# This should not be active if Nginx do what it should do because I have bot filtering there

@@ -6,6 +6,10 @@ sub cors {
 		set resp.http.Access-Control-Allow-Origin = req.http.X-Saved-Origin;
 	}
 	
+	if (req.http.host ~ "www.katiska.info") {
+		set resp.http.Access-Control-Allow-Origin = "*";
+	}
+	
 	unset req.http.X-Saved-Origin;
 	
 	# Discourse. Not behind Varnish.

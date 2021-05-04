@@ -2,7 +2,7 @@ sub stop_pages {
 
 ## I'm really bad at regex, so heads up
 ## There is a lot WordPress plugins & themes what you might use, so comment those when needed
-## I'm killing most of 404 situations at vcl_backend_response. Here only trying an url triggers the error.
+## I'm killing some of 404 situations at vcl_backend_response. Here only trying an url triggers the error.
 
 #Knock, knock, who's there globally?
 	if (
@@ -30,6 +30,8 @@ sub stop_pages {
 	|| req.url ~ "/wp-db-backup/"
 	|| req.url ~ "/wp-file-manager/"
 	|| req.url ~ "/wp-hotel-booking/"
+		# wp-content/themes
+	|| req.url ~ "/themes/twenty(ten|eleven|thirteen|fourteen|fifteen|sixteen|seventeen|nineteen|twenty)"
 		# /wp-admin/
 	|| req.url ~ "/wp-admin/admin-ajax.php\?action\=revslider_show_image\&img\=../wp-config.php"
 	|| req.url ~ "/wp-admin/asd.php"
@@ -164,6 +166,7 @@ sub stop_pages {
 		# G
 	|| req.url ~ "^/genre/"
 	|| req.url ~ "^/\.git/"
+	|| req.url ~ "^/GponForm/"
 	|| req.url ~ "^/graphql"
 		# H
 	|| req.url ~ "^/heibing"
@@ -337,6 +340,7 @@ sub stop_pages {
 	|| req.url ~ "/upgrade/myaccount/order_status_login.jsp"
 		# V
 #	|| req.url ~ "^/v[1-9]/"
+	|| req.url ~ "/vicidial/"
 	|| req.url ~ "VMobile\ Cheque\ DayBAKIT"
 	|| req.url ~ "^/vpn/"
 	|| req.url ~ "/vuln.htm"
@@ -380,10 +384,11 @@ sub stop_pages {
 	|| req.url ~ "^/yts/"
 		# Z
 	) {
-	#if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ ipslist) {
-	#	return(synth(666, "The site is unreachable"));
-	#	}
-		return(synth(403, "Security issue"));
+		if ((std.ip(req.http.X-Real-IP, "0.0.0.0") ~ isplist) || (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ whitelist)) {
+			return(synth(403, "The site is unreachable"));
+		} else {
+			return(synth(666, "Security issue"));
+		}
 	}
 		
 	# Fake referers
@@ -434,10 +439,11 @@ sub stop_pages {
 			return(synth(666, "The site is frozen"));
 		}
 
-
-## These are per domain when I can't use generic ones
-# Want to visit EksisONE?
-if (req.http.host == "eksis.one" || req.http.host == "www.eksis.one") {
+if ((std.ip(req.http.X-Real-IP, "0.0.0.0") !~ isplist) || (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist)) {
+	## These are per domain when I can't or will not use generic ones
+	
+	# Want to visit EksisONE?
+	if (req.http.host == "eksis.one" || req.http.host == "www.eksis.one") {
 		if (
 			   req.url ~ "/adminer/"
 			|| req.url ~ "^/vendor/"
@@ -448,8 +454,8 @@ if (req.http.host == "eksis.one" || req.http.host == "www.eksis.one") {
 			}
 	}
 	
-# Want to visit Jagster.fi?
-if (req.http.host == "jagster.fi" || req.http.host == "www.jagster.fi") {
+	# Want to visit Jagster.fi?
+	if (req.http.host == "jagster.fi" || req.http.host == "www.jagster.fi") {
 		if (
 			   req.url ~ "/adminer/"
 			|| req.url ~ "^/vendor/"
@@ -460,8 +466,8 @@ if (req.http.host == "jagster.fi" || req.http.host == "www.jagster.fi") {
 			}
 	}
 	
-# Want to visit Katiska.info?
-if (req.http.host == "katiska.info" || req.http.host == "www.katiska.info") {
+	# Want to visit Katiska.info?
+	if (req.http.host == "katiska.info" || req.http.host == "www.katiska.info") {
 		if (
 			   req.url ~ "/adminer/"
 			|| req.http.User-Agent ~ "jetmon"
@@ -472,8 +478,8 @@ if (req.http.host == "katiska.info" || req.http.host == "www.katiska.info") {
 		
 	}
 	
-# Want to visit pro.katiska.info?
-if (req.http.host == "pro.katiska.info") {
+	# Want to visit pro.katiska.info?
+	if (req.http.host == "pro.katiska.info") {
 		if (
 			   req.url ~ "wp-login.php"
 			|| req.url ~ "xmlrpc.php"
@@ -483,8 +489,8 @@ if (req.http.host == "pro.katiska.info") {
 		
 	}
 
-# Want to visit pro.eksis.one?
-if (req.http.host == "pro.eksis.one") {
+	# Want to visit pro.eksis.one?
+	if (req.http.host == "pro.eksis.one") {
 		if (
 			   req.url ~ "wp-login.php"
 			|| req.url ~ "xmlrpc.php"
@@ -493,6 +499,7 @@ if (req.http.host == "pro.eksis.one") {
 			}
 		
 	}
+}
 	
 # will end here
 }
