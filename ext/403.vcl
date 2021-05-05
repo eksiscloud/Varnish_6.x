@@ -31,6 +31,7 @@ sub stop_pages {
 	|| req.url ~ "/wp-file-manager/"
 	|| req.url ~ "/wp-hotel-booking/"
 		# wp-content/themes
+	|| req.url ~ "/themes//themes/sketch/"
 	|| req.url ~ "/themes/twenty(ten|eleven|thirteen|fourteen|fifteen|sixteen|seventeen|nineteen|twenty)"
 		# /wp-admin/
 	|| req.url ~ "/wp-admin/admin-ajax.php\?action\=revslider_show_image\&img\=../wp-config.php"
@@ -145,6 +146,7 @@ sub stop_pages {
 		# E
 	|| req.url ~ "^/ec-js"
 	|| req.url ~ "^/EcNg"
+	|| req.url ~ "^/ecp/"
 	|| req.url ~ "^/edd-api"
 	|| req.url ~ "/engl/slem.php"
 	|| req.url ~ "/\.env"
@@ -236,6 +238,7 @@ sub stop_pages {
 	|| req.url ~ "mysql.sql"
 		# N
 	|| req.url ~ "^/new/"
+	|| req.url ~ "/new_pluginwp.php"
 	|| req.url ~ "^/news/"
 	|| req.url ~ "nmaplowercheck"
 		# O

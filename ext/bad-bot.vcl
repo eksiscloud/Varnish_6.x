@@ -57,7 +57,6 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "BDCbot"
 		|| req.http.User-Agent ~ "bidswitchbot"					# bad
 		|| req.http.User-Agent ~ "Bidtellect"
-		|| req.http.User-Agent ~ "BingPreview"
 		|| req.http.User-Agent ~ "Blackboard Safeassign"
 		|| req.http.User-Agent ~ "BLEXBot"
 		|| req.http.User-Agent ~ "Bloglines"
@@ -119,7 +118,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "evc-batch"
 		
 		# F
-		|| req.http.User-Agent ~ "Facebot Twitterbot"
+#		|| req.http.User-Agent ~ "Facebot Twitterbot"	# When legit it is preview of Apple devices
 		|| req.http.User-Agent ~ "Faraday"
 		|| req.http.User-Agent ~ "Foregenix"
 		|| req.http.User-Agent ~ "fr-crawler"
@@ -401,7 +400,7 @@ sub bad_bot_detection {
 #		|| req.http.User-Agent == "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.125 Safari/537.36"
 		|| req.http.User-Agent == "Mozilla/5.0 (Windows; U; MSIE 9.0; WIndows NT 9.0; de-DE)"
 #		|| req.http.User-Agent == "Mozilla/5.8"
-#		|| req.http.User-Agent ~ "Mozilla/4.0"	/* is in 420.vcl */
+#		|| req.http.User-Agent ~ "Mozilla/4.0"
 		|| req.http.User-Agent ~ "Windows NT 5.1\; ru\;"
 		|| req.http.User-Agent ~ "Windows NT 5.2"
 #		|| req.http.User-Agent ~ "(Windows NT 6.0)"
@@ -421,6 +420,15 @@ sub bad_bot_detection {
 			}
 		}
 		
+# These are legit user agent that is used very often by unwanted bot - like any UAs, though. It is often just picking up applestyle favicon.
+# I have this only for documentation.
+	if (
+		req.http.User-Agent ~ "Facebot Twitterbot"	# Apple's stupid way to identfy devices as bots
+	#Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit/601.2.4 (KHTML, like Gecko) Version/9.0.1 Safari/601.2.4 facebookexternalhit/1.1 Facebot Twitterbot/1.0
+	) {
+		return(synth(403, "Bot detected " + req.http.X-Real-IP));
+	}
+		
 # Allowed only from whitelisted IP, but no bans by Fail2ban either
 # Works only when user agent has not been changed, so this will stop only easy ones
 	if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
@@ -429,6 +437,7 @@ sub bad_bot_detection {
 			|| req.http.User-Agent ~ "wget"
 			|| req.http.User-Agent ~ "libwww-perl"
 			|| req.http.User-Agent ~ "Ruby"
+			#|| req.http.User-Agent ~ "BingPreview"
 			) {
 				return (synth(403, "Access Denied " + req.http.X-Real-IP));
 		}
