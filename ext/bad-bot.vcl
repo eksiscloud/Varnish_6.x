@@ -45,7 +45,6 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "aria2"
 		|| req.http.User-Agent ~ "Asana"
 		|| req.http.User-Agent ~ "AspiegelBot"					# good
-		|| req.http.User-Agent ~ "atc/"
 		|| req.http.User-Agent ~ "AvocetCrawler"
 		|| req.http.User-Agent ~ "AVSearch"
 		|| req.http.User-Agent ~ "AwarioRssBot"					# brand/marketing - done
@@ -423,9 +422,12 @@ sub bad_bot_detection {
 # These are legit user agent that is used very often by unwanted bot - like any UAs, though. It is often just picking up applestyle favicon.
 # I have this only for documentation.
 	if (
-		# Apple's stupid way to identify devices as bots
-		# Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit/601.2.4 (KHTML, like Gecko) Version/9.0.1 Safari/601.2.4 facebookexternalhit/1.1 Facebot Twitterbot/1.0
+			# Apple's stupid way to identify devices as bots
+			# Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit/601.2.4 (KHTML, like Gecko) Version/9.0.1 Safari/601.2.4 facebookexternalhit/1.1 Facebot Twitterbot/1.0
 		req.http.User-Agent ~ "Facebot Twitterbot"
+			# Apple Watch etc.
+			# atc/1.0 watchOS/7.4.1 model/Watch5,9 hwp/t8006 build/18T201 (6; dt:233)
+		|| req.http.User-Agent ~ "atc/"
 	) {
 		if ((std.ip(req.http.X-Real-IP, "0.0.0.0") ~ isplist) || (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ whitelist)) {
 			# This is actually meaningless
