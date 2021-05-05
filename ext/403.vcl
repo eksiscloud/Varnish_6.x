@@ -34,7 +34,7 @@ sub stop_pages {
 	|| req.url ~ "/themes//themes/sketch/"
 	|| req.url ~ "/themes/twenty(ten|eleven|thirteen|fourteen|fifteen|sixteen|seventeen|nineteen|twenty)"
 		# /wp-admin/
-	|| req.url ~ "/wp-admin/admin-ajax.php\?action\=revslider_show_image\&img\=../wp-config.php"
+	#|| req.url ~ "/wp-admin/admin-ajax.php\?action\=revslider_show_image\&img\=../wp-config.php"
 	|| req.url ~ "/wp-admin/asd.php"
 	|| req.url ~ "/wp-admin/class-adminsbar.php"
 	|| req.url ~ "/wp-admin/css/Marvins.php"

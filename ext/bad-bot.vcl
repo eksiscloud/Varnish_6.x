@@ -423,10 +423,17 @@ sub bad_bot_detection {
 # These are legit user agent that is used very often by unwanted bot - like any UAs, though. It is often just picking up applestyle favicon.
 # I have this only for documentation.
 	if (
-		req.http.User-Agent ~ "Facebot Twitterbot"	# Apple's stupid way to identfy devices as bots
-	#Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit/601.2.4 (KHTML, like Gecko) Version/9.0.1 Safari/601.2.4 facebookexternalhit/1.1 Facebot Twitterbot/1.0
+		# Apple's stupid way to identify devices as bots
+		# Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit/601.2.4 (KHTML, like Gecko) Version/9.0.1 Safari/601.2.4 facebookexternalhit/1.1 Facebot Twitterbot/1.0
+		req.http.User-Agent ~ "Facebot Twitterbot"
 	) {
-		return(synth(403, "Bot detected " + req.http.X-Real-IP));
+		if ((std.ip(req.http.X-Real-IP, "0.0.0.0") ~ isplist) || (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ whitelist)) {
+			# This is actually meaningless
+			set req.http.User-Agent = "Apple/preview";	
+		} else {
+			# if not from domestic/whitelisted IP, there is a big chance it is a bot; foreigners still can use sites, but not get preview to Apple devices
+			return(synth(403, "Bot detected " + req.http.X-Real-IP));
+		}
 	}
 		
 # Allowed only from whitelisted IP, but no bans by Fail2ban either
