@@ -19,13 +19,13 @@ sub bad_bot_detection {
 		|| req.http.User-Agent == "-"							# because I couldn't success with LUA
 		# #
 		|| req.http.User-Agent ~ "360Spider"					# bad 		- done
-		|| req.http.User-Agent ~ "2345Explorer"					# malicious - done
+		|| req.http.User-Agent ~ "2345Explorer"				# malicious - done
 		# A 
 		|| req.http.User-Agent ~ "Acast "						# bad 		- done
 		|| req.http.User-Agent ~ "Accept-Encoding"
 		|| req.http.User-Agent ~ "AccompanyBot"
 		|| req.http.User-Agent ~ "AdAuth"						# bad 		- done
-		|| req.http.User-Agent ~ "adidxbot"						# good
+		|| req.http.User-Agent ~ "adidxbot"					# good
 		|| req.http.User-Agent ~ "admantx"						# bad 		- done
 		|| req.http.User-Agent ~ "Adsbot/"
 		|| req.http.User-Agent ~ "AdsTxtCrawler"				# bad 		- done
@@ -47,21 +47,21 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "AspiegelBot"					# good
 		|| req.http.User-Agent ~ "AvocetCrawler"
 		|| req.http.User-Agent ~ "AVSearch"
-		|| req.http.User-Agent ~ "AwarioRssBot"					# brand/marketing - done
+		|| req.http.User-Agent ~ "AwarioRssBot"				# brand/marketing - done
 		|| req.http.User-Agent ~ "AwarioSmartBot"				# brand/marketing - done
 		|| req.http.User-Agent ~ "axios"						# bad
 		# B
 		|| req.http.User-Agent ~ "Baidu"
 		|| req.http.User-Agent ~ "Barkrowler"
 		|| req.http.User-Agent ~ "BDCbot"
-		|| req.http.User-Agent ~ "bidswitchbot"					# bad
+		|| req.http.User-Agent ~ "bidswitchbot"				# bad
 		|| req.http.User-Agent ~ "Bidtellect"
 		|| req.http.User-Agent ~ "Blackboard Safeassign"
 		|| req.http.User-Agent ~ "BLEXBot"
 		|| req.http.User-Agent ~ "Bloglines"
 		|| req.http.User-Agent ~ "BorneoBot"
 		|| req.http.User-Agent ~ "botify"
-		|| req.http.User-Agent ~ "Buck"							# bad
+		|| req.http.User-Agent ~ "Buck"						# bad
 		|| req.http.User-Agent ~ "BuiltWith"
 		# C
 		|| req.http.User-Agent ~ "CarrierWave"
@@ -76,7 +76,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "checkout-"
 		|| req.http.User-Agent ~ "CISPA"
 		|| req.http.User-Agent ~ "Clarabot"
-		|| req.http.User-Agent ~ "Cliqzbot"						# bad
+		|| req.http.User-Agent ~ "Cliqzbot"					# bad
 		|| req.http.User-Agent ~ "Clone"
 		|| req.http.User-Agent ~ "Cloud mapping experiment"
 		|| req.http.User-Agent ~ "CMS Crawler"
@@ -89,12 +89,13 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "datagnionbot"
 		|| req.http.User-Agent ~ "Datanyze"
 		|| req.http.User-Agent ~ "Dataprovider"
-		|| req.http.User-Agent ~ "Daum"							# bad
+		|| req.http.User-Agent ~ "Daum"						# bad
 		|| req.http.User-Agent ~ "deepcrawl.com"
 		|| req.http.User-Agent ~ "^demo$"
 		|| req.http.User-Agent ~ "DF Bot"
 		|| req.http.User-Agent ~ "digincore"
 		|| req.http.User-Agent ~ "Directo-Indexer"
+		|| req.http.User-Agent ~ "Disqus"
 		|| req.http.User-Agent ~ "Discordbot"
 #		|| req.http.User-Agent ~ "DisqusAdstxtCrawler"
 		|| req.http.User-Agent ~ "Dispatch"
@@ -112,12 +113,13 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "en-US\)"
 		|| req.http.User-Agent ~ "e.ventures"
 		|| req.http.User-Agent ~ "Exabot"
+		|| req.http.User-Agent ~ "Expance"
 		|| req.http.User-Agent ~ "expanseinc"
 		|| req.http.User-Agent ~ "Ezooms"
 		|| req.http.User-Agent ~ "evc-batch"
 		
 		# F
-#		|| req.http.User-Agent ~ "Facebot Twitterbot"	# When legit it is preview of Apple devices
+#		|| req.http.User-Agent ~ "Facebot Twitterbot"			# When legit it is preview of Apple devices
 		|| req.http.User-Agent ~ "Faraday"
 		|| req.http.User-Agent ~ "Foregenix"
 		|| req.http.User-Agent ~ "fr-crawler"
@@ -133,7 +135,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "Go-http-client"				# bad, the most biggest issue and mostly from China and arabic countries
 		|| req.http.User-Agent ~ "^got "
 		|| req.http.User-Agent ~ "GotSiteMonitor"
-		|| req.http.User-Agent ~ "GrapeshotCrawler"				# bad
+		|| req.http.User-Agent ~ "GrapeshotCrawler"			# bad
 		|| req.http.User-Agent ~ "GRequests"
 		|| req.http.User-Agent ~ "GT-C3595"
 		|| req.http.User-Agent ~ "GuzzleHttp"
@@ -151,7 +153,7 @@ sub bad_bot_detection {
 		# I
 		|| req.http.User-Agent ~ "IAB ATQ"
 		|| req.http.User-Agent ~ "IAS crawler"					# bad
-		|| req.http.User-Agent ~ "ias-"							# bad
+		|| req.http.User-Agent ~ "ias-"						# bad
 		|| req.http.User-Agent ~ "import.io"
 		|| req.http.User-Agent ~ "Incutio"
 		|| req.http.User-Agent ~ "INGRID/"
@@ -180,7 +182,6 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "Leap"
 		|| req.http.User-Agent ~ "Liana"
 		|| req.http.User-Agent ~ "LieBaoFast"					# bad
-		|| req.http.User-Agent ~ "LightSpeed"
 		|| req.http.User-Agent ~ "LightspeedSystemsCrawler"
 		|| req.http.User-Agent ~ "Linguee"
 		|| req.http.User-Agent ~ "linkdexbot"
@@ -188,6 +189,8 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "linklooker"
 		|| req.http.User-Agent ~ "Linux Gnu"
 		|| req.http.User-Agent ~ "ListenNotes"
+		|| req.http.User-Agent ~ "ltx71"
+		|| req.http.User-Agent ~ "Luminary"
 		|| req.http.User-Agent ~ "Lycos"
 		# M
 		|| req.http.User-Agent ~ "magpie-crawler"
@@ -214,7 +217,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "NetSystemsResearch"
 		|| req.http.User-Agent ~ "Nextcloud"
 		|| req.http.User-Agent ~ "newspaper"					# python3
-		|| req.http.User-Agent ~ "Nimbostratus-Bot"				# bad
+		|| req.http.User-Agent ~ "Nimbostratus-Bot"			# bad
 		|| req.http.User-Agent ~ "Nmap Scripting Engine"
 		|| req.http.User-Agent ~ "node-fetch"					# malicious
 		|| req.http.User-Agent ~ "NRCAudioBot"
@@ -231,12 +234,11 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "Pandalytics"
 		|| req.http.User-Agent ~ "panscient.com"
 		|| req.http.User-Agent ~ "PaperLiBot"
-		|| req.http.User-Agent ~ "PetalBot"						# same as AspiegelBot
+		|| req.http.User-Agent ~ "PetalBot"					# same as AspiegelBot
 		|| req.http.User-Agent ~ "PhantomJS"
 		|| req.http.User-Agent ~ "PHist/"
 		|| req.http.User-Agent ~ "Photon/"  					# Automattic
 		|| req.http.User-Agent ~ "PHP/"
-#		|| req.http.User-Agent ~ "PHP\/[5|6|7].[3|2].[1|2|3|4|5|6|7|8|9|0][1|2|3|4|5|6|7|8|9|0]"
 		|| req.http.User-Agent ~ "pimeyes.com"
 		|| req.http.User-Agent ~ "PocketCasts"
 		|| req.http.User-Agent ~ "Podalong"
@@ -253,7 +255,8 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "Podyssey"
 		|| req.http.User-Agent ~ "Poster"						# malicious
 		|| req.http.User-Agent ~ "print\("						# malicious
-		|| req.http.User-Agent ~ "proximic"						# bad, really big issue, mostly from Amazon
+		|| req.http.User-Agent ~ "project-resonance"
+		|| req.http.User-Agent ~ "proximic"					# bad, really big issue, mostly from Amazon
 		|| req.http.User-Agent ~ "PulsePoint-Ads.txt-Crawler"
 		|| req.http.User-Agent ~ "python"
 		|| req.http.User-Agent ~ "Python"
@@ -308,7 +311,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "Slack-ImgProxy"
 		|| req.http.User-Agent ~ "Slurp"
 		|| req.http.User-Agent ~ "SMTBot"
-		|| req.http.User-Agent ~ "Snap URL"						# https://support.article
+		|| req.http.User-Agent ~ "Snap URL"					# https://support.article
 		|| req.http.User-Agent ~ "Sodes/"						# podcaster IP 209.6.245.67
 		|| req.http.User-Agent ~ "Sogou"
 		|| req.http.User-Agent ~ "socialmediascanner"
@@ -357,7 +360,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "WebZIP"
 		|| req.http.User-Agent ~ "Who.is"
 		|| req.http.User-Agent ~ "willnorris"
-		|| req.http.User-Agent ~ "Windows Live Writter"			# malicious
+		|| req.http.User-Agent ~ "Windows Live Writter"		# malicious
 		|| req.http.User-Agent == "Wordpress"					# malicious
 		|| req.http.User-Agent ~ "Wordpress.com"
 		|| req.http.User-Agent ~ "wp.com"
@@ -367,7 +370,6 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "XoviBot"
 		|| req.http.User-Agent ~ "xpymep"
 		# Y
-		|| req.http.User-Agent ~ "YaBrowser"					# bad
 		|| req.http.User-Agent ~ "yacubot"
 		|| req.http.User-Agent ~ "YahooSeeker"
 		|| req.http.User-Agent ~ "YaK"							# bad
@@ -410,9 +412,13 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "x22Mozilla/5.0"
 		|| req.http.User-Agent ~ "Mozlila"
 		) {
-			# ISPs of real users can't be banned even somebody is trying funny things
+			# First I normalize UAs to be on safe side
+			set req.http.User-Agent = "Bad bot";
+			set req.http.x-bot = "bad";
+			# My sites are in finnish so I can't ban finnish IPs or IPs using off-shore finnish folk
+			# And yes, I know this isn't reliable solution. But hey... don't use fake UAs
 			# Everybody else will go to loving hands of Fail2ban
-			if ((std.ip(req.http.X-Real-IP, "0.0.0.0") ~ isplist) || (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ whitelist)) {
+			if (req.http.X-Country-Code ~ "fi" || req.http.x-language ~ "fi") {
 				return(synth(403, "Access Denied " + req.http.X-Real-IP));
 			} else {
 				return(synth(666, "Forbidden Bot " + req.http.X-Real-IP));
@@ -421,38 +427,38 @@ sub bad_bot_detection {
 		
 # These are legit user agent that is used very often by unwanted bot - like any UAs, though. It is often just picking up applestyle favicon.
 # I have this only for documentation.
-	if (
-			# Apple's stupid way to identify devices as bots
-			# Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit/601.2.4 (KHTML, like Gecko) Version/9.0.1 Safari/601.2.4 facebookexternalhit/1.1 Facebot Twitterbot/1.0
-		req.http.User-Agent ~ "Facebot Twitterbot"
-			# Apple Watch etc.
-			# atc/1.0 watchOS/7.4.1 model/Watch5,9 hwp/t8006 build/18T201 (6; dt:233)
-		|| req.http.User-Agent ~ "atc/"
-	) {
-		if ((std.ip(req.http.X-Real-IP, "0.0.0.0") ~ isplist) || (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ whitelist)) {
-			# This is actually meaningless
-			set req.http.User-Agent = "Apple/preview";	
-		} else {
-			# if not from domestic/whitelisted IP, there is a big chance it is a bot; foreigners still can use sites, but not get preview to Apple devices
-			return(synth(403, "Bot detected " + req.http.X-Real-IP));
-		}
-	}
+#	if (
+#			# Apple's stupid way to identify devices as bots
+#			# Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit/601.2.4 (KHTML, like Gecko) Version/9.0.1 Safari/601.2.4 facebookexternalhit/1.1 Facebot Twitterbot/1.0
+#		req.http.User-Agent ~ "Facebot Twitterbot"
+#			# Apple Watch etc.
+#			# atc/1.0 watchOS/7.4.1 model/Watch5,9 hwp/t8006 build/18T201 (6; dt:233)
+#		|| req.http.User-Agent ~ "atc/"
+#			# iPhone etc.
+#			# "Mozilla/5.0 (iPhone; CPU iPhone OS 14_4_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 LightSpeed [FBAN/MessengerLiteForiOS;FBAV/310.0.0.38.116;FBBV/287543612;FBDV/iPhone9,3;FBMD/iPhone;FBSN/iOS;FBSV/14.4.2;FBSS/2;FBCR/;FBID/phone;FBLC/sv;FBOP/0]
+#		|| req.http.User-Agent ~ "LightSpeed"
+#	) {
+#		if ((std.ip(req.http.X-Real-IP, "0.0.0.0") ~ isplist) || (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ whitelist)) {
+#			# This is actually meaningless
+#			set req.http.User-Agent = "Apple/preview";	
+#		} else {
+#			# if not from domestic/whitelisted IP, there is a big chance it is a bot; foreigners still can use sites, but not get preview to Apple devices
+#			return(synth(403, "Bot detected " + req.http.X-Real-IP));
+#		}
+#	}
 		
 # Allowed only from whitelisted IP, but no bans by Fail2ban either
 # Works only when user agent has not been changed, so this will stop only easy ones
-	if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
-		if (
-			   req.http.User-Agent ~ "curl"
-			|| req.http.User-Agent ~ "wget"
-			|| req.http.User-Agent ~ "libwww-perl"
-			|| req.http.User-Agent ~ "Ruby"
-			#|| req.http.User-Agent ~ "BingPreview"
-			) {
-				return (synth(403, "Access Denied " + req.http.X-Real-IP));
+	if (
+		   req.http.User-Agent ~ "curl"
+		|| req.http.User-Agent ~ "wget"
+		|| req.http.User-Agent ~ "libwww-perl"
+		|| req.http.User-Agent ~ "HTTPie"
+		|| req.http.User-Agent ~ "Ruby"
+		) {
+			#set req.http.User-Agent = "libs";
+			return (synth(403, "Access Denied " + req.http.X-Real-IP));
 		}
-	}
-
 
 		# That's all folk.
-
 }    

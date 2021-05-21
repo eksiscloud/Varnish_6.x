@@ -1,3 +1,5 @@
+###### This worked but it didn't exacly what I hoped, so this sub is archived now
+
 sub endless_void {
 
 ## One part of fight against scropt kiddies.
@@ -9,7 +11,7 @@ sub endless_void {
 ## I'm redirecting requests to default virtual host of Nginx and serving error 444 from there.
 ## At same time Fail2ban will ban every request reaching default when a request is using plain IP-address or these redirects.
 ## If I just gives an error after 404 hit, that request shows up in 404-logs like in WordPress because of custom 404 page.
-## log_not_found off; directive works only in the very last point, like when Nginx is serving its own buildin error 404.
+## log_not_found off; directive works only in the very last point, like when Nginx is serving its own building error 404.
 ##
 ## Example of virtual host in Nginx:
 ##
@@ -34,15 +36,30 @@ sub endless_void {
 ##	}
 
 ## And the fun begins
-	
+
 # Because I'm so lousy at regex, 404-444.vcl will be triggered when this is requested: 
-	if (!bereq.url ~ "/wp-json/") {
+	if (bereq.url !~ "/wp-json/") {
 
 		# This watches only the root directory and some file types
-		if (beresp.status == 404 && bereq.url ~ "^\/([a-z0-9_\.-]+).(asp|aspx|php|js|jsp|rar|zip|tar|gz)") {
+		if (beresp.status == 404 && bereq.url ~ "^/([a-z0-9_\.-]+).(asp|aspx|php|js|jsp|rar|zip|tar|gz)") {
 			set beresp.status = 999;
 		}
 		
 	}
 
 }
+
+##### This was at vcl_deliver ########
+
+	if (resp.status == 999) {
+		return(synth(999, "http://104.248.141.204" + req.url));
+	}
+
+###### I had this at vcl_synth  #########
+
+	if (resp.status == 999) {
+	# I use special error status 999 to force 301 redirects
+		set resp.http.Location = resp.reason;
+		set resp.status = 301;
+		return(deliver);
+	}

@@ -1,7 +1,7 @@
 sub cute_bot_allowance {
 
 # Useful bots, spiders etc.
-	if (
+		if (
 		# Google
 		   req.http.User-Agent ~ "APIs-Google"
 		|| req.http.User-Agent ~ "Mediapartners-Google"
@@ -15,62 +15,68 @@ sub cute_bot_allowance {
 		|| req.http.User-Agent ~ "Googlebot-Video"
 		|| req.http.User-Agent ~ "AppEngine-Google" #snapchat
 		|| req.http.User-Agent == "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.246 Mozilla/5.0" # the actual gmail bot
+		) { set req.http.x-bot = "nice"; set req.http.User-Agent = "Google"; }
+		
+		if (
 		# Microsoft
-		|| req.http.User-Agent ~ "Bingbot"
+		req.http.User-Agent ~ "Bingbot"
 		|| req.http.User-Agent ~ "bingbot"
 		|| req.http.User-Agent ~ "msnbot"
-#		|| req.http.User-Agent ~ "BingPreview"
+#		|| req.http.User-Agent ~ "BingPreview"	# done elsewhere
+		) { set req.http.x-bot = "nice"; set req.http.User-Agent = "Bing"; }
+		
+		if (
 		# DuckDuckGo
-		|| req.http.User-Agent ~ "DuckDuckBot"
+		req.http.User-Agent ~ "DuckDuckBot"
 		|| req.http.User-Agent ~ "DuckDuckGo-Favicons-Bot"
-		# Alexa
-		|| req.http.User-Agent ~ "ia_archiver"
+		) { set req.http.x-bot = "nice"; set req.http.User-Agent = "DuckDuckGo"; }
+		
+		if (
 		# Apple
-		|| req.http.User-Agent ~ "Applebot"
+		req.http.User-Agent ~ "Applebot"
 		|| req.http.User-Agent ~ "AppleCoreMedia"
-		|| req.http.User-Agent == "iTMS" # iTunes
+		) { set req.http.x-bot = "nice"; set req.http.User-Agent = "Apple"; }
+		
+		if (
+		req.http.User-Agent == "iTMS" # iTunes
 		|| req.http.User-Agent ~ "Jakarta Commons-HttpClient" #always together with iTMS
 		|| req.http.User-Agent ~ "Podcastit" #Apple Podcast-app
 		|| req.http.User-Agent ~ "iTunes"
-		# Blekko
-		|| req.http.User-Agent ~ "Blekkobot"
+		) { set req.http.x-bot = "nice"; set req.http.User-Agent = "iTunes"; }
+		
+		if (
 		# Facebook
-		|| req.http.User-Agent ~ "externalhit_uatext"
+		req.http.User-Agent ~ "externalhit_uatext"
 		|| req.http.User-Agent ~ "cortex"
 		|| req.http.User-Agent ~ "adreview"
-		# AWS
-		|| req.http.User-Agent == "Amazon Simple Notification Service Agent"
-		|| req.http.User-Agent == "Amazon Music Podcast"
+		) { set req.http.x-bot = "nice"; set req.http.User-Agent = "Facebook"; }
+		
 		# podcasts
-		|| req.http.User-Agent ~ "Spotify"
-		|| req.http.User-Agent ~ "Luminary"
-		|| req.http.User-Agent ~ "StitcherBot"
-		|| req.http.User-Agent ~ "Podcaster"
-		|| req.http.User-Agent ~ "Overcast"
-		|| req.http.User-Agent ~ "Breaker"
-		|| req.http.User-Agent ~ "CastBox"
-		# MeWe
-		|| req.http.User-Agent ~ "^MeWeBot"
+		if (req.http.User-Agent ~ "Spotify") { set req.http.x-bot = "nice"; set req.http.User-Agent = "Spotify"; }
+		if (req.http.User-Agent ~ "StitcherBot") { set req.http.x-bot = "nice"; set req.http.User-Agent = "Stitcher"; }
+		if (req.http.User-Agent ~ "Podcaster") { set req.http.x-bot = "nice"; set req.http.User-Agent = "Podcaster"; }
+		if (req.http.User-Agent ~ "Overcast") { set req.http.x-bot = "nice"; set req.http.User-Agent = "Overcast"; }
+		if (req.http.User-Agent ~ "Breaker") { set req.http.x-bot = "nice"; set req.http.User-Agent = "Breaker"; }
+		if (req.http.User-Agent ~ "CastBox") { set req.http.x-bot = "nice"; set req.http.User-Agent = "CastBox"; }
+		if (req.http.User-Agent == "Amazon Music Podcast") { set req.http.x-bot = "nice"; set req.http.User-Agent = "Amazon Podcast"; }
+		
 		# Others
-		|| req.http.User-Agent ~ "TurnitinBot"
-		|| req.http.User-Agent ~ "special_archiver"
-		|| req.http.User-Agent ~ "archive.org_bot"
-		|| req.http.User-Agent ~ "Feedly"
-		|| req.http.User-Agent ~ "MetaFeedly"
-		|| req.http.User-Agent ~ "Bloglovin"
-		|| req.http.User-Agent ~ "Moodlebot"
-		|| req.http.User-Agent ~ "TelegramBot"
-		|| req.http.User-Agent ~ "^Twitterbot"
-		|| req.http.User-Agent ~ "Pinterestbot"
-		|| req.http.User-Agent ~ "Disqus"
-		|| req.http.User-Agent ~ "WhatsApp"
-		|| req.http.User-Agent ~ "Snapchat"
-		|| req.http.User-Agent ~ "Newsify"
-		) {
-			# For testing purposes I need to identify bots on backend every now and then
-			set req.http.User-Agent = "Nice bot";
-			#unset req.http.User-Agent;
-		}
-
+		if (req.http.User-Agent ~ "ia_archiver") { set req.http.x-bot = "nice"; set req.http.User-Agent = "Alexa"; }
+		if (req.http.User-Agent ~ "Blekkobot") {set req.http.x-bot = "nice"; set req.http.User-Agent = "Blekko"; }
+		if (req.http.User-Agent == "Amazon Simple Notification Service Agent") { set req.http.x-bot = "nice"; set req.http.User-Agent = "AWS"; }
+		if (req.http.User-Agent ~ "^MeWeBot") { set req.http.x-bot = "nice"; set req.http.User-Agent = "MeWe"; }
+		if (req.http.User-Agent ~ "TurnitinBot") { set req.http.x-bot = "nice"; set req.http.User-Agent = "TurnitinBot"; }
+		if (req.http.User-Agent ~ "archive.org") { set req.http.x-bot = "nice"; set req.http.User-Agent = "Internet Archiver"; }
+		if (req.http.User-Agent ~ "Feedly") { set req.http.x-bot = "nice"; set req.http.User-Agent = "Feedly"; }
+		if (req.http.User-Agent ~ "MetaFeedly") { set req.http.x-bot = "nice"; set req.http.User-Agent = "MetaFeedly"; }
+		if (req.http.User-Agent ~ "Bloglovin") { set req.http.x-bot = "nice"; set req.http.User-Agent = "Bloglovin"; }
+		if (req.http.User-Agent ~ "Moodlebot") { set req.http.x-bot = "nice"; set req.http.User-Agent = "Moodle"; }
+		if (req.http.User-Agent ~ "TelegramBot") { set req.http.x-bot = "nice"; set req.http.User-Agent = "Telegram"; }
+		if (req.http.User-Agent ~ "^Twitterbot") { set req.http.x-bot = "nice"; set req.http.User-Agent = "Twitter"; }
+		if (req.http.User-Agent ~ "Pinterestbot") { set req.http.x-bot = "nice"; set req.http.User-Agent = "Pinterest"; }
+		if (req.http.User-Agent ~ "WhatsApp") { set req.http.x-bot = "nice"; set req.http.User-Agent = "WhatsApp"; }
+		if (req.http.User-Agent ~ "Snapchat") { set req.http.x-bot = "nice"; set req.http.User-Agent = "Snapchat"; }
+		if (req.http.User-Agent ~ "Newsify") { set req.http.x-bot = "nice"; set req.http.User-Agent = "Newsify"; }
+	
 	# That's it, folk
 }

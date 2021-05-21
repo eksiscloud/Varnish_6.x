@@ -14,6 +14,9 @@ sub vcl_recv {
 	set req.http.host = regsub(req.http.host,
 	"^sumppu\.info$", "www.sumppu.info");
 	
+	call common_rules;
+	call wp_basics;
+	
 	return(synth(403, "Unauthorized request"));
 	
 	}

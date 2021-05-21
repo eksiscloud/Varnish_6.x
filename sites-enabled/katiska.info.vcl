@@ -13,24 +13,12 @@ sub vcl_recv {
 	# Normalize hostname to avoid double caching
 	set req.http.host = regsub(req.http.host,
 	"^katiska\.info$", "www.katiska.info");
-
-	# Wordpress REST API
-	if (req.url ~ "/wp-json/wp/v2/") {
-		# Whitelisted IP will pass
-		if (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ whitelist) {
-			return(pass);
-		}
-		# Must be logged in
-		elseif (!req.http.Cookie ~ "wordpress_logged_in") {
-			return(synth(403, "Unauthorized request"));
-		}
-	}
-
-	# Googlebot-Image doesn't follow limits of robots.txt		
-	if (req.http.User-Agent ~ "Googlebot-Image") {
-		if (!req.url ~ "/uploads/|/images/") {
-			return(synth(403, "Forbidden"));
-		} 
+	
+	call common_rules;
+	
+	# Discourse as commenting
+	if (req.url ~ "/wp-json/wp-discourse/v1/discourse-comments") {
+		return(pass);
 	}
 
 	# drops stage site totally
@@ -38,62 +26,34 @@ sub vcl_recv {
 		return(pipe);
 	}
 
-	# drops Mailster
-	if (req.url ~ "/postilista/") {
-		return(pass);
-	}
-	
-	# AWStats
-	if (req.url ~ "cgi-bin/awsstats.pl") {
+	# Landing pages with form/mailing list (needs nonce)
+	if (req.url ~ "/laskeutumissivut") {
 		return(pass);
 	}
 
-	## Do not Cache: special cases ##
-
-	# Do not cache AJAX requests.
-	if (req.http.X-Requested-With == "XMLHttpRequest") {
+	# drops Mailster/contact form
+	if (req.url ~ "/postilista") {
 		return(pass);
 	}
 
-	# Post requests will not be cached
-	if (req.http.Authorization || req.method == "POST") {
-		return(pass);
-	}
-	
-	# Pass Let's Encrypt
-	# This should not happend because I give a pipeline to UA Let's Encrypt
-	if (req.url ~ "^/\.well-known/acme-challenge/") {
-		return(pass);
-	}
-	
-	## Wordpress ##
-
-	# Don't cache post and edit pages
-	if (req.url ~ "/wp-(post.php|edit.php)") {
+	# Pass contact form
+	if (req.url ~ "/tiedustelut") {
 		return(pass);
 	}
 
-	# Don't cache logged-in user
-	if ( req.http.Cookie ~ "wordpress_logged_in|resetpass" ) {
-		return(pass);
+	# Needed for Monit
+	if (req.url ~ "/pong") {
+		return (pipe);
 	}
 
-	# Pass contact form, RSS feed and must use plugins of Wordpress
-	if (req.url ~ "/(tiedustelut|feed|mu-)") {
-		return(pass);
-	}
-
-	#Hit everything else
-	if (!req.url ~ "/wp-(login|admin|cron)|logout|administrator|resetpass") {
-		unset req.http.Cookie;
-		return(hash);
-	}
-	
-	## Everything else ##
+	# Keep this last
+	call wp_basics;
 	
 	# Cache all others requests if they reach this point
 	return(hash);
-
+	
+	#the of host
   }
+  # The end of sub-vcl
 }
 

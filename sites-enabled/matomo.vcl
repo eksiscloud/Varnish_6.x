@@ -4,7 +4,7 @@ sub vcl_recv {
 		set req.backend_hint = default;
 
 	# No cache, no fixed headers, no nothing
-	# There is nothing to cache
+	# Here is nothing to cache
 	return (pipe);
 
   }

@@ -9,19 +9,18 @@ sub tech_things {
 		|| req.http.User-Agent ~ "WP Rocket/"
 		) {
 			if (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ whitelist) {
-				return(pipe);
+				return(pass);
 			} else {
-				return(synth(666, "False Bot"));
+				return(synth(403, "False Bot"));
 			}
 		}
-
 	
 	# UptimeRobot
 	if (req.http.User-Agent ~ "UptimeRobot") {
-		if (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ uptime) {
-			return(pipe);
+		if (req.url ~ "^/(pong|tietosuojaseloste|latest|login|user)") {
+			return(pass);
 		} else {
-			return(synth(666, "False Bot"));
+			return(synth(403, "False Bot"));
 		}
 	}
 	
@@ -30,9 +29,10 @@ sub tech_things {
 		if (req.url ~ "^/.well-known/acme-challenge/") {
 			return(pipe);
 		} else {
-			return(synth(666, "False Bot"));
+			return(synth(404, "Not found"));
 		}
 	}
+		
 
 
 # And here's the end

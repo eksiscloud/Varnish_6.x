@@ -10,7 +10,9 @@ sub vcl_recv {
 	#return(pass);
 	
 	# Must pipe, otherwise I just can't get Discourse work
-	#return(pipe);
+	return(pipe);
+	
+	########### Not working #########
 
 	# Gives error 500 if pass
 	

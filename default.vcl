@@ -1,23 +1,40 @@
 ## Jakke Lehtonen
+## https://git.eksis.one/jagster/varnish_6.x
 ## from several sources
 ## Heads up! There is errors for sure
 ## I'm just another copypaster
 ##
-## Varnish 6.2.1 default.vcl for multiple virtual hosts
+## Varnish 6.6.0 default.vcl for multiple virtual hosts
 ## 
+## Known issues: 
+##  - easy to get false bans (googlebot, Bing...) 
+##  - geoip doesn't give a country everytime
 #
 # Lets's start caching
  
 #
  
-# Marker to tell the VCL compiler that this VCL has been adapted to the 4.0 format.
+# Marker to tell the VCL compiler that this VCL has been adapted to the 4.1 format.
 vcl 4.1;
 
 import directors;	# Load the vmod_directors
 import std;			# Load the std, not STD for god sake
+import cookie;		# Load the cookie, former libvmod-cookie
+import geoip2;		# Load the GeoIP2 by MaxMind
+
+## I'm using sub-vcls only to keep default.vcl a little bit easier to read
 
 # Let's Encrypt; this was just for Hitch and has nothing to do right now
 #include "/etc/varnish/ext/letsencrypt.vcl";
+
+# All common vcl_recv
+include "/etc/varnish/ext/common.vcl";
+
+# Wordpress stuff
+include "/etc/varnish/ext/wordpress_common.vcl";
+
+# WooCommerce related
+include "/etc/varnish/ext/woocommerce_common.vcl";
 
 # Probes and similar good stuff
 include "/etc/varnish/ext/probes.vcl";
@@ -37,18 +54,17 @@ include "/etc/varnish/ext/nice-bot.vcl";
 # Stop knocking
 include "/etc/varnish/ext/403.vcl";
 
-# Some will get error 444
-include "/etc/varnish/ext/404-444.vcl";
-
 # Global redirecting if any
 include "/etc/varnish/ext/404.vcl";
+
+# Just some debugging headers like HIT and MISS
+include "/etc/varnish/ext/debugs.vcl";
 
 # Cheshire cat at headers
 include "/etc/varnish/ext/cheshire_cat.vcl";
 
 # X-headers, just for fun
 include "/etc/varnish/ext/x-heads.vcl";
-
 
 probe sondi {
     #.url = "/index.html";  # or you can use just an url
@@ -74,9 +90,6 @@ backend default {					# use your servers instead default if you have more than j
 	.probe = sondi;					# We have chance to recycle the probe 
 }
 
-## REMEMBER: You can not do pipe or pass before domain.vcl 
-## If you do so, the backend can't be founded and all you get is your very first domain in alphabetically
-
 # git.eksis.one by Gitea
 backend gitea {
 	.path = "/run/gitea/gitea.sock";
@@ -97,12 +110,12 @@ backend gitea {
 
 # kaffein.jagster.fi by Discourse
 # Served by Nginx because my VCLs have something wrong
-backend kaffein {
-	.path = "/var/discourse/shared/jagster/nginx.http.sock";
-}
+#backend kaffein {
+#	.path = "/var/discourse/shared/jagster/nginx.http.sock";
+#}
 
-## ACLs: I can't use client.ip because it is alwaus 127.0.0.1 because of Nginx (or any proxy like Apache2)
-## It have to be like (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist)
+## ACLs: I can't use client.ip because it is always 127.0.0.1 by Nginx (or any proxy like Apache2)
+## Instead client.ip it has to be like std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist
 
 # Only allow purging from specific IPs
 acl purge {
@@ -117,92 +130,12 @@ acl purge {
 # This can do almost everything
 acl whitelist {
 	"localhost";
-	"netti.link";
+	"netti.link";		# reverse dns is done only when systemctl restart
 	"127.0.0.1";
 	"84.231.164.255";
 	"104.248.141.204";
 	#"64.225.73.149";
 	"138.68.111.130";
-}
-
-# Mostly finnish ISPs that can't be banned by Fail2ban
-acl isplist {
-	#"84.231.164.255";
-	"37.33.128.0"/17;
-	"37.219.0.0"/17;
-	"37.219.128.0"/17;
-	"46.132.0.0"/17;
-	"66.220.144.0"/20;
-	"78.27.64.0"/19;
-	"80.220.0.0"/16;
-	"80.222.0.0"/15;
-	"82.130.0.0"/18;
-	"83.245.224.0"/21;
-	"84.248.0.0"/15; 
-	"84.250.0.0"/15;
-	"84.253.192.0"/19;
-	"85.76.16.0"/21;
-	"85.76.40.0"/21;
-	"85.76.48.0"/21;
-	"85.76.72.0"/21;
-	"85.76.8.0"/21;
-	"85.76.32.0"/21;
-	"85.76.64.0"/21;
-	"85.76.104.0"/21;
-	"85.76.112.0"/21;
-	"85.76.128.0"/21;
-	"85.76.136.0"/21;
-	"85.76.144.0"/21;
-	"86.114.192.0"/18;
-	"87.95.0.0"/17;
-	"88.148.152.0"/21;
-	"88.193.0.0"/16;
-	"89.27.96.0"/21;
-	"91.152.0.0"/16;
-	"91.155.0.0"/16;
-	"91.159.0.0"/16;
-	"93.106.0.0"/17;
-	"93.106.128.0"/18;
-	"95.214.64.0"/24;
-	"109.240.128.0"/17;
-	"176.93.128.0"/17;
-	"188.238.128.0"/17;
-	"194.111.82.0"/23;
-	"207.241.224.0"/20;
-}
-
-# UptimeRobot should be whitelisted
-acl uptime {
-	"69.162.124.224"/28;
-	"63.143.42.240"/28;
-	"216.245.221.80"/28;
-	"208.115.199.16"/28;
-	"104.131.107.63";
-	"122.248.234.23";
-	"128.199.195.156";
-	"138.197.150.151";
-	"139.59.173.249";
-	"146.185.143.14";
-	"159.203.30.41";
-	"159.89.8.111";
-	"165.227.83.148";
-	"178.62.52.237";
-	"18.221.56.27";
-	"167.99.209.234";
-	"216.144.250.150";
-	"34.233.66.117";
-	"46.101.250.135";
-	"46.137.190.132";
-	"52.60.129.180";
-	"54.64.67.106";
-	"54.67.10.127";
-	"54.79.28.129";
-	"54.94.142.218";
-}
-
-# I'm using this sometimes for testing purposes
-acl target {
-	"127.0.0.1";
 }
 
 # just an example, I use 403.vcl together fail2ban
@@ -216,13 +149,16 @@ acl target {
 # You have to define server at backend definition too.
 
 sub vcl_init {
-
+	new country = geoip2.geoip2("/usr/share/GeoIP/GeoLite2-Country.mmdb");
+	new city = geoip2.geoip2("/usr/share/GeoIP/GeoLite2-City.mmdb");
+	new asn = geoip2.geoip2("/usr/share/GeoIP/GeoLite2-ASN.mmdb");
 }
 
 
 ############### vcl_recv #################
 ## We should have here only statments without return(...)
 ## because such goes over virtual hosts
+## The solution has explained here: https://www.getpagespeed.com/server-setup/varnish/varnish-virtual-hosts
 
 sub vcl_recv {
 	
@@ -236,171 +172,28 @@ sub vcl_recv {
 	## Your last hope: a dumb TCP termination
 	## It passes everything right thru Varnish
 	# return(pipe);
-	
+
+	# My personal safenet when (not if...) I'll make some funny to Varnish
+	#if (req.http.host == "store.katiska.info") {
+	#	return(pipe);
+	#}
 	
 	### The work starts here
+	###
+	### At main vcl_recv will happend only normalizing etc, where is no return(...) statements because those bypasses other VCLs.
+	### At all-common.vcl is for cookies and similar commmon things for hosts
+	### All domain-VCLs do the rest where return(...) is needed and part of jobs are done using 'call common.vcl'
 	
-	## You never know if this is needed
-	set req.http.X-Agent = req.http.User-Agent;
+	## Normalize the header, remove the port (in case you're testing this on various TCP ports)
+	set req.http.host = regsub(req.http.host, ":[0-9]+", "");
 	
-	## I have strange redirection issue with all WordPresses
-	## Must be a problem with cookies but I can't solve it out
-	## So, I'm taking a short road here
-	if (
-		   req.url ~ "&_wpnonce"
-		|| req.url ~ "&reauth=1"
-		) {
-			return(pipe);
-		}
-		
-	## Before anything I must clean up some trashes
+	## Backend can vary by host. Can be changed in virtual hosts' vcl_recv()
+	set req.backend_hint = default;
 	
-		# Technical probes, so let them at large using probes.vcl
-		# These are useful and I want to know if backend is working etc.
-		call tech_things;
-		
-		# These are nice bots, so let them through using nice-bot.vcl and using just one UA
-		call cute_bot_allowance;
-		
-		# If you follow robots.txt you aren't a rotten one and Fail2ban doesn't ban you
-		# This bypasses bad bot detection and lets every bots read robots.txt (if I wouldn't use Nginx...)
-		if (req.url ~ "^/robots.txt") {
-			return(pass);
-		}
-		
-		# robots.txt offers a honey pot to fail2ban, let's serve it
-		# BTW, it has catched never ever anything
-		if (req.url ~ "^/private-wallet/") {
-			return(pipe);
-		}
-
-		# Extra layer of security to xmlrpc.php 
-		# Now I'm onlyone who can use xmlrpc.php
-		# Commented because Nginx does this for me
-		#if (req.url ~ "^/xmlrpc.php" && std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
-		#	return(synth(423, "Post not allowed for " + req.http.X-Real-IP));
-		#}
-
-		# I need curl every now and then, others not
-		# Commented, because 420.vcl is doing the job
-		#if (req.http.User-Agent ~ "curl/" && std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
-		#	return(synth(420, "Forbidden Method"));
-		#}
-		
-		# I need libwww-perl too
-		# Commented, because 420.vcl is doing the job
-		#if (req.http.User-Agent ~ "libwww-perl" && (req.http.x-ip !~ whitelist)) {
-		#	return(synth(420, "Forbidden Method"));
-		#}
-		
-		# Trying figure out some strange traffic
-		# Basicly, I'll try to find out which service will break down now
-		# case 1
-		if (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ target && req.http.User-Agent == "Go-http-client/1.1") {
-			return(synth(402, "Denied Access"));
-		}
-		# case 2
-		if (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ target && req.http.User-Agent == "^$") {
-			return(synth(402, "Denied Access"));
-		}
-		
-		## Special cases
-		
-		# Now we stop known useless ones who's not from whitelisted IPs using bad-bot.vcl
-		# This should not be active if Nginx do what it should do because I have bot filtering there
-		if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
-			call bad_bot_detection;
-		}
-		
-		# Stop bots and knockers seeking holes using 403.vcl
-		# I don't let search agents and similar to forbidden urls. Otherwise Fail2ban would ban theirs IPs too.
-		# I get error for testing purposes, but Fail2ban has whitelisted my IP.
-		if (!req.http.User-Agent == "Nice bot") {
-			call stop_pages;
-		}
-	
-		# More or less just an example here. 
-		# I'm cleaning bots and knockers using bad bot and 403 VCLs plus Fail2ban
-		#if (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ forbidden) {
-		#	return(synth(403, "Forbidden IP"));
-		#}
-	
-	# Who can do BAN, PURGE and REFRESH
-	# Remember to use capitals when doing, size matters...
-	
-	if (req.method == "BAN") {
-		if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ purge) {
-			return (synth(405, "Banning not allowed for " + req.http.X-Real-IP));
-		}
-		ban("obj.http.x-url ~ " + req.http.x-ban-url +
-			" && obj.http.x-host ~ " + req.http.x-ban-host);
-		# Throw a synthetic page so the request won't go to the backend.
-		return(synth(200, "Ban added"));
-	}
-	
-	if (req.method == "PURGE") {
-		if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ purge) {
-			return (synth(405, "Purging not allowed for " + req.http.X-Real-IP));
-		}
-		return (purge);
-	}
-	
-	if (req.method == "REFRESH") {
-		if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ purge) {
-			return(synth(405, "Refreshing not allowed for " + req.http.X-Real-IP));
-		}
-		set req.method = "GET";
-		set req.hash_always_miss = true;
-	}
-
-	# Only deal with "normal" types
-	if (req.method != "GET" &&
-	req.method != "HEAD" &&
-	req.method != "PUT" &&
-	req.method != "POST" &&
-	req.method != "TRACE" &&
-	req.method != "OPTIONS" &&
-	req.method != "PATCH" &&
-	req.method != "DELETE") {
-	# Non-RFC2616 or CONNECT which is weird. */
-	# Why send the packet upstream, while the visitor is using a non-valid HTTP method? */
-		return(synth(405, "Non-valid HTTP method!"));
-	}
-
-	# Implementing websocket support
-	if (req.http.Upgrade ~ "(?i)websocket") {
-		return(pipe);
-	}
-	
-	## Giving a pipeline to sites that I doesn't want to be under influence of Varnish (except killing the bots)
-	# - Moodle dislike Varnish (I have some cookie issues) and Moodle has its own system to cache things
-	# - When a Woocommerce is small and there isn't any real content, Varnish will give only headache
-	# - Matomo is quite dynamic and because there is no other users, Varnish doesn't help a bit
-	if (
-		   req.http.host == "pro.eksis.one" 			# Moodle
-		|| req.http.host == "pro.katiska.info" 			# Moodle
-		|| req.http.host == "store.katiska.info"		# Woocommerce
-		|| req.http.host == "stats.eksis.eu"			# Matomo
-		|| req.http.host == "graph.eksis.eu"			# Munit
-		) {
-			return(pipe);
-		}
-	
-	# Let's tune up a bit behavior for healthy backends: Cap grace to 5 min
+	## Let's tune up a bit behavior for healthy backends: Cap grace to 5 min
 	if (std.healthy(req.backend_hint)) {
 		set req.grace = 300s;
 	}
-
-	# Fix Wordpress visual editor issues, must be the first one as url requests to work
-	if (req.url ~ "/wp-(login|admin|comments-post.php|cron)" || req.url ~ "preview=true") {
-		return (pass);
-	}
-
-	# That's it, no more filtering by user-agent
-	unset req.http.User-Agent;
-
-	## Normalize the header, remove the port (in case you're testing this on various TCP ports)
-	set req.http.host = regsub(req.http.host, ":[0-9]+", "");
 	
 	## Setting http headers for backend
 	if (req.restarts == 0) {
@@ -412,13 +205,10 @@ sub vcl_recv {
 		}
 	}
 	
-	## Awstats needs the host 
-	# You must add something like this in systemctl edit --full varnishncsa at line StartExec:
-	# -F '%%{X-Forwarded-For}i %%{VCL_Log:X-Req-Host}x %%l %%u %%t "%%r" %%s %%b "%%{Referer}i" "%%{User-agent}i"'
-	set req.http.X-Req-Host = req.http.host;
-	std.log("X-Req-Host:" + req.http.X-Req-Host);
+	## Remove the proxy header
+	unset req.http.Proxy;
 	
-	## Strip a trailing #, server doesn't need it.
+	## Strip a plain HTML anchor #, server doesn't need it.
 	if (req.url ~ "\#") {
 		set req.url = regsub(req.url, "\#.*$", "");
 	}
@@ -427,40 +217,56 @@ sub vcl_recv {
 	if (req.url ~ "\?$") {
 		set req.url = regsub(req.url, "\?$", "");
 	}
+	
+	## Awstats needs the host 
+	# You must add something like this in systemctl edit --full varnishncsa at line StartExec:
+	# -F '%%{X-Forwarded-For}i %%{VCL_Log:X-Req-Host}x %%l %%u %%t "%%r" %%s %%b "%%{Referer}i" "%%{User-agent}i"'
+	set req.http.X-Req-Host = req.http.host;
+	std.log("X-Req-Host:" + req.http.X-Req-Host);
+	
+	## Implementing websocket support
+	if (req.http.Upgrade ~ "(?i)websocket") {
+		return(pipe);
+	}
 
 	## Save Origin (for CORS) in a custom header and 
 	## remove Origin from the request so that backend doesn’t add CORS headers.
 	set req.http.X-Saved-Origin = req.http.Origin;
 	unset req.http.Origin;
-
-	## Remove the proxy header
-	unset req.http.Proxy;
 	
-	## Unset language, because I don't have any multilingual site
-	unset req.http.Accept-Language;
-	
-	## Normalize Accept-Encoding header and compression
-	# We don't need compress/uncompress, Varnish will do it automatically if backend tells so
-	#if (req.http.Accept-Encoding) {
-		# Do no compress compressed files...
-	#	if (req.url ~ "\.(jpg|png|gif|gz|tgz|bz2|tbz|mp3|mp4|ogg|jpeg|rar|zip|exe|flv|mov|wma|avi|swf|mpg|mpeg|mp4|webm|webp|pdf)$") {
-	#	unset req.http.Accept-Encoding;
-	#	}
+	## GeoIP and normalizing country codes to lower case, because remembering to use capital letters is just too hard
+	set req.http.X-Country-Code = country.lookup("country/iso_code", std.ip(req.http.X-Real-IP, "0.0.0.0"));
+	set req.http.X-Country-Code = std.tolower(req.http.X-Country-Code);
+	# I could do for example:
+	#if (req.http.X-Country-Code !~ "(fi|se)") {
+	#	set req.http.X-Country-Code = "fi";
+	#} else {
+	#	set req.http.X-Country-Code = "us";
 	#}
 	
-	## Normalize the query arguments.
-	# Note: Placing this above the "do not cache" section breaks some WP theme elements and admin functionality.
-	# Well, this is above most of those... I don't even know what this should do
-	set req.url = std.querysort(req.url);
-	
-	## Global handling of 404 and 410
-	call global-redirect;
+	# I'm using ASN too
+	set req.http.x-asn = asn.lookup("autonomous_system_organization", std.ip(req.http.X-Real-IP, "0.0.0.0"));
+	set req.http.x-asn = std.tolower(req.http.x-asn);
+
+	## I'm normalizing language
+	# This is quite waste of time, though.
+	# For REAL normalizing you should work with Accept-Language only
+	set req.http.x-language = std.tolower(req.http.Accept-Language);
+	unset req.http.Accept-Language;
+	if (req.http.x-language ~ "fi") {
+		set req.http.x-language = "fi";
+	#} elseif (req.http.x-language ~ "se") {
+	#	set req.http.x-language = "se"
+	#} elseif (req.http.x-language ~ "en") {
+	#	set req.http.x-language = "en"
+	} else {
+		unset req.http.x-language;
+	}
 
 	## Send Surrogate-Capability headers to announce ESI support to backend
 	set req.http.Surrogate-Capability = "key=ESI/1.0";
 	
 	## At this point we jump to all-common.vcl
-
 } 
 
 
@@ -499,37 +305,19 @@ sub vcl_hash {
 		hash_data(server.ip);
 	}
 
-	## hash Cookies for requests that have them 
-	
-	# like store cache based on PHPSESSID or woocommerce Cookie so cart doesn't show 0
-	# I can't understand meaning of this. Does it work if I first fix all other cookies at vcl_recv?
-	# Well, I don't have any Woocommerces behind Varnish nowadays so it is commented
-	#if (req.http.Cookie) {
-	#	hash_data(req.http.Cookie);
-	#}
-	
-	if (req.http.cookie ~ "lang=") {
-		set req.http.X-COOKIE = regsub(req.http.cookie, "lang=([^;]+);.*", "\1");
-		hash_data(req.http.X-COOKIE);
-		unset req.http.X-COOKIE;
-	}
-	
-	if (req.http.cookie ~ "Cookie_notice_accepted=") {
-		set req.http.X-COOKIE = regsub(req.http.cookie, "Cookie_notice_accepted=([^;]+);.*", "\1");
-		hash_data(req.http.X-COOKIE);
-		unset req.http.X-COOKIE;
-	}
-	
-	if (req.http.Cookie-Backup) {
-		# restore the cookies before the lookup if any
-		set req.http.Cookie = req.http.Cookie-Backup;
-		unset req.http.Cookie-Backup;
+	# hash cookies for requests that have them 
+	if (req.http.Cookie) {
+		hash_data(req.http.Cookie);
 	}
 
+#	if (req.http.Cookie-Backup) {
+	# restore the cookies before the lookup if any
+#		set req.http.Cookie = req.http.Cookie-Backup;
+#		unset req.http.Cookie-Backup;
+#	}
 
 	## The end
 	return (lookup);
-
 }
 
 
@@ -537,10 +325,8 @@ sub vcl_hash {
 #
 sub vcl_hit {
 
-	## Varnish has now built-in grace, so there is no need to adjust grace times by yourself
-	## Still... I do it on vcl_backend_response
+	## End of the road, Jack
 	return(deliver);
-
 }
 
 
@@ -567,12 +353,110 @@ sub vcl_miss {
 #
 sub vcl_backend_response {
 
-	# Will kick in if backend is sick
-	set beresp.grace = 24h;
-
-	# Backend is down, stop caching
+	## Add name of backend in varnishncsa log (I don't do with that much, because I have only one active backend)
+	# You can finds slow replying backends (over 3 sec) with that:
+	# varnishncsa -b -F '%t "%r" %s %{Varnish:time_firstbyte}x %{VCL_Log:backend}x' | awk '$7 > 3 {print}'
+	# or
+	# varnishncsa -b -F '%t "%r" %s %{Varnish:time_firstbyte}x %{VCL_Log:backend}x' -q "Timestamp:Beresp[3] > 3 or Timestamp:Error[3] > 3"
+	std.log("backend:" + beresp.backend.name);
+	
+	## Backend is down, stop caching
 	if (beresp.status >= 500 && bereq.is_bgfetch) {
-		return (abandon);
+		return(abandon);
+	}
+	
+	## Send User-Agent to backend, but removing it from Vary prevents Varnish to use it caching
+	if (beresp.http.Vary ~ "User-Agent") {
+		set beresp.http.Vary = regsuball(beresp.http.Vary, ",? *User-Agent *", "");
+		set beresp.http.Vary = regsub(beresp.http.Vary, "^, *", "");
+		if (beresp.http.Vary == "") {
+			unset beresp.http.Vary;
+		}
+	}
+	
+	## Ordinary default; how long Varnish will keep objects
+	# Varnish is using s-maxage as beresp.ttl (max-age is for browser),
+	# Server must reboot about once in month so 1y is ridiculous long
+	# If backend sets s-maxage Varnish will use it, otherwise it will be 1y
+	# Heads up! What should I do with nonce by Wordpress? That can't be cached over 12 hours.
+	if (beresp.http.cache-control !~ "s-maxage") {
+		set beresp.ttl = 31536000s;
+		# or if you will pass TTL to other intermediate caches as CDN, otherwise they will use maxage
+		#set beresp.http.cache-control = "s-maxage=31536000, " + beresp.http.cache-control;
+	}
+
+	## Will kick in if backend is sick
+	set beresp.grace = 24h;
+	
+	## Cache some responses only short period
+	# Can I do beresp.status == 302 || beresp.status == 307 ?
+	if (beresp.status == 404) {
+		set beresp.http.cache-control = "max-age: 120";
+		set beresp.ttl = 300s; # 5min
+	}
+	
+	## 301/410 are quite static
+	if (beresp.status == 301 || beresp.status == 410) {
+		unset beresp.http.cache-control;
+		set beresp.http.cache-control = "max-age=2592000"; # 30d
+		set beresp.ttl = 31536000s;
+	}
+	
+	## RSS and other feeds like podcast can be cached
+	# Podcast services are checking feed way too often, and I'm quite lazy to publish, so 24h delay is acceptable
+	if (beresp.http.Content-Type ~ "text/xml") {
+		set beresp.http.cache-control = "max-age=86400"; # 24h
+		set beresp.ttl = 86400s; 
+	}
+	
+	## Robots.txt is really static, but let's be on safe side
+	# Against all claims bots check robots.txt almost never, so caching doesn't help much
+	if (bereq.url ~ "/robots.txt") {
+		unset beresp.http.cache-control;
+		set beresp.http.cache-control = "max-age=604800";
+		set beresp.ttl = 604800s; # 1wk
+	}
+
+	## Search results, mostly Wordpress if I'm guessing right
+	# Normally those querys should pass but I want to cache answers
+	# Caching or not doesn't matter because users don't search too often
+	# Well, this isn't working anyway; because of POST I reckon
+	if (bereq.url ~ "/\?s=") {
+		unset beresp.http.cache-control;
+		set beresp.http.cache-control = "max-age=120";
+		set beresp.ttl = 43200s; # 12h
+	}
+	
+	## I have an issue with one cache-control value from WordPress
+	if (bereq.url ~ "/icons\.ttf\?pozjks") {
+		unset beresp.http.set-cookie;
+		set beresp.http.cache-control = "max-age=31536000"; 
+	}
+	
+	## I tried this with MediaWiki; it did something, but I couldn't put MediaWiki behind Varnish.
+	#if (bereq.http.host ~ "koiranravitsemus.fi") {
+	#	unset beresp.http.cache-control;
+	#	# max-age doesn't go through and I don't know why.
+	#	#set beresp.http.cache-control = "max-age=120";
+	#	set beresp.ttl = 300s;
+	#}
+	
+	## Old wp-json leak'ish of users/authors. I'm using this only to stop nagging from Bing.
+	if (beresp.status == 404 && bereq.url ~ "^/(kirjoittaja|author)") {
+		set beresp.status = 410;
+	}
+	
+	## Some admin-ajax.php can be cached by Varnish
+	# Except... it is always POST and that is uncacheable
+	if (bereq.url ~ "admin-ajax.php" && bereq.http.cookie !~ "wordpress_logged_in" ) {
+		unset beresp.http.set-cookie;
+		set beresp.ttl = 1d;
+		set beresp.grace = 1d;
+	}
+	
+	## Not found images after I started CDN; yes, these should redirect on server but I don't know how
+	if (beresp.status == 404 && bereq.url ~ ".jpg") {
+		set beresp.status = 410;
 	}
 	
 	# ESI is enabled. IDK if this is enough
@@ -585,35 +469,33 @@ sub vcl_backend_response {
 	#	set beresp.do_gzip = true;
 	#}
 	
-	# Keep the response in cache for 6 hours if the response has validating headers.
+	## Keep the response in cache for 6 hours if the response has validating headers.
 	if (beresp.http.ETag || beresp.http.Last-Modified) {
 		set beresp.keep = 6h;
 	}
-		
-	# I have an issue with one cache-control value from WordPress
-	if (bereq.url ~ "/icons\.ttf\?pozjks") {
-		unset beresp.http.set-cookie;
-		set beresp.http.cache-control = "max-age=31536000s";
-		set beresp.ttl = 1y; 
-	}
 	
-	# I tried this with MediaWiki; it did something, but i couldn't put MediaWiki behind Varnish.
-	#if (bereq.http.host ~ "koiranravitsemus.fi") {
-	#	unset beresp.http.cache-control;
-	#	# max-age doesn't go through and I don't know why.
-	#	#set beresp.http.cache-control = "max-age=300s";
-	#	set beresp.ttl = 300s;
+	## Just an example how to vary by country from GeoIP VMOD
+	#if (bereq.http.X-Country-Code) {
+	#	if (!beresp.http.Vary) {
+	#		set beresp.http.Vary = "X-Country-Code";
+	#	} elsif (beresp.http.Vary !~ "X-Country-Code") {
+	#		set beresp.http.Vary = beresp.http.Vary + ", X-Country-Code";
+	#	}
 	#}
 	
-	# Old wp-json leak'ish of users/authors. I'm using this only to stop nagging from Bing.
-	if (beresp.status == 404 && bereq.url ~ "/kirjoittaja/") {
-		set beresp.status = 410;
+	## Stupid knockers trying different kind of executables or archives
+	# 404 notices at backend, like Wordpress, doesn't disappear because this happends after backend, of course
+	if (bereq.url !~ "(/wp-json/wp-discourse/|/wp-content/uploads/caos)") {  # both gives 404 sometimes, so this is just failsafe
+		if (beresp.status == 404 && bereq.url ~ "/([a-z0-9_\.-]+).(asp|aspx|php|js|jsp|rar|zip|tar|gz)") {
+			if (bereq.http.X-Country-Code !~ "fi") {
+				set beresp.status = 666;
+			} else {
+				set beresp.status = 403;
+			}
+		}
 	}
-	
-	# Stupid knockers and 404-444.vcl
-	call endless_void;
 		
-	# 301 and 410 are quite steady, so let Varnish cache resuls from backend
+	## 301 and 410 are quite steady, so let Varnish cache resuls from backend
 	if (beresp.status == 301 && beresp.http.location ~ "^https?://[^/]+/") {
 		set bereq.http.host = regsuball(beresp.http.location, "^https?://([^/]+)/.*", "\1");
 		set bereq.url = regsuball(beresp.http.location, "^https?://([^/]+)", "");
@@ -625,10 +507,45 @@ sub vcl_backend_response {
 		set bereq.url = regsuball(beresp.http.location, "^https?://([^/]+)", "");
 		return(retry);
 	}
+	
+	## Caching static files improves cache ratio, but eats RAM and doesn't make your site faster. 
+	# Most of media files are served from CDN anyway and I have some RAM left so let's go hey-ho.
+	# But... I'm almost sure this snippet had some meaning back Varnish 4.0, perhaps, but I'm using 6.6 and AFAIK these are just another objects
+	if (bereq.url ~ "^[^?]*\.(7z|bmp|bz2|css|csv|doc|docx|eot|flac|flv|gif|gz|ico|jpeg|jpg|js|otf|pdf|png|ppt|pptx|rtf|svg|svgz|swf|tar|tbz|tgz|ttf|txt|txz|webm|webp|woff|woff2|xls|xlsx|xml|xz|zip)(\?.*)?$") {
+		unset beresp.http.set-cookie;
+	}
+	
+	## Large static files are delivered directly to the end-user without waiting for Varnish to fully read the file first.
+	# Most of these are in CDN, but I have some MP3s behind backend
+	# Is this really needed anymore? AFAIK Varnish should do this anyway.
+	if (bereq.url ~ "^[^?]*\.(avi|mkv|mov|mp3|mp4|mpeg|mpg|ogg|ogm|wav)(\?.*)?$") {
+		unset beresp.http.set-cookie;
+		set beresp.do_stream = true;  # This should be ignored because I have do_esi = true
+	}
+	
+	## Unset cookies except for Wordpress admin and WooCommerce pages 
+	# Heads up: product is 'tuote' in finnish, change it!
+	# Heads up: some sites may need to set cookie!
+	if (
+		bereq.url !~ "(wp-(login|admin)|admin-ajax|cart|my-account|wc-api|checkout|addons|logout|resetpass|lost-password|tuote|\?wc-ajax=get_refreshed_fragments)" &&
+		bereq.http.cookie !~ "wordpress_|resetpass|wp-postpass" &&
+		beresp.status != 302 &&
+		bereq.method == "GET"
+		) { 
+		unset beresp.http.set-cookie; 
+	}
+	
+	## Do I really have to tell this again?
+#	if (bereq.method == "POST") {
+#		set beresp.uncacheable = true;
+#		return (deliver);
+#	}
+
+	## Unset the old pragma header
+	unset beresp.http.Pragma;
 
 	## We are at the end
 	return(deliver);
-
 }
 
 
@@ -641,12 +558,12 @@ sub vcl_deliver {
 		return(restart);
 	}
 	
-	## Knockers with 404 will get synthetic error 999
-	## They will be redirected to server IP and getting 444 from there
-	if (resp.status == 999) {
-		return(synth(999, "http://104.248.141.204" + req.url));
+	## Knockers with 404 will get synthetic error 666 that leads to real error 666
+	if (resp.status == 666) {
+		return(synth(666, "Requests not allowed for " + req.url));
 	}
-
+	
+	
 	## MediaWiki doesn't set vary as I want it; this has no point anyway
 	#if (req.http.host ~ "koiranravitsemus.fi") {
 	#	unset resp.http.vary;
@@ -662,46 +579,42 @@ sub vcl_deliver {
 	} else {
 		set resp.http.Vary = "Origin";
 	}
-
-	## HIT & MISS
-	if (obj.hits > 0) {
-		# I don't fancy boring hit/miss announcements
-		set resp.http.You-had-only-one-job = "Success";
-	} else {
-		set resp.http.You-had-only-one-job = "Phew";
-	}
-
-	## Show hit counts (per objecthead)
-	# Same here, something like X-total-hits is just boring
-	set resp.http.Footprint-of-CO2-metric-tons = (obj.hits);
 	
-	## Not too important one, but I use these sometimes for debugging
-	set resp.http.Your-Agent = req.http.X-Agent;
-	set resp.http.Your-IP = req.http.X-Real-IP;
-
+	## Just some unneeded headers
+	call diagnose;
+	
+	## Expires is unneeded because cache-control overrides it
+	unset resp.http.Expires;
+	
 	## Remove some headers, because the client doesn't need them
 	unset resp.http.Server;	
 	unset resp.http.X-Powered-By;
 	unset resp.http.X-Varnish;
-	#unset resp.http.Age;
 	unset resp.http.Via;
 	unset resp.http.Link;
 	unset resp.http.X-Generator;
 	unset resp.http.x-url;
 	unset resp.http.x-host;
+	unset resp.http.Pragma;
 	# these were by MediaWiki
 	#unset resp.http.x-request-id;
 	#unset resp.http.x-frame-options;
 	#unset resp.http.x-content-type-options;
 
 	## Custom headers, not so serious thing 
+	set resp.http.Your-Agent = req.http.User-Agent;
+	set resp.http.Your-IP = req.http.X-Real-IP;
+	# lookup can't be in sub vcl
+	set resp.http.Your-IP-Country = country.lookup("country/names/en", std.ip(req.http.X-Real-IP, "0.0.0.0")) + "/" + std.toupper(req.http.X-Country-Code);
+	set resp.http.Your-IP-City = city.lookup("city/names/en", std.ip(req.http.X-Real-IP, "0.0.0.0"));
+	set resp.http.Your-IP-GPS = city.lookup("location/latitude", std.ip(req.http.X-Real-IP, "0.0.0.0")) + " " + city.lookup("location/longitude", std.ip(req.http.X-Real-IP, "0.0.0.0"));
+	set resp.http.Your-IP-ASN = asn.lookup("autonomous_system_organization", std.ip(req.http.X-Real-IP, "0.0.0.0"));
 	call headers_x;
 	call header_smiley;
 
 
-
+	# That's it
 	return (deliver);
-
 }
 
 
@@ -762,11 +675,17 @@ sub vcl_synth {
 		synthetic(std.fileread("/etc/varnish/error/503.html"));
 		return (deliver);
 	} 
-
-	if (resp.status == 999) {
-	# I use special error status 999 to force 301 redirects
-		set resp.http.Location = resp.reason;
-		set resp.status = 301;
+	
+	# robots.txt for those sites that not generate theirs own
+	# doesn't work with Wordpress
+	if (resp.status == 601) {
+		set resp.status = 200;
+		set resp.reason = "OK";
+		set resp.http.Content-Type = "text/plain; charset=utf8";
+		synthetic( {"
+		User-agent: *
+		Disallow: /
+		"} );
 		return(deliver);
 	}
 
@@ -780,7 +699,7 @@ sub vcl_synth {
   </head>
   <body>
     <h1>Error "} + resp.status + " " + resp.reason + {"</h1>
-    <p>"} + resp.reason + " for IP " + req.http.X-Real-IP + {"</p>
+    <p>"} + resp.reason + " from IP " + req.http.X-Real-IP + {"</p>
     <h3>Guru Meditation:</h3>
     <p>XID: "} + req.xid + {"</p>
     <hr>
@@ -807,7 +726,6 @@ sub vcl_fini {
 
 
 # Vhosts, needed when multiple virtual hosts is in use
+# must be in this order
 include "all-vhost.vcl";
 include "all-common.vcl";
-
-

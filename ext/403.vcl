@@ -3,6 +3,10 @@ sub stop_pages {
 ## I'm really bad at regex, so heads up
 ## There is a lot WordPress plugins & themes what you might use, so comment those when needed
 ## I'm killing some of 404 situations at vcl_backend_response. Here only trying an url triggers the error.
+## Search agents and similar get 403. Otherwise Fail2ban would ban theirs IPs too.
+
+# I'm allowing whitelisted IPs
+if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 
 #Knock, knock, who's there globally?
 	if (
@@ -31,12 +35,12 @@ sub stop_pages {
 	|| req.url ~ "/wp-file-manager/"
 	|| req.url ~ "/wp-hotel-booking/"
 		# wp-content/themes
-	|| req.url ~ "/themes//themes/sketch/"
-	|| req.url ~ "/themes/twenty(ten|eleven|thirteen|fourteen|fifteen|sixteen|seventeen|nineteen|twenty)"
+	|| req.url ~ "/themes/themes/sketch/"
+	#|| req.url ~ "/themes/twenty(ten|eleven|thirteen|fourteen|fifteen|sixteen|seventeen|nineteen|twenty)"
 		# /wp-admin/
 	#|| req.url ~ "/wp-admin/admin-ajax.php\?action\=revslider_show_image\&img\=../wp-config.php"
 	|| req.url ~ "/wp-admin/asd.php"
-	|| req.url ~ "/wp-admin/class-adminsbar.php"
+	#|| req.url ~ "/wp-admin/class-adminsbar.php"
 	|| req.url ~ "/wp-admin/css/Marvins.php"
 	|| req.url ~ "/wp-admin/images/uni.php"
 	|| req.url ~ "/wp-admin/network/"
@@ -104,7 +108,7 @@ sub stop_pages {
 	|| req.url ~ "/bitrix/"
 	|| req.url ~ "^/bk/"
 	|| req.url ~ "^/_blog/"
-	|| req.url ~ "^/blog/"
+#	|| req.url ~ "^/blog/"
 	|| req.url ~ "^/blogs/"
 	|| req.url ~ "BlogTypeView.do"
 	|| req.url ~ "/boaform/"
@@ -115,8 +119,9 @@ sub stop_pages {
 	|| req.url ~ "/catalog/bedding-bed-bath.jsp"
 	|| req.url ~ "^/CFIDE/"
 	|| req.url ~ "^/cgi-bin/config.exp"
-	|| req.url ~ "^/checkout/"
 	|| req.url ~ "^/cgi-bin/test-cgi"
+	|| req.url ~ "^/checkout/"
+	|| req.url ~ "^/client_area"
 	|| req.url ~ "^/cms/"
 	|| req.url ~ "^/codes$"
 	|| req.url ~ "^/compra/"
@@ -127,6 +132,7 @@ sub stop_pages {
 	|| req.url ~ "/configuration.php.old"
 	|| req.url ~ "^/console"
 	|| req.url ~ "^/Content/"
+	|| req.url ~ "^/core/"
 	|| req.url ~ "^/cv/"
 		# D
 	|| req.url ~ "^/dana-na/"
@@ -307,6 +313,7 @@ sub stop_pages {
 	|| req.url ~ "^/shared/"
 	|| req.url ~ "^/shell"
 	|| req.url ~ "^/shop/"
+	|| req.url ~ "^/stalker_portal/"
 	|| req.url ~ "^/statics/"
 #	|| req.url ~ "^/site/"
 	|| req.url ~ "/site.sql"
@@ -320,6 +327,8 @@ sub stop_pages {
 	|| req.url ~ "/staging/"
 	|| req.url ~ "^/static/"
 	|| req.url ~ "^/store/"
+	|| req.url ~ "^/stream/"
+	|| req.url ~ "^/streaming/"
 	|| req.url ~ "^/struts/"
 	|| req.url ~ "/superforms"
 	|| req.url ~ ".suspected"
@@ -358,7 +367,7 @@ sub stop_pages {
 	|| req.url ~ "^/website/"
 	|| req.url ~ "\.well-known/autoconfig/mail/config-v1.1.xml"
 	|| req.url ~ "^/w00tw00t"
-	|| req.url ~ "^/wordpress/"
+#	|| req.url ~ "^/wordpress/"
 	|| req.url ~ "/wordpress/wp-admin/"
 	|| req.url ~ "/wordpress/wp-login.php"
 	|| req.url ~ "/wordpress/xmlrpc.php"
@@ -387,7 +396,11 @@ sub stop_pages {
 	|| req.url ~ "^/yts/"
 		# Z
 	) {
-		if ((std.ip(req.http.X-Real-IP, "0.0.0.0") ~ isplist) || (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ whitelist)) {
+		if (
+		   req.http.X-County-Code ~ "fi" 
+		|| req.http.x-language ~ "fi" 
+		|| req.http.x-bot == "nice"
+		) {
 			return(synth(403, "The site is unreachable"));
 		} else {
 			return(synth(666, "Security issue"));
@@ -411,7 +424,7 @@ sub stop_pages {
 		|| req.http.Referer ~ "oknativeplants.org"
 		|| req.http.Referer ~ "pcreparatieamersfoort.nl"
 		|| req.http.Referer ~ "bassin.ru"
-		|| req.http.Referer ~ "mytuner-radio.com"			# podcast\-service, lies UA as googlebot
+		|| req.http.Referer ~ "mytuner-radio.com"			# podcast-service, lies UA as googlebot and that's why I can't give 444 on Nginx
 		|| req.http.Referer ~ "jasacucisofasemarang.net"
 		|| req.http.Referer ~ "coffre\-fort\-pro.com"
 		|| req.http.Referer ~ "howtovinyl.com"
@@ -438,11 +451,19 @@ sub stop_pages {
 		|| req.http.Referer ~ "rcrrs.com"
 		|| req.http.Referer ~ "almatatour.com"
 		|| req.http.Referer ~ "etrafika.net"
+		|| req.http.Referer ~ "suomalaiset-podcastit.fi"
 		) {
-			return(synth(666, "The site is frozen"));
+			if (
+			   req.http.X-County-Code ~ "fi"
+			|| req.http.x-language ~ "fi" 
+			|| req.http.x-agent == "nice"
+			) {
+				return(synth(403, "Forbidden referer: " + req.http.Referer));
+			} else {
+				return(synth(666, "Forbidden referer: " + req.http.Referer));
 		}
+	}
 
-if ((std.ip(req.http.X-Real-IP, "0.0.0.0") !~ isplist) || (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist)) {
 	## These are per domain when I can't or will not use generic ones
 	
 	# Want to visit EksisONE?
@@ -453,20 +474,35 @@ if ((std.ip(req.http.X-Real-IP, "0.0.0.0") !~ isplist) || (std.ip(req.http.X-Rea
 			|| req.http.User-Agent ~ "jetmon"
 			|| req.http.User-Agent ~ "Jetpack by WordPress.com"
 		) {
-			return(synth(666, "Server is confused"));
+			if (
+			   req.http.X-County-Code ~ "fi"
+			|| req.http.x-language ~ "fi" 
+			|| req.http.x-agent == "nice"
+			) {
+				return(synth(403, "Forbidden referer: " + req.http.Referer));
+			} else {
+				return(synth(666, "Forbidden referer: " + req.http.Referer));
 			}
+	}
 	}
 	
 	# Want to visit Jagster.fi?
 	if (req.http.host == "jagster.fi" || req.http.host == "www.jagster.fi") {
 		if (
 			   req.url ~ "/adminer/"
-			|| req.url ~ "^/vendor/"
 			|| req.http.User-Agent ~ "jetmon"
 			|| req.http.User-Agent ~ "Jetpack by WordPress.com"
 		) {
-			return(synth(666, "Server is confused"));
+			if (
+			   req.http.X-County-Code ~ "fi"
+			|| req.http.x-language ~ "fi" 
+			|| req.http.x-agent == "nice"
+			) {
+				return(synth(403, "Forbidden referer: " + req.http.Referer));
+			} else {
+				return(synth(666, "Forbidden referer: " + req.http.Referer));
 			}
+	}
 	}
 	
 	# Want to visit Katiska.info?
@@ -476,9 +512,16 @@ if ((std.ip(req.http.X-Real-IP, "0.0.0.0") !~ isplist) || (std.ip(req.http.X-Rea
 			|| req.http.User-Agent ~ "jetmon"
 			|| req.http.User-Agent ~ "Jetpack by WordPress.com"
 		) {
-			return(synth(666, "Server is confused"));
-			}
-		
+			if (
+			   req.http.X-County-Code ~ "fi"
+			|| req.http.x-language ~ "fi" 
+			|| req.http.x-agent == "nice"
+			) {
+				return(synth(403, "Forbidden referer: " + req.http.Referer));
+			} else {
+				return(synth(666, "Forbidden referer: " + req.http.Referer));
+		}
+	}
 	}
 	
 	# Want to visit pro.katiska.info?
@@ -487,9 +530,16 @@ if ((std.ip(req.http.X-Real-IP, "0.0.0.0") !~ isplist) || (std.ip(req.http.X-Rea
 			   req.url ~ "wp-login.php"
 			|| req.url ~ "xmlrpc.php"
 		) {
-			return(synth(666, "Server is confused"));
-			}
-		
+			if (
+			   req.http.X-County-Code ~ "fi"
+			|| req.http.x-language ~ "fi" 
+			|| req.http.x-agent == "nice"
+			) {
+				return(synth(403, "Forbidden referer: " + req.http.Referer));
+			} else {
+				return(synth(666, "Forbidden referer: " + req.http.Referer));
+		}
+	}
 	}
 
 	# Want to visit pro.eksis.one?
@@ -498,11 +548,20 @@ if ((std.ip(req.http.X-Real-IP, "0.0.0.0") !~ isplist) || (std.ip(req.http.X-Rea
 			   req.url ~ "wp-login.php"
 			|| req.url ~ "xmlrpc.php"
 		) {
-			return(synth(666, "Server is confused"));
-			}
-		
+			if (
+			   req.http.X-County-Code ~ "fi"
+			|| req.http.x-language ~ "fi" 
+			|| req.http.x-agent == "nice"
+			) {
+				return(synth(403, "Forbidden referer: " + req.http.Referer));
+			} else {
+				return(synth(666, "Forbidden referer: " + req.http.Referer));
+		}
 	}
-}
+	}
 	
-# will end here
+# whitelisting ends here
+}
+
+# sub will end here
 }

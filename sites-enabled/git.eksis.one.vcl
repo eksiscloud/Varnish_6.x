@@ -9,6 +9,8 @@ sub vcl_recv {
 	#return(pass);
 	#return(pipe);
 
+	call common_rules;
+
 	# Pass Let's Encrypt
 	if (req.url ~ "^/\.well-known/acme-challenge/") {
 		return (pass);

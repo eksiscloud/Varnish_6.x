@@ -21,6 +21,7 @@ sub global-redirect {
 	|| req.url ~ "/art/"
 	|| req.url ~ "\?author=[1-9]"
 	|| req.url ~ "/bitnami/"
+	|| req.url ~ "^/pwa-amp-sw.js"
 	|| req.url ~ "^/.well-known/assetlinks.json"
 	) {
 		return(synth(410, "Error 410 Gone"));
