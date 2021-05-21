@@ -1,0 +1,53 @@
+##### Just starting to wonder is I could set easily TTLs from backend here #########
+
+	# max-age for client
+	# This could and should done at backend, 
+	# but I'm using same times everywhere so it is easiet set up max-age here
+	# 1 month = 2592000
+	
+	if (beresp.http.content-type ~ "text/cache-manifest") {
+		set cache-control = "no-cache";
+		set beresp.ttl = 120s;
+	} elseif (beresp.http.content-type ~ 
+		# HTML
+		   "text/cache-manifest"
+		   # HTC files (css3pie)
+		|| "text/x-component"
+		) {
+		if (beresp.status == 200) { 
+			set cache-control = "max-age=2592000s, public";
+		} else {
+			set obj.ttl = 120 s;
+    
+
+
+			# Data
+			ExpiresByType text/xml                      "access plus 1 day"
+			ExpiresByType application/xml               "access plus 1 week"
+			ExpiresByType application/json              "access plus 1 week"
+			# Feed
+			ExpiresByType application/rss+xml           "access plus 1 day"
+			ExpiresByType application/atom+xml          "access plus 1 day"
+			# Favicon (cannot be renamed)
+			ExpiresByType image/x-icon                  "access plus 1 year"
+			# Media: images, video, audio
+			ExpiresByType image/gif                     "access plus 1 year"
+			ExpiresByType image/png                     "access plus 1 year"
+			ExpiresByType image/jpeg                    "access plus 1 year"
+			ExpiresByType image/webp                    "access plus 1 year"
+			ExpiresByType video/ogg                     "access plus 1 year"
+			ExpiresByType audio/ogg                     "access plus 1 year"
+			ExpiresByType video/mp4                     "access plus 1 year"
+			ExpiresByType video/webm                    "access plus 1 year"
+			# HTC files  (css3pie)
+			ExpiresByType text/x-component              "access plus 1 month"
+			# Webfonts
+			ExpiresByType font/ttf                      "access plus 1 year"
+			ExpiresByType font/otf                      "access plus 1 year"
+			ExpiresByType font/woff                     "access plus 1 year"
+			ExpiresByType font/woff2                    "access plus 1 year"
+			ExpiresByType image/svg+xml                 "access plus 1 year"
+			ExpiresByType application/vnd.ms-fontobject "access plus 1 year"
+			# CSS and JavaScript
+			ExpiresByType text/css                      "access plus 1 year"
+			ExpiresByType application/javascript        "access plus 1 year"

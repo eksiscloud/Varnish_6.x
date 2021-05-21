@@ -1,0 +1,114 @@
+	#### For Varnish under 6.4 or without libvmod-cookie
+	#### I don't know regex at all, or understand what is happening here, but I reckon
+	#### - somehow needed cookies lost header/content, like GA or similar, and just name continues further
+	#### - useless cookies get end of the road
+	#### - needed cookies, like Wordpress/Woocommerce, will be untouched and those should not mention here
+	#### Please, if you know and understand better let me know
+	
+	## Cookies
+	
+	# First remove the Google Analytics added parameters, useless for backend
+	if (req.url ~ "(\?|&)(utm_source|utm_medium|utm_campaign|utm_content|gclid|cx|ie|cof|siteurl)=") {
+		set req.url = regsuball(req.url, "&(utm_source|utm_medium|utm_campaign|utm_content|gclid|cx|ie|cof|siteurl)=([A-z0-9_\-\.%25]+)", "");
+		set req.url = regsuball(req.url, "\?(utm_source|utm_medium|utm_campaign|utm_content|gclid|cx|ie|cof|siteurl)=([A-z0-9_\-\.%25]+)", "?");
+		set req.url = regsub(req.url, "\?&", "?");
+		set req.url = regsub(req.url, "\?$", "");
+	}
+
+	# Remove any Google Analytics and Adsense based Cookies
+	set req.http.Cookie = regsuball(req.http.Cookie, "__utm.=[^;]+(; )?", "");
+	set req.http.Cookie = regsuball(req.http.Cookie, "_ga.=[^;]+(; )?", "");
+	set req.http.Cookie = regsuball(req.http.Cookie, "_gat=[^;]+(; )?", "");
+	set req.http.Cookie = regsuball(req.http.Cookie, "_gali=[^;]+(; )?", "");
+	set req.http.Cookie = regsuball(req.http.Cookie, "_gid=[^;]+(; )?", "");
+	set req.http.Cookie = regsuball(req.http.Cookie, "utmctr=[^;]+(; )?", "");
+	set req.http.Cookie = regsuball(req.http.Cookie, "utmcmd.=[^;]+(; )?", "");
+	set req.http.Cookie = regsuball(req.http.Cookie, "utmccn.=[^;]+(; )?", "");
+
+	# Remove Caos, locally stored GA
+	set req.http.Cookie = regsuball(req.http.Cookie, "caosLocalGA=[^;]+(; )?", "");
+	set req.http.Cookie = regsuball(req.http.Cookie, "caosLocalGA_gid=[^;]+(; )?", "");
+
+	# Wordpress
+	#set req.http.Cookie = regsuball(req.http.Cookie, "wp-settings-1=[^;]+(; )?", "");
+	#set req.http.Cookie = regsuball(req.http.Cookie, "wp-settings-time-1=[^;]+(; )?", "");
+	#set req.http.Cookie = regsuball(req.http.Cookie, "wordpress_test_Cookie=[^;]+(; )?", "");
+	#set req.http.Cookie = regsuball(req.http.Cookie, "_wp_session=[^;]+(; )?", "");
+	
+	# Remove Woocommerce Cookies, all three
+	# or not...
+	#set req.http.Cookie = regsuball(req.http.Cookie, "woocommerce_cart_hash=[^;]+(; )?", "");
+	#set req.http.Cookie = regsuball(req.http.Cookie, "woocommerce_items_in_cart=[^;]+(; )?", "");
+	#set req.http.Cookie = regsuball(req.http.Cookie, "wp_woocommerce_session_=[^;]+(; )?", "");
+	
+	# Remove the PHPSESSID
+	#set req.http.Cookie = regsuball(req.http.Cookie, "PHPSESSID=[^;]+(; )?", "");
+	
+	# nonce?
+	#set req.http.Cookie = regsuball(req.http.Cookie, "_csrf=[^;]+(; )?", "");
+
+	# Remove the Quant Capital Cookies (added by some plugin, all __qca)
+	set req.http.Cookie = regsuball(req.http.Cookie, "__qc.=[^;]+(; )?", "");
+
+	# Remove DoubleClick offensive Cookies
+	set req.http.Cookie = regsuball(req.http.Cookie, "__gads=[^;]+(; )?", "");
+	set req.http.Cookie = regsuball(req.http.Cookie, "gadsTEST=[^;]+(; )?", "");
+
+	# Others
+	set req.http.Cookie = regsuball(req.http.Cookie, "__distillery=[^;]+(; )?", "");
+	set req.http.Cookie = regsuball(req.http.Cookie, "mp_=[^;]+(; )?", "");
+	set req.http.Cookie = regsuball(req.http.Cookie, "basepress=[^;]+(; )?", "");
+	set req.http.Cookie = regsuball(req.http.Cookie, "_pk_=[^;]+(; )?", "");
+	set req.http.Cookie = regsuball(req.http.Cookie, "has_js=[^;]+(; )?", "");
+
+	# Remove a ";" prefix in the cookie if present
+	set req.http.Cookie = regsuball(req.http.Cookie, "^;\s*", "");
+	
+	### These never worked
+	
+		# Moodle, but this doesn't work so I'm not using it with Varnish
+	#set req.http.Cookie = regsuball(req.http.Cookie, "MoodleSession=[^;]+(; )?", "");
+	#set req.http.Cookie = regsuball(req.http.Cookie, "MoodleTest=[^;]+(; )?", "");
+	#set req.http.Cookie = regsuball(req.http.Cookie, "MOODLEID=[^;]+(; )?", "");
+
+	# Gitea - doesn't work with Varnish
+	#set req.http.Cookie = regsuball(req.http.Cookie, "i_like_gitea=[^;]+(; )?", "");
+
+	# Remove the AddThis Cookies
+	set req.http.Cookie = regsuball(req.http.Cookie, "__atuv.=[^;]+(; )?", "");
+	
+	# Discourse
+	# Normalizing these is a bad idea
+	#set req.http.Cookie = regsuball(req.http.Cookie, "__profilin=[^;]+(; )?", "");
+	#set req.http.Cookie = regsuball(req.http.Cookie, "_forum_session=[^;]+(; )?", "");
+	#set req.http.Cookie = regsuball(req.http.Cookie, "_t=[^;]+(; )?", "");
+	#set req.http.Cookie = regsuball(req.http.Cookie, "_ws=[^;]+(; )?", "");
+	
+	# MediaWiki
+	#if(req.http.Cookie ~ "mf_useformat=") {
+		# This means user clicked on Toggle link "Mobile view" in the footer.
+		# Inform vcl_hash() that this should be cached as mobile page.
+	#	set req.http.x-wap = "no";
+	#}
+	
+	###
+
+	# Are there Cookies left with only spaces or that are empty?
+	if (req.http.Cookie ~ "^ *$") {
+		unset req.http.Cookie;
+	}
+	
+	# Check for the custom "X-Logged-In" header to identify
+	# if the visitor is a guest, then unset any cookie (including session cookies) provided
+	# it's not a POST request.
+	#if(req.http.X-Logged-In == "False" && req.method != "POST") {
+	#	unset req.http.Cookie;
+	#}
+	
+	## This actually do the magic? With statemant at vcl_hash it should let backend decide if a cookie means caching or not.
+	## But will backends really do that? That's the question.
+	# Save the cookies if any left before the built-in vcl_recv
+	# Those can be restored without cacheing at vcl_hash
+	set req.http.Cookie-Backup = req.http.Cookie;
+	unset req.http.Cookie;
+	
