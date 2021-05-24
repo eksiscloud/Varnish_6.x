@@ -71,12 +71,42 @@ sub common_rules {
 		return(synth(405, "Non-valid HTTP method!"));
 	}
 	
-	# Only GET and HEAD are cacheable methods AFAIK
+	## Auth requests shall be passed
+	if (req.http.Authorization || req.method == "POST") {
+		return (pass);
+	}
+	
+	## Do not cache AJAX requests.
+	if (req.http.X-Requested-With == "XMLHttpRequest") {
+		return(pass);
+	}
+	
+	## Only GET and HEAD are cacheable methods AFAIK
 	# Well, Varnish doesn't cache POST and others anyway and I don't like unneeded pass-jumps
-	# So... commented
-	#if (req.method != "GET" && req.method != "HEAD") {
-	#	return(pass);
-	#}
+	if (req.method != "GET" && req.method != "HEAD") {
+		return(pass);
+	}
+	
+	## Enable smart refreshing, aka. ctrl+F5 will flush that page
+	# Remember your header Cache-Control must be set something else than no-cache
+	# Otherwise everything will miss
+#	if (req.http.Cache-Control ~ "no-cache" && (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ purge)) {
+#		set req.hash_always_miss = true;
+#	}
+	
+	## 410 Gone redirects
+	call all_gone;
+	
+	## Steady and easy 301 redirections
+	call this_way;
+	
+	## Global handling of 404 and 410
+	call global-redirect;
+
+	## Implementing websocket support
+	if (req.http.Upgrade ~ "(?i)websocket") {
+		return(pipe);
+	}
 
 	## Cache warmup
 	# wget --spider -o wget.log -e robots=off -r -l 5 -p -S -T3 --header="X-Bypass-Cache: 1" --header="User-Agent:CacheWarmer" -H --domains=example.com --show-progress www.example.com
@@ -84,14 +114,6 @@ sub common_rules {
 	if (req.http.X-Bypass-Cache == "1" && req.http.User-Agent == "CacheWarmer") {
 		return(pass);
 	}
-	
-	## Fix Wordpress visual editor issues, must be the first one as url requests to work
-	if (req.url ~ "/wp-((login|admin)|comments-post.php|cron)" || req.url ~ "preview=true") {
-		return(pass);
-	}
-	
-	## Global handling of 404 and 410
-	call global-redirect;
 	
 	## I must clean up some trashes
 	
@@ -158,30 +180,6 @@ sub common_rules {
 		#if (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ forbidden) {
 		#	return(synth(403, "Forbidden IP"));
 		#}
-	
-		# Block access to phpmyadmin via website 
-		if (req.url ~ "^/phpmyadmin/.*$" || req.url ~ "^/phppgadmin/.*$" || req.url ~ "^/server-status.*$") { 
-			return(synth(666, "Request not allowed for " + req.url));
-		}
-	
-	## Googlebot-Image doesn't follow limits of robots.txt		
-	if (req.http.User-Agent ~ "Googlebot-Image") {
-		if (req.url !~ "/uploads/" || req.url !~ "/images/") {
-			return(synth(403, "Forbidden"));
-		} 
-	}
-	
-	
-	
-	## Auth requests shall be passed
-	if (req.http.Authorization) {
-		return (pass);
-	}
-	
-	## Do not cache AJAX requests.
-	if (req.http.X-Requested-With == "XMLHttpRequest") {
-		return(pass);
-	} 
 
 	## AWStats
 	if (req.url ~ "cgi-bin/awsstats.pl") {
@@ -208,12 +206,6 @@ sub common_rules {
 		unset req.http.Cookie;
 		return(hash);
 	}
-	
-	## I don't let user-agent to Vary.
-	# I could normalize those, but there is no need right now
-	# I send agent to headers anyway, just for fun and ut will be removed from Vary later at vcl_backend_response
-	#set req.http.Backup-Agent = req.http.User-Agent;
-	#unset req.http.User-Agent;
 	
 # The end
 }

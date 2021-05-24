@@ -9,25 +9,22 @@ sub vcl_recv {
 	#return(pass);
 	#return(pipe);
 
+	### Gitea is quite impossible to cache with Varnish. To keep return(pass) is the best option.
+
 	call common_rules;
 
-	# Pass Let's Encrypt
-	if (req.url ~ "^/\.well-known/acme-challenge/") {
-		return (pass);
-	}
-	
-	# user, admin and login pages
-	if (req.url ~ "/(user|admin|login)") {
+	# Only directory-likes and standard pages can be cached
+	if (
+	req.url !~ "/explore/"
+	&& req.url !~ "/licenses.txt"
+	&& req.url !~ "/tietosuojaseloste"
+	&& req.url !~ "/humans.txt"
+	&& req.url !~ "/avatar"
+	# this is bad idea, but my repos are quite static...
+	&& req.url !~ "/src/"
+	) {
 		return(pass);
-	}
-	
-	# Don't cache logged-in user
-	if (req.http.Cookie ~ "gitea_(awesome|incredible)") {
-		return(pass);
-	}
-
-	# Post requests will not be cached; does Gitea need this?
-	if (req.http.Authorization || req.method == "POST") {
+	} elseif (req.url == "/explore/repos") {
 		return(pass);
 	}
 	

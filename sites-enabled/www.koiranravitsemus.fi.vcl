@@ -7,7 +7,9 @@ sub vcl_recv {
 	#return(pass);
 	# for dumb TCL-proxy uncomment
 	#
-	#return(pipe);
+	return(pipe);
+	
+	##### Doesn't work, that's why pipe
 	
 	## MediaWiki doesn't let cache anything, because it loves to be dynamic for everybody. So, MediaWiki is setting vary:cookie and prgma: no-cache.
 	## My wiki aren't that dynamic so I'll adjust those two later at backend_response.

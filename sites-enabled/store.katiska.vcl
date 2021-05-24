@@ -23,6 +23,11 @@ sub vcl_recv {
 		return (pipe);
 	}
 
+	# Email-link to Gravity form by WP Offload
+	if (req.url ~ "^/wp-json/wp-offload-ses/v1/") {
+		return(pass);
+	}
+
 	# Pass the Store related
 	if (req.url ~ "/(koulutukset-2|tuote)") {
 		return (pass);
@@ -31,6 +36,11 @@ sub vcl_recv {
 	# Page of contact form
 	if (req.url ~ "/(tiedustelut)") {
 		return (pass);
+	}
+	
+	# Gravity form 
+	if (req.url ~ "/puhelinajan-lisatiedot") {
+		return(pass);
 	}
 
 	# WooCommerce common

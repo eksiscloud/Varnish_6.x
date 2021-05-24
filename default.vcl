@@ -24,9 +24,6 @@ import geoip2;		# Load the GeoIP2 by MaxMind
 
 ## I'm using sub-vcls only to keep default.vcl a little bit easier to read
 
-# Let's Encrypt; this was just for Hitch and has nothing to do right now
-#include "/etc/varnish/ext/letsencrypt.vcl";
-
 # All common vcl_recv
 include "/etc/varnish/ext/common.vcl";
 
@@ -36,35 +33,44 @@ include "/etc/varnish/ext/wordpress_common.vcl";
 # WooCommerce related
 include "/etc/varnish/ext/woocommerce_common.vcl";
 
-# Probes and similar good stuff
-include "/etc/varnish/ext/probes.vcl";
-
 # CORS
-include "/etc/varnish/ext/cors.vcl";
+include "/etc/varnish/ext/addons/cors.vcl";
 
 # Monit
-include "/etc/varnish/ext/monit.vcl";
+include "/etc/varnish/ext/addons/monit.vcl";
 
-# Bad Bad Robots
-include "/etc/varnish/ext/bad-bot.vcl";
+# Let's Encrypt; this was just for Hitch and has nothing to do right now
+#include "/etc/varnish/ext/addons/letsencrypt.vcl";
 
-# Cute and nice botties
-include "/etc/varnish/ext/nice-bot.vcl";
-
-# Stop knocking
-include "/etc/varnish/ext/403.vcl";
+# 301 Redirect
+include "/etc/varnish/ext/redirect/301sites.vcl";
 
 # Global redirecting if any
-include "/etc/varnish/ext/404.vcl";
+include "/etc/varnish/ext/redirect/404.vcl";
+
+# 410 Gone
+include "/etc/varnish/ext/redirect/410sites.vcl";
+
+# Probes and similar good stuff
+include "/etc/varnish/ext/filtering/probes.vcl";
+
+# Bad Bad Robots
+include "/etc/varnish/ext/filtering/bad-bot.vcl";
+
+# Cute and nice botties
+include "/etc/varnish/ext/filtering/nice-bot.vcl";
+
+# Stop knocking
+include "/etc/varnish/ext/filtering/403.vcl";
 
 # Just some debugging headers like HIT and MISS
-include "/etc/varnish/ext/debugs.vcl";
+include "/etc/varnish/ext/general/debugs.vcl";
 
 # Cheshire cat at headers
-include "/etc/varnish/ext/cheshire_cat.vcl";
+include "/etc/varnish/ext/general/cheshire_cat.vcl";
 
 # X-headers, just for fun
-include "/etc/varnish/ext/x-heads.vcl";
+include "/etc/varnish/ext/general/x-heads.vcl";
 
 probe sondi {
     #.url = "/index.html";  # or you can use just an url
@@ -72,6 +78,66 @@ probe sondi {
     .request =
       "HEAD / HTTP/1.1"
       "Host: www.katiska.info"
+      "Connection: close"
+      "User-Agent: Varnish Health Probe";
+	.timeout = 3s;
+	.interval = 4s;
+	.window = 5;
+	.threshold = 3;
+}
+
+probe sondi2 {
+    .request =
+      "HEAD / HTTP/1.1"
+      "Host: git.eksis.one"
+      "Connection: close"
+      "User-Agent: Varnish Health Probe";
+	.timeout = 3s;
+	.interval = 4s;
+	.window = 5;
+	.threshold = 3;
+}
+
+#probe sondi3 {
+#    .request =
+#      "HEAD / HTTP/1.1"
+#      "Host: www.koiranravitsemus.fi"
+#      "Connection: close"
+#      "User-Agent: Varnish Health Probe";
+#	.timeout = 3s;
+#	.interval = 4s;
+#	.window = 5;
+#	.threshold = 3;
+#}
+
+probe sondi4 {
+    .request =
+      "HEAD / HTTP/1.1"
+      "Host: proto.eksis.one"
+      "Connection: close"
+      "User-Agent: Varnish Health Probe";
+	.timeout = 3s;
+	.interval = 4s;
+	.window = 5;
+	.threshold = 3;
+}
+
+#probe sondi5 {
+#    .request =
+#      "HEAD / HTTP/1.1"
+#      "Host: kaffein.jagster.fi"
+#      "Connection: close"
+#      "User-Agent: Varnish Health Probe";
+#	.timeout = 3s;
+#	.interval = 4s;
+#	.window = 5;
+#	.threshold = 3;
+#}
+
+probe sondi6 {
+    .request =
+      "HEAD / HTTP/1.1"
+      "Host: meta.katiska.info"
       "Connection: close"
       "User-Agent: Varnish Health Probe";
 	.timeout = 3s;
@@ -95,24 +161,49 @@ backend gitea {
 	.path = "/run/gitea/gitea.sock";
 	#.host = "localhost";
 	#.port = "3000";					# Gitea
+	.first_byte_timeout = 300s;		# How long to wait before we receive a first byte from our backend?
+	.connect_timeout = 300s;		# How long to wait for a backend connection?
+	.between_bytes_timeout = 300s;	# How long to wait between bytes received from our backend?
+	.probe = sondi2;				# We have chance to recycle the probe
 }
 
-#backend wiki {
-#	.host = "127.0.0.1";
-#	.port = "82";
-#}
+# www.koiranravitsemus.fi by MediaWiki
+backend wiki {
+	.host = "127.0.0.1";
+	.port = "82";
+	.first_byte_timeout = 300s;		# How long to wait before we receive a first byte from our backend?
+	.connect_timeout = 300s;		# How long to wait for a backend connection?
+	.between_bytes_timeout = 300s;	# How long to wait between bytes received from our backend?
+	#.probe = sondi3;				# We have chance to recycle the probe
+}
 
 # proto.eksis.one by Discourse
-# Served by Nginx because my VCLs have something wrong
-#backend proto {
-#	.path = "/var/discourse/shared/proto/nginx.http.sock";
-#}
+backend proto {
+	.path = "/var/discourse/shared/proto/nginx.http.sock";
+	.first_byte_timeout = 300s;		# How long to wait before we receive a first byte from our backend?
+	.connect_timeout = 300s;		# How long to wait for a backend connection?
+	.between_bytes_timeout = 300s;	# How long to wait between bytes received from our backend?
+	.probe = sondi4;				# We have chance to recycle the probe
+}
 
 # kaffein.jagster.fi by Discourse
-# Served by Nginx because my VCLs have something wrong
-#backend kaffein {
-#	.path = "/var/discourse/shared/jagster/nginx.http.sock";
-#}
+backend kaffein {
+	.path = "/var/discourse/shared/jagster/nginx.http.sock";
+	.first_byte_timeout = 300s;		# How long to wait before we receive a first byte from our backend?
+	.connect_timeout = 300s;		# How long to wait for a backend connection?
+	.between_bytes_timeout = 300s;	# How long to wait between bytes received from our backend?
+#	.probe = sondi5;				# We have chance to recycle the probe
+}
+
+# meta.katiska.info by Discourse in other DO droplet
+backend meta {
+	.host = "138.68.111.130";
+	.port = "82";
+	.first_byte_timeout = 300s;		# How long to wait before we receive a first byte from our backend?
+	.connect_timeout = 300s;		# How long to wait for a backend connection?
+	.between_bytes_timeout = 300s;	# How long to wait between bytes received from our backend?
+	.probe = sondi6;				# We have chance to recycle the probe
+}
 
 ## ACLs: I can't use client.ip because it is always 127.0.0.1 by Nginx (or any proxy like Apache2)
 ## Instead client.ip it has to be like std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist
@@ -157,7 +248,7 @@ sub vcl_init {
 
 ############### vcl_recv #################
 ## We should have here only statments without return(...)
-## because such goes over virtual hosts
+## because such jumps to buildin.vcl passing everything in all.common.vcl and hosts' vcl
 ## The solution has explained here: https://www.getpagespeed.com/server-setup/varnish/varnish-virtual-hosts
 
 sub vcl_recv {
@@ -174,10 +265,10 @@ sub vcl_recv {
 	# return(pipe);
 
 	# My personal safenet when (not if...) I'll make some funny to Varnish
-	#if (req.http.host == "store.katiska.info") {
-	#	return(pipe);
-	#}
-	
+	if (req.http.host == "store.katiska.info") {
+		return(pipe);
+	}
+
 	### The work starts here
 	###
 	### At main vcl_recv will happend only normalizing etc, where is no return(...) statements because those bypasses other VCLs.
@@ -186,9 +277,6 @@ sub vcl_recv {
 	
 	## Normalize the header, remove the port (in case you're testing this on various TCP ports)
 	set req.http.host = regsub(req.http.host, ":[0-9]+", "");
-	
-	## Backend can vary by host. Can be changed in virtual hosts' vcl_recv()
-	set req.backend_hint = default;
 	
 	## Let's tune up a bit behavior for healthy backends: Cap grace to 5 min
 	if (std.healthy(req.backend_hint)) {
@@ -208,6 +296,14 @@ sub vcl_recv {
 	## Remove the proxy header
 	unset req.http.Proxy;
 	
+	## First remove the Google Analytics added parameters, useless for backend
+	if (req.url ~ "(\?|&)(utm_source|utm_medium|utm_campaign|utm_content|gclid|fbclid|cx|ie|cof|siteurl)=") {
+		set req.url = regsuball(req.url, "&(utm_source|utm_medium|utm_campaign|utm_content|gclid|cx|ie|cof|siteurl)=([A-z0-9_\-\.%25]+)", "");
+		set req.url = regsuball(req.url, "\?(utm_source|utm_medium|utm_campaign|utm_content|gclid|cx|ie|cof|siteurl)=([A-z0-9_\-\.%25]+)", "?");
+		set req.url = regsub(req.url, "\?&", "?");
+		set req.url = regsub(req.url, "\?$", "");
+	}
+	
 	## Strip a plain HTML anchor #, server doesn't need it.
 	if (req.url ~ "\#") {
 		set req.url = regsub(req.url, "\#.*$", "");
@@ -223,11 +319,6 @@ sub vcl_recv {
 	# -F '%%{X-Forwarded-For}i %%{VCL_Log:X-Req-Host}x %%l %%u %%t "%%r" %%s %%b "%%{Referer}i" "%%{User-agent}i"'
 	set req.http.X-Req-Host = req.http.host;
 	std.log("X-Req-Host:" + req.http.X-Req-Host);
-	
-	## Implementing websocket support
-	if (req.http.Upgrade ~ "(?i)websocket") {
-		return(pipe);
-	}
 
 	## Save Origin (for CORS) in a custom header and 
 	## remove Origin from the request so that backend doesn’t add CORS headers.
@@ -306,15 +397,29 @@ sub vcl_hash {
 	}
 
 	# hash cookies for requests that have them 
-	if (req.http.Cookie) {
-		hash_data(req.http.Cookie);
-	}
-
-#	if (req.http.Cookie-Backup) {
-	# restore the cookies before the lookup if any
-#		set req.http.Cookie = req.http.Cookie-Backup;
-#		unset req.http.Cookie-Backup;
+#	if (req.http.Cookie) {
+#		hash_data(req.http.Cookie);
 #	}
+
+	## Cookie madness
+	
+	if (req.http.cookie-wp) {
+		set req.http.Cookie = req.http.cookie-wp;
+		hash_data(req.http.Cookie);
+		unset req.http.cookie-wp;
+	}
+	
+	if (req.http.cookie-dc) {
+		set req.http.Cookie = req.http.cookie-dc;
+		hash_data(req.http.Cookie);
+		unset req.http.cookie-dc;
+	}
+	
+	if (req.http.cookie-git) {
+		set req.http.Cookie = req.http.cookie-git;
+		hash_data(req.http.Cookie);
+		unset req.http.cookie-git;
+	}
 
 	## The end
 	return (lookup);
@@ -416,6 +521,13 @@ sub vcl_backend_response {
 		set beresp.http.cache-control = "max-age=604800";
 		set beresp.ttl = 604800s; # 1wk
 	}
+	
+	## Sitemaps
+	if (bereq.url ~ "sitemap") {
+		unset beresp.http.cache-control;
+		set beresp.http.cache-control = "max-age=86400"; # 24h
+		set beresp.ttl = 86400s; # 24h
+	}
 
 	## Search results, mostly Wordpress if I'm guessing right
 	# Normally those querys should pass but I want to cache answers
@@ -441,20 +553,23 @@ sub vcl_backend_response {
 	#	set beresp.ttl = 300s;
 	#}
 	
-	## Old wp-json leak'ish of users/authors. I'm using this only to stop nagging from Bing.
-	if (beresp.status == 404 && bereq.url ~ "^/(kirjoittaja|author)") {
-		set beresp.status = 410;
-	}
-	
 	## Some admin-ajax.php can be cached by Varnish
-	# Except... it is always POST and that is uncacheable
+	# Except... it is almost always POST and that is uncacheable
 	if (bereq.url ~ "admin-ajax.php" && bereq.http.cookie !~ "wordpress_logged_in" ) {
 		unset beresp.http.set-cookie;
 		set beresp.ttl = 1d;
 		set beresp.grace = 1d;
 	}
 	
-	## Not found images after I started CDN; yes, these should redirect on server but I don't know how
+	## My repo/Gitea
+	if (bereq.url ~ "/src/" || bereq.url ~ "/explore/" ) {
+		#unset beresp.http.set-cookie;
+		set beresp.ttl = 1d;
+		set beresp.grace = 1d;
+		set beresp.http.cache-control = "max-age=86400"; # 24h
+	}
+	
+	## Not found images from different caches after I started CDN; yes, these should redirect on server but I don't know how
 	if (beresp.status == 404 && bereq.url ~ ".jpg") {
 		set beresp.status = 410;
 	}
@@ -527,7 +642,7 @@ sub vcl_backend_response {
 	# Heads up: product is 'tuote' in finnish, change it!
 	# Heads up: some sites may need to set cookie!
 	if (
-		bereq.url !~ "(wp-(login|admin)|admin-ajax|cart|my-account|wc-api|checkout|addons|logout|resetpass|lost-password|tuote|\?wc-ajax=get_refreshed_fragments)" &&
+		bereq.url !~ "(wp-(login|admin)|login|admin-ajax|cart|my-account|wc-api|checkout|addons|logout|resetpass|lost-password|tuote|\?wc-ajax=get_refreshed_fragments)" &&
 		bereq.http.cookie !~ "wordpress_|resetpass|wp-postpass" &&
 		beresp.status != 302 &&
 		bereq.method == "GET"
@@ -536,10 +651,10 @@ sub vcl_backend_response {
 	}
 	
 	## Do I really have to tell this again?
-#	if (bereq.method == "POST") {
-#		set beresp.uncacheable = true;
-#		return (deliver);
-#	}
+	if (bereq.method == "POST") {
+		set beresp.uncacheable = true;
+		return (deliver);
+	}
 
 	## Unset the old pragma header
 	unset beresp.http.Pragma;
@@ -639,44 +754,33 @@ sub vcl_purge {
 #
 sub vcl_synth {
 
-	## 301/302 redirects using custom status
-	#if (resp.status == 720) {
-	# We use this special error status 720 to force redirects with 301 (permanent) redirects
-	# To use this, call the following from anywhere in vcl_recv: return(synth(720, "http://host/new.html"));
-	#	set resp.http.Location = resp.reason;
-	#	set resp.status = 301;
-	#	return(deliver);
-	#} elseif (resp.status == 721) {
-	# And we use error status 721 to force redirects with a 302 (temporary) redirect
-	# To use this, call the following from anywhere in vcl_recv: return(synth(721, "http://host/new.html"));
-	#	set resp.http.Location = resp.reason;
-	#	set resp.status = 302;
-	#	return(deliver);
-	#}
-	
 	call cors;
 	
-	## Custom errors
+	### Custom errors
 		
-	# forbidden login
+	## forbidden error 403
 	if (resp.status == 403) {
+		set resp.status = 403;
+		set resp.reason = "Forbidden";
 		synthetic(std.fileread("/etc/varnish/error/403.html"));
 		return (deliver);
 	}
 		
-	# forbidden url
+	## Forbidden url
 	if (resp.status == 429) {
+		set resp.status = 429;
 		synthetic(std.fileread("/etc/varnish/error/429.html"));
 		return (deliver);
 	}
 		
-	# system is down
+	## System is down
 	if (resp.status == 503) {
+		set resp.status = 503;
 		synthetic(std.fileread("/etc/varnish/error/503.html"));
 		return (deliver);
 	} 
 	
-	# robots.txt for those sites that not generate theirs own
+	## robots.txt for those sites that not generate theirs own
 	# doesn't work with Wordpress
 	if (resp.status == 601) {
 		set resp.status = 200;
@@ -689,7 +793,51 @@ sub vcl_synth {
 		return(deliver);
 	}
 
-	# all other errors if any
+	## 301/302 redirects using custom status
+	if (resp.status == 701) {
+	# We use this special error status 720 to force redirects with 301 (permanent) redirects
+	# To use this, call the following from anywhere in vcl_recv: return(synth(720, "http://host/new.html"));
+		set resp.http.Location = resp.reason;
+		set resp.status = 301;
+		return(deliver);
+	} elseif (resp.status == 702) {
+	# And we use error status 721 to force redirects with a 302 (temporary) redirect
+	# To use this, call the following from anywhere in vcl_recv: return(synth(721, "http://host/new.html"));
+		set resp.http.Location = resp.reason;
+		set resp.status = 302;
+		return(deliver);
+	}
+
+	## 410 Gone
+	if (resp.status == 810) {
+		set resp.status = 410;
+		set resp.reason = "Gone";
+		# If there is custon 410-page
+		if (req.http.host ~ "www.katiska.info") {
+			set resp.http.Location = "https://www.katiska.info/error-410-sisalto-on-poistettu/";
+		} else {
+			set resp.http.Content-Type = "text/html; charset=utf-8";
+			set resp.http.Retry-After = "5";
+			synthetic( {"<!DOCTYPE html>
+			<html>
+				<head>
+					<title>Error "} + resp.status + " " + resp.reason + {"</title>
+				</head>
+					<body>
+						<h1>Error "} + resp.status + " " + resp.reason + {"</h1>
+						<p>Sorry, the content you were looking for has deleted. </p>
+						<h3>Guru Meditation:</h3>
+						<p>XID: "} + req.xid + {"</p>
+						<hr>
+						<p>Varnish cache server</p>
+					</body>
+				</html>
+			"} );
+		}
+		return(deliver);
+	}
+
+	## all other errors if any
 	set resp.http.Content-Type = "text/html; charset=utf-8";
 	set resp.http.Retry-After = "5";
 	synthetic( {"<!DOCTYPE html>
