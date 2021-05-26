@@ -86,7 +86,7 @@ probe sondi {
 	.threshold = 3;
 }
 
-probe sondi2 {
+probe sondi-git {
     .request =
       "HEAD / HTTP/1.1"
       "Host: git.eksis.one"
@@ -98,7 +98,7 @@ probe sondi2 {
 	.threshold = 3;
 }
 
-#probe sondi3 {
+#probe sondi-wiki {
 #    .request =
 #      "HEAD / HTTP/1.1"
 #      "Host: www.koiranravitsemus.fi"
@@ -110,7 +110,7 @@ probe sondi2 {
 #	.threshold = 3;
 #}
 
-probe sondi4 {
+probe sondi-proto {
     .request =
       "HEAD / HTTP/1.1"
       "Host: proto.eksis.one"
@@ -122,19 +122,19 @@ probe sondi4 {
 	.threshold = 3;
 }
 
-#probe sondi5 {
-#    .request =
-#      "HEAD / HTTP/1.1"
-#      "Host: kaffein.jagster.fi"
-#      "Connection: close"
-#      "User-Agent: Varnish Health Probe";
-#	.timeout = 3s;
-#	.interval = 4s;
-#	.window = 5;
-#	.threshold = 3;
-#}
+probe sondi-kaffein {
+    .request =
+      "HEAD / HTTP/1.1"
+      "Host: kaffein.jagster.fi"
+      "Connection: close"
+      "User-Agent: Varnish Health Probe";
+	.timeout = 3s;
+	.interval = 4s;
+	.window = 5;
+	.threshold = 3;
+}
 
-probe sondi6 {
+probe sondi-meta {
     .request =
       "HEAD / HTTP/1.1"
       "Host: meta.katiska.info"
@@ -164,7 +164,7 @@ backend gitea {
 	.first_byte_timeout = 300s;		# How long to wait before we receive a first byte from our backend?
 	.connect_timeout = 300s;		# How long to wait for a backend connection?
 	.between_bytes_timeout = 300s;	# How long to wait between bytes received from our backend?
-	.probe = sondi2;				# We have chance to recycle the probe
+	.probe = sondi-git;				# We have chance to recycle the probe
 }
 
 # www.koiranravitsemus.fi by MediaWiki
@@ -174,7 +174,7 @@ backend wiki {
 	.first_byte_timeout = 300s;		# How long to wait before we receive a first byte from our backend?
 	.connect_timeout = 300s;		# How long to wait for a backend connection?
 	.between_bytes_timeout = 300s;	# How long to wait between bytes received from our backend?
-	#.probe = sondi3;				# We have chance to recycle the probe
+	#.probe = sondi-wiki;			# We have chance to recycle the probe
 }
 
 # proto.eksis.one by Discourse
@@ -183,7 +183,7 @@ backend proto {
 	.first_byte_timeout = 300s;		# How long to wait before we receive a first byte from our backend?
 	.connect_timeout = 300s;		# How long to wait for a backend connection?
 	.between_bytes_timeout = 300s;	# How long to wait between bytes received from our backend?
-	.probe = sondi4;				# We have chance to recycle the probe
+	.probe = sondi-proto;			# We have chance to recycle the probe
 }
 
 # kaffein.jagster.fi by Discourse
@@ -192,7 +192,7 @@ backend kaffein {
 	.first_byte_timeout = 300s;		# How long to wait before we receive a first byte from our backend?
 	.connect_timeout = 300s;		# How long to wait for a backend connection?
 	.between_bytes_timeout = 300s;	# How long to wait between bytes received from our backend?
-#	.probe = sondi5;				# We have chance to recycle the probe
+	.probe = sondi-kaffein;			# We have chance to recycle the probe
 }
 
 # meta.katiska.info by Discourse in other DO droplet
@@ -202,7 +202,7 @@ backend meta {
 	.first_byte_timeout = 300s;		# How long to wait before we receive a first byte from our backend?
 	.connect_timeout = 300s;		# How long to wait for a backend connection?
 	.between_bytes_timeout = 300s;	# How long to wait between bytes received from our backend?
-	.probe = sondi6;				# We have chance to recycle the probe
+	.probe = sondi-meta;			# We have chance to recycle the probe
 }
 
 ## ACLs: I can't use client.ip because it is always 127.0.0.1 by Nginx (or any proxy like Apache2)
@@ -240,9 +240,13 @@ acl whitelist {
 # You have to define server at backend definition too.
 
 sub vcl_init {
+	
+	# GeiOP
 	new country = geoip2.geoip2("/usr/share/GeoIP/GeoLite2-Country.mmdb");
 	new city = geoip2.geoip2("/usr/share/GeoIP/GeoLite2-City.mmdb");
 	new asn = geoip2.geoip2("/usr/share/GeoIP/GeoLite2-ASN.mmdb");
+	
+# The end of init
 }
 
 
@@ -265,9 +269,9 @@ sub vcl_recv {
 	# return(pipe);
 
 	# My personal safenet when (not if...) I'll make some funny to Varnish
-	if (req.http.host == "store.katiska.info") {
-		return(pipe);
-	}
+	#if (req.http.host == "store.katiska.info") {
+	#	return(pipe);
+	#}
 
 	### The work starts here
 	###
@@ -276,6 +280,7 @@ sub vcl_recv {
 	### All domain-VCLs do the rest where return(...) is needed and part of jobs are done using 'call common.vcl'
 	
 	## Normalize the header, remove the port (in case you're testing this on various TCP ports)
+	set req.http.host = std.tolower(req.http.host);
 	set req.http.host = regsub(req.http.host, ":[0-9]+", "");
 	
 	## Let's tune up a bit behavior for healthy backends: Cap grace to 5 min
@@ -298,11 +303,14 @@ sub vcl_recv {
 	
 	## First remove the Google Analytics added parameters, useless for backend
 	if (req.url ~ "(\?|&)(utm_source|utm_medium|utm_campaign|utm_content|gclid|fbclid|cx|ie|cof|siteurl)=") {
-		set req.url = regsuball(req.url, "&(utm_source|utm_medium|utm_campaign|utm_content|gclid|cx|ie|cof|siteurl)=([A-z0-9_\-\.%25]+)", "");
-		set req.url = regsuball(req.url, "\?(utm_source|utm_medium|utm_campaign|utm_content|gclid|cx|ie|cof|siteurl)=([A-z0-9_\-\.%25]+)", "?");
+		set req.url = regsuball(req.url, "&(utm_source|utm_medium|utm_campaign|utm_content|gclid|fbclid|cx|ie|cof|siteurl)=([A-z0-9_\-\.%25]+)", "");
+		set req.url = regsuball(req.url, "\?(utm_source|utm_medium|utm_campaign|utm_content|gclid|fbclid|cx|ie|cof|siteurl)=([A-z0-9_\-\.%25]+)", "?");
 		set req.url = regsub(req.url, "\?&", "?");
 		set req.url = regsub(req.url, "\?$", "");
 	}
+	
+	## Strip querystring ?nocache
+	set req.url = regsuball(req.url, "\?nocache", "");
 	
 	## Strip a plain HTML anchor #, server doesn't need it.
 	if (req.url ~ "\#") {
@@ -313,6 +321,8 @@ sub vcl_recv {
 	if (req.url ~ "\?$") {
 		set req.url = regsub(req.url, "\?$", "");
 	}
+	
+
 	
 	## Awstats needs the host 
 	# You must add something like this in systemctl edit --full varnishncsa at line StartExec:
@@ -409,17 +419,25 @@ sub vcl_hash {
 		unset req.http.cookie-wp;
 	}
 	
+	if (req.http.cookie-git) {
+		set req.http.Cookie = req.http.cookie-git;
+		hash_data(req.http.Cookie);
+		unset req.http.cookie-git;
+	}
+	
 	if (req.http.cookie-dc) {
 		set req.http.Cookie = req.http.cookie-dc;
 		hash_data(req.http.Cookie);
 		unset req.http.cookie-dc;
 	}
 	
-	if (req.http.cookie-git) {
-		set req.http.Cookie = req.http.cookie-git;
+	if (req.http.cookie-moodle) {
+		set req.http.Cookie = req.http.cookie-moodle;
 		hash_data(req.http.Cookie);
-		unset req.http.cookie-git;
+		unset req.http.cookie-moodle;
 	}
+	
+	### /Cookie madness
 
 	## The end
 	return (lookup);
@@ -491,6 +509,7 @@ sub vcl_backend_response {
 	}
 
 	## Will kick in if backend is sick
+	# Why using grace instead keep? IDK.
 	set beresp.grace = 24h;
 	
 	## Cache some responses only short period
@@ -604,8 +623,10 @@ sub vcl_backend_response {
 		if (beresp.status == 404 && bereq.url ~ "/([a-z0-9_\.-]+).(asp|aspx|php|js|jsp|rar|zip|tar|gz)") {
 			if (bereq.http.X-Country-Code !~ "fi") {
 				set beresp.status = 666;
+				set beresp.ttl = 24h; # longer TTL for foreigners
 			} else {
 				set beresp.status = 403;
+				set beresp.ttl = 1h; # shorter TTL for more trustful ones
 			}
 		}
 	}
@@ -657,6 +678,7 @@ sub vcl_backend_response {
 	}
 
 	## Unset the old pragma header
+	# Unnecessary filtering 'cos Varnish doesn't care of pragma, but it is ugly in headers
 	unset beresp.http.Pragma;
 
 	## We are at the end

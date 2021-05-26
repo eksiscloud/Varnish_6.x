@@ -192,18 +192,22 @@ sub common_rules {
 	}
 	
 	## Large static files are delivered directly to the end-user without waiting for Varnish to fully read the file first.
+	# I have to use here custom cookies made in all-common, I reckon.
 	# The job will be done at vcl_backend_response
 	# But is this really needed nowadays?
 	if (req.url ~ "^[^?]*\.(avi|mkv|mov|mp3|mp4|mpeg|mpg|ogg|ogm|wav)(\?.*)?$") {
-		unset req.http.Cookie;
+		unset req.http.cookie-wp;
+		unset req.http.cookie-moodle;
 		return(hash);
 	}
 
 	## Cache all static files by Removing all Cookies for static files
+	# I have to use here custom cookies made in all-common, I reckon.
 	# Remember, do you really need to cache static files that don't cause load? Only if you have memory left.
-	# Here I decide to cache these static files. For me, most of them are handled by the CDN anyway.
-	if (req.url ~ "^[^?]*\.(7z|bmp|bz2|css|csv|doc|docx|eot|flac|flv|gif|gz|ico|jpeg|jpg|js|otf|pdf|png|ppt|pptx|rtf|svg|svgz|swf|tar|tbz|tgz|ttf|txt|txz|webm|webp|woff|woff2|xls|xlsx|xml|xz|zip)(\?.*)?$") {
-		unset req.http.Cookie;
+	# Here I decide to cache these static files. I exclude images because they are handled by the CDN.
+	if (req.http.host !~ "cdn." && req.url ~ "^[^?]*\.(7z|bmp|bz2|css|csv|doc|docx|eot|flac|flv|gz|ico|js|otf|pdf|png|ppt|pptx|rtf|svg|swf|tar|tbz|tgz|ttf|txt|txz|webm|woff|woff2|xls|xlsx|xml|xz|zip)(\?.*)?$") {
+		unset req.http.cookie-wp;
+		unset req.http.cookie-moodle;
 		return(hash);
 	}
 	

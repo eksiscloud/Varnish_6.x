@@ -453,6 +453,7 @@ sub bad_bot_detection {
 		   req.http.User-Agent ~ "curl"
 		|| req.http.User-Agent ~ "wget"
 		|| req.http.User-Agent ~ "libwww-perl"
+		|| req.http.User-Agent ~ "lwp-request"
 		|| req.http.User-Agent ~ "HTTPie"
 		|| req.http.User-Agent ~ "Ruby"
 		) {

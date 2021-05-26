@@ -7,51 +7,24 @@ sub vcl_recv {
 	# Turn off cache
 	# or make Varnish act like dumb proxy
 	#return(pass);
-	return(pipe);
+	#return(pipe);
 	
-	## Followind doesn't work, because of something @ default.vcl
-	# That's why piping and no cache, no fixed headers, no nothing
+	call common_rules;
 	
-	# Allow purging from ACL
-	if (req.method == "PURGE") {
-	if (!client.ip ~ purge) {
-		 return(synth(405, "This IP is not allowed to send PURGE requests."));
-	}
-	# If allowed, do a cache_lookup -> vlc_hit() or vlc_miss()
-	return (purge);
-	}
-
-	# Only deal with "normal" types
-	if (req.method != "GET" &&
-	req.method != "HEAD" &&
-	req.method != "PUT" &&
-	req.method != "POST" &&
-	req.method != "TRACE" &&
-	req.method != "OPTIONS" &&
-	req.method != "PATCH" &&
-	req.method != "DELETE") {
-	# Non-RFC2616 or CONNECT which is weird. */
-	# Why send the packet upstream, while the visitor is using a non-valid HTTP method? */
-	return (synth(404, "Non-valid HTTP method!"));
-	}
+	return(pass);
+	
+	### just testing
 	
 	if (req.url ~ "^/(theme|pix)/") { 
-		unset req.http.Cookie; 
+		unset req.http.cookie-moodle; 
+	}
+	
+	if (req.url ~ "/(login|my|user|courses|admin|tool|h5p|cohort|backup|grade|mod|cache|filter)") {
+		return (pass);
 	}
 
-	#Moodle doesn't like to be cached, passing
-    if (req.http.Cookie ~ "(MoodleSession|MoodleTest|MOODLEID)") {
-      return (pass);
-    }
-    if (req.url ~ "^/courses") {
-      return (pass);
-	  
-    }
-    if (req.url ~ "file.php") {
-      return (pass);
-    }
 
+  # The host ends here
   }
-
-
+# The end of the sub
 }

@@ -6,35 +6,30 @@ sub vcl_recv {
 	# Your lifelines: 
 	# Turn off cache
 	# or make Varnish act like dumb proxy
-	#return(pass);
-	return(pipe);
+	
+	#return(pipe);
 	
 	# No cache, no fixed headers, no nothing
 	
-	# Allow purging from ACL
-	if (req.method == "PURGE") {
-	if (!client.ip ~ purge) {
-		 return(synth(405, "This IP is not allowed to send PURGE requests."));
-	}
-	# If allowed, do a cache_lookup -> vlc_hit() or vlc_miss()
-	return (purge);
-	}
-
-	# Only deal with "normal" types
-	if (req.method != "GET" &&
-	req.method != "HEAD" &&
-	req.method != "PUT" &&
-	req.method != "POST" &&
-	req.method != "TRACE" &&
-	req.method != "OPTIONS" &&
-	req.method != "PATCH" &&
-	req.method != "DELETE") {
-	# Non-RFC2616 or CONNECT which is weird. */
-	# Why send the packet upstream, while the visitor is using a non-valid HTTP method? */
-	return (synth(404, "Non-valid HTTP method!"));
-	}
+	call common_rules;
 	
+	#return(pass);
+	
+	### just testing
+	
+	if (req.url ~ "^/(theme|pix)/") { 
+		unset req.http.cookie-moodle; 
+	} else {
+		return(pass);
+	}
+
+	## or...
+	
+    #if (req.url ~ "/(login|my|user|courses|admin|tool|h5p|cohort|backup|grade|mod|cache|filter|") {
+		#return (pass);
+	 #}
+	
+  # host ends here
   }
-
-
+# the end of sub
 }

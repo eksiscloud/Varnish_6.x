@@ -36,9 +36,18 @@ sub vcl_recv {
 		cookie.keep("mikromakro_");
 		set req.http.cookie = cookie.get_string();
 		set req.http.cookie-wiki = req.http.cookie;
-		
+	}
+	
+	# Moodle (waste of time, must pipe to work)
+	elseif (req.http.host ~ "pro.") {
+		cookie.parse(req.http.cookie);
+		cookie.keep("MoodleSession,MoodleTest,MOODLEID");
+		set req.http.cookie = cookie.get_string();
+		set req.http.cookie-moodle = req.http.cookie;
+	}
+	
 	# Everything else must be pure Wordpress and/or Woocommerce
-	} else {
+	else {
 		cookie.parse(req.http.cookie);
 		# I'm deleting test_cookie because 'wordpress_' acts like wildcard, I reckon
 		cookie.delete("wordpress_test_Cookie");

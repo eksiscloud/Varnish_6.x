@@ -211,6 +211,7 @@ if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 	|| req.url ~ "^/js/mage/"
 	|| req.url ~ "^/js/varien/"
 		# K
+	|| req.url ~ "^/katiska.info"
 	|| req.url ~ "/katiskainfo.sql"
 	|| req.url ~ "^/kauppa/wp-json"
 		# L
@@ -523,6 +524,7 @@ if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 	if (req.http.host == "katiska.info" || req.http.host == "www.katiska.info") {
 		if (
 			   req.url ~ "/adminer/"
+			|| req.url ~ "^/wordpress"
 			|| req.http.User-Agent ~ "jetmon"
 			|| req.http.User-Agent ~ "Jetpack by WordPress.com"
 		) {

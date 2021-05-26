@@ -20,6 +20,11 @@ sub vcl_recv {
 	if (req.url ~ "/wp-json/wp-discourse/v1/discourse-comments") {
 		return(pass);
 	}
+	
+	# Tag list 
+	if (req.url ~ "^/blogi/avainsana/") {
+		return(pass);
+	}
 
 	# drops stage site totally
 	if (req.url ~ "/stage") {

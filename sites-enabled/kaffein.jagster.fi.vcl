@@ -11,8 +11,6 @@ sub vcl_recv {
 	
 	# Must pipe, otherwise I just get error 500
 	return(pipe);
-	
-
 
 	
 	# Cache all others requests if they reach this point
