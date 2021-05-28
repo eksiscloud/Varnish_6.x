@@ -15,6 +15,15 @@ sub vcl_recv {
 	"^eksis\.eu$", "www.eksis.eu");
 	
 	call common_rules;
+	
+	# Limit logins by acl whitelist
+	if (req.url ~ "^/wp-login.php" && (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist)) {
+		if (req.http.X-Country-Code ~ "fi" || req.http.x-language ~ "fi") {
+				return(synth(403, "Access Denied " + req.http.X-Real-IP));
+		} else {
+				return(synth(666, "Forbidden action from " + req.http.X-Real-IP));
+		}
+	}
 
 	# Needed for Monit
 	if (req.url ~ "/pong") {

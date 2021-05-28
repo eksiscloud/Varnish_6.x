@@ -16,6 +16,20 @@ sub vcl_recv {
 	
 	call common_rules;
 	
+	# Limit logins by acl whitelist
+	if (req.url ~ "^/wp-login.php" && (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist)) {
+		if (req.http.X-Country-Code ~ "fi" || req.http.x-language ~ "fi") {
+				return(synth(403, "Access Denied " + req.http.X-Real-IP));
+		} else {
+				return(synth(666, "Forbidden action from " + req.http.X-Real-IP));
+		}
+	}
+	
+	# cPanel (please, don't bother. You can't break my password. Really.
+	if (req.url ~ "^/hallinta") {
+		return(synth(702, "https://whm47.louhi.net:2083/hallinta"));
+	}
+	
 	# Discourse as commenting
 	if (req.url ~ "/wp-json/wp-discourse/v1/discourse-comments") {
 		return(pass);

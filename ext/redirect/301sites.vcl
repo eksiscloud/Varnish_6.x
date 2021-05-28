@@ -80,15 +80,5 @@ sub this_way {
 
 	}
 	
-	### URL manipulations, mostly searches
-	if (req.url == "/?s=be") { set req.url = "^/?=be-vitamiini"; }
-	if (req.url == "/?s=rabdomyoloosi") { set req.url = "^/?=asidoosi"; }
-	if (req.url == "/?s=syylä") { set req.url = "^/?=syylät"; }
-	if (req.url == "/?s=täyslihapullat") { set req.url = "^/?=lihapulla"; }
-	if (req.url ~ "/?s=(nappulat|nappularuokinta)") { set req.url = "^/?=kuivamuona"; }
-	if (req.url ~ "/?s=nivelterveys") { set req.url = "^/?=nivelet"; }
-	if (req.url ~ "/?s=vischy") { set req.url = "^/?=vichy"; }
-	if (req.url ~ "/?s=vitamiinilista") { set req.url = "^/?=vitamiinit"; }
-	
 # The if the sub
 }

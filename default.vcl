@@ -42,6 +42,9 @@ include "/etc/varnish/ext/addons/monit.vcl";
 # Let's Encrypt; this was just for Hitch and has nothing to do right now
 #include "/etc/varnish/ext/addons/letsencrypt.vcl";
 
+# Some URL manipulations
+include "/etc/varnish/ext/redirect/manipulate.vcl";
+
 # 301 Redirect
 include "/etc/varnish/ext/redirect/301sites.vcl";
 
@@ -322,7 +325,7 @@ sub vcl_recv {
 		set req.url = regsub(req.url, "\?$", "");
 	}
 	
-
+	call new_direction;
 	
 	## Awstats needs the host 
 	# You must add something like this in systemctl edit --full varnishncsa at line StartExec:
@@ -350,19 +353,20 @@ sub vcl_recv {
 	set req.http.x-asn = std.tolower(req.http.x-asn);
 
 	## I'm normalizing language
-	# This is quite waste of time, though.
 	# For REAL normalizing you should work with Accept-Language only
-	set req.http.x-language = std.tolower(req.http.Accept-Language);
 	unset req.http.Accept-Language;
-	if (req.http.x-language ~ "fi") {
-		set req.http.x-language = "fi";
+	# But I could do something like:
+	#set req.http.x-language = std.tolower(req.http.Accept-Language);
+	#unset req.http.Accept-Language;
+	#if (req.http.x-language ~ "fi") {
+	#	set req.http.x-language = "fi";
 	#} elseif (req.http.x-language ~ "se") {
 	#	set req.http.x-language = "se"
 	#} elseif (req.http.x-language ~ "en") {
 	#	set req.http.x-language = "en"
-	} else {
-		unset req.http.x-language;
-	}
+	#} else {
+	#	unset req.http.x-language;
+	#}
 
 	## Send Surrogate-Capability headers to announce ESI support to backend
 	set req.http.Surrogate-Capability = "key=ESI/1.0";
@@ -551,7 +555,6 @@ sub vcl_backend_response {
 	## Search results, mostly Wordpress if I'm guessing right
 	# Normally those querys should pass but I want to cache answers
 	# Caching or not doesn't matter because users don't search too often
-	# Well, this isn't working anyway; because of POST I reckon
 	if (bereq.url ~ "/\?s=") {
 		unset beresp.http.cache-control;
 		set beresp.http.cache-control = "max-age=120";
@@ -818,13 +821,13 @@ sub vcl_synth {
 	## 301/302 redirects using custom status
 	if (resp.status == 701) {
 	# We use this special error status 720 to force redirects with 301 (permanent) redirects
-	# To use this, call the following from anywhere in vcl_recv: return(synth(720, "http://host/new.html"));
+	# To use this, call the following from anywhere in vcl_recv: return(synth(701, "http://host/new.html"));
 		set resp.http.Location = resp.reason;
 		set resp.status = 301;
 		return(deliver);
 	} elseif (resp.status == 702) {
 	# And we use error status 721 to force redirects with a 302 (temporary) redirect
-	# To use this, call the following from anywhere in vcl_recv: return(synth(721, "http://host/new.html"));
+	# To use this, call the following from anywhere in vcl_recv: return(synth(702, "http://host/new.html"));
 		set resp.http.Location = resp.reason;
 		set resp.status = 302;
 		return(deliver);
@@ -834,9 +837,11 @@ sub vcl_synth {
 	if (resp.status == 810) {
 		set resp.status = 410;
 		set resp.reason = "Gone";
-		# If there is custon 410-page
+		# If there is custom 410-page
+		# but... redirecting doesn't work
 		if (req.http.host ~ "www.katiska.info") {
 			set resp.http.Location = "https://www.katiska.info/error-410-sisalto-on-poistettu/";
+			return(deliver);
 		} else {
 			set resp.http.Content-Type = "text/html; charset=utf-8";
 			set resp.http.Retry-After = "5";
@@ -855,8 +860,8 @@ sub vcl_synth {
 					</body>
 				</html>
 			"} );
+			return(deliver);
 		}
-		return(deliver);
 	}
 
 	## all other errors if any

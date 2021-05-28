@@ -15,10 +15,13 @@ sub all_gone {
 		elseif (req.url ~ "/koira/mita-kupissa-luuraa-osa-3-perjantai-tuijottelut") { return(synth(810, "Gone")); }
 		elseif (req.url ~ "/znpb_template_mngr") { return(synth(810, "Gone")); }
 		
-	} 
-	elseif (req.http.host ~ "www.eksis.one") {
-		if (req.url =="/testi/testi/") { return(synth(810, "Gone")); }
-		elseif (req.url ~ "/testi2/resti2/") { return(synth(810, "Gone")); }
+		# Old wp-json leak'ish of users/authors. I'm using this only to stop nagging from Bing.
+		elseif (req.url ~ "^/(kirjoittaja|author)") {
+			if (req.url !~ "(adurodiel|atmini|Jagster|Katiska|MKarulinna|osmaja|sinituulia|Sivusto|Sumppu|tehtailija|tiia)") {
+				return(synth(810, "Gone"));
+			}
+		}
+	# End of Katiska.info
 	}
 
 	

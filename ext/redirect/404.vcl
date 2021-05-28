@@ -28,14 +28,6 @@ sub global-redirect {
 		return(synth(810, "Error 410 Gone"));
 	}
 
-	# Katiska.info
-	# Old wp-json leak'ish of users/authors. I'm using this only to stop nagging from Bing.
-	if (req.http.host ~ "www.katiska.info" && req.url ~ "^/(kirjoittaja|author)") {
-		if (req.url !~ "(adurodiel|atmini|Jagster|Katiska|MKarulinna|osmaja|sinituulia|Sivusto|Sumppu|tehtailija|tiia)") {
-			return(synth(810, "Error 410 Gone"));
-		}
-	}
-
 	
 # end of sub
 }
