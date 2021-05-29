@@ -121,6 +121,7 @@ if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 	|| req.url ~ "^/cgi-bin/config.exp"
 	|| req.url ~ "^/cgi-bin/test-cgi"
 	|| req.url ~ "^/checkout/"
+	|| req.url ~ "ckfinder"
 	|| req.url ~ "^/client_area"
 	|| req.url ~ "^/cms/"
 	|| req.url ~ "^/codes$"

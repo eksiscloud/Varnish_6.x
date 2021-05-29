@@ -163,7 +163,7 @@ backend default {					# use your servers instead default if you have more than j
 backend gitea {
 	.path = "/run/gitea/gitea.sock";
 	#.host = "localhost";
-	#.port = "3000";					# Gitea
+	#.port = "3000";				# Gitea
 	.first_byte_timeout = 300s;		# How long to wait before we receive a first byte from our backend?
 	.connect_timeout = 300s;		# How long to wait for a backend connection?
 	.between_bytes_timeout = 300s;	# How long to wait between bytes received from our backend?
@@ -354,19 +354,18 @@ sub vcl_recv {
 
 	## I'm normalizing language
 	# For REAL normalizing you should work with Accept-Language only
-	unset req.http.Accept-Language;
 	# But I could do something like:
-	#set req.http.x-language = std.tolower(req.http.Accept-Language);
-	#unset req.http.Accept-Language;
-	#if (req.http.x-language ~ "fi") {
-	#	set req.http.x-language = "fi";
+	set req.http.x-language = std.tolower(req.http.Accept-Language);
+	unset req.http.Accept-Language;
+	if (req.http.x-language ~ "fi") {
+		set req.http.x-language = "fi";
 	#} elseif (req.http.x-language ~ "se") {
 	#	set req.http.x-language = "se"
 	#} elseif (req.http.x-language ~ "en") {
 	#	set req.http.x-language = "en"
-	#} else {
-	#	unset req.http.x-language;
-	#}
+	} else {
+		unset req.http.x-language;
+	}
 
 	## Send Surrogate-Capability headers to announce ESI support to backend
 	set req.http.Surrogate-Capability = "key=ESI/1.0";
@@ -622,9 +621,9 @@ sub vcl_backend_response {
 	
 	## Stupid knockers trying different kind of executables or archives
 	# 404 notices at backend, like Wordpress, doesn't disappear because this happends after backend, of course
-	if (bereq.url !~ "(/wp-json/wp-discourse/|/wp-content/uploads/caos)") {  # both gives 404 sometimes, so this is just failsafe
+	if (bereq.url !~ "(/wp-json/wp-discourse/|/wp-content/uploads/caos|sitemap-)") {  # all give 404 sometimes, so this is just failsafe
 		if (beresp.status == 404 && bereq.url ~ "/([a-z0-9_\.-]+).(asp|aspx|php|js|jsp|rar|zip|tar|gz)") {
-			if (bereq.http.X-Country-Code !~ "fi") {
+			if (bereq.http.X-Country-Code !~ "fi" || bereq.http.x-bot != "nice") {
 				set beresp.status = 666;
 				set beresp.ttl = 24h; # longer TTL for foreigners
 			} else {
