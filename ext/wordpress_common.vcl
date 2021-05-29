@@ -17,6 +17,24 @@ sub wp_basics {
 		return (hash);
 	}
 	
+	# Stop behaving bad
+	if (
+		   req.url ~ "/adminer/"
+		|| req.url ~ "^/vendor/"
+		|| req.http.User-Agent ~ "jetmon"
+		|| req.http.User-Agent ~ "Jetpack by WordPress.com"
+		) {
+		if (
+			   req.http.X-County-Code ~ "fi"
+			|| req.http.x-language ~ "fi" 
+			|| req.http.x-agent == "nice"
+			) {
+				return(synth(403, "Forbidden: " + req.http.X-Real-IP));
+		} else {
+				return(synth(666, "Forbidden: " + req.http.X-Real-IP));
+		}
+	}
+	
 	## Fix Wordpress visual editor issues, must be the first one as url requests to work
 	if (req.url ~ "/wp-((login|admin)|comments-post.php|cron|)" || req.url ~ "/login" || req.url ~ "preview=true") {
 		return(pass);

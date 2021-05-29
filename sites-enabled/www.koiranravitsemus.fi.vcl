@@ -7,6 +7,23 @@ sub vcl_recv {
 	#return(pass);
 	# for dumb TCL-proxy uncomment
 	#
+	
+	# Stop knocking
+	if (
+		   req.url ~ "wp-login.php"
+		|| req.url ~ "xmlrpc.php"
+		) {
+		if (
+		   req.http.X-County-Code ~ "fi"
+		|| req.http.x-language ~ "fi" 
+		|| req.http.x-agent == "nice"
+		) {
+			return(synth(403, "Forbidden referer: " + req.http.X-Real-IP));
+		} else {
+			return(synth(666, "Forbidden referer: " + req.http.X-Real-IP));
+		}
+	}
+	
 	return(pipe);
 	
 	##### Doesn't work, that's why pipe

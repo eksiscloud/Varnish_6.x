@@ -25,6 +25,19 @@ sub vcl_recv {
 		}
 	}
 	
+	# Stop knocking
+	if (req.url ~ "^/wordpress") {
+		if (
+			   req.http.X-County-Code ~ "fi"
+			|| req.http.x-language ~ "fi" 
+			|| req.http.x-agent == "nice"
+			) {
+				return(synth(403, "Forbidden referer: " + req.http.Referer));
+		} else {
+				return(synth(666, "Forbidden referer: " + req.http.Referer));
+		}
+	}
+	
 	# cPanel (please, don't bother. You can't break my password. Really.
 	if (req.url ~ "^/hallinta") {
 		return(synth(702, "https://whm47.louhi.net:2083/hallinta"));

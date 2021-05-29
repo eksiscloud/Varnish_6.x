@@ -282,6 +282,32 @@ sub vcl_recv {
 	### At all-common.vcl is for cookies and similar commmon things for hosts
 	### All domain-VCLs do the rest where return(...) is needed and part of jobs are done using 'call common.vcl'
 	
+	## Just an example how to do geo-blocking
+	# 1st: GeoIP and normalizing country codes to lower case, because remembering to use capital letters is just too hard
+	set req.http.X-Country-Code = country.lookup("country/iso_code", std.ip(req.http.X-Real-IP, "0.0.0.0"));
+	set req.http.X-Country-Code = std.tolower(req.http.X-Country-Code);
+	# I could do for example:
+	#if (req.http.X-Country-Code !~ "(fi|se)") {
+	#	set req.http.X-Country-Code = "fi";
+	#} else {
+	#	set req.http.X-Country-Code = "us";
+	#}
+	
+	# 2nd: Actual blocking:
+	if (req.http.X-Country-Code ~ "(id|hk|tw)") {
+		return(synth(403, "Forbidden country: " + std.toupper(req.http.X-Country-Code)));
+	}
+	
+	## I can block service provider too.
+	# 1st: Finding out and normalizing ASN
+	set req.http.x-asn = asn.lookup("autonomous_system_organization", std.ip(req.http.X-Real-IP, "0.0.0.0"));
+	set req.http.x-asn = std.tolower(req.http.x-asn);
+	
+	# 2nd: Actual blocking: (customers from these are knocking my VPN etc way too often)
+	if (req.http.x-asn ~ "(censys|carinet|abc consultancy|frantech)") {
+		return(synth(403, "Forbidden organization: " + std.toupper(req.http.x-asn)));
+	}
+	
 	## Normalize the header, remove the port (in case you're testing this on various TCP ports)
 	set req.http.host = std.tolower(req.http.host);
 	set req.http.host = regsub(req.http.host, ":[0-9]+", "");
@@ -337,20 +363,6 @@ sub vcl_recv {
 	## remove Origin from the request so that backend doesn’t add CORS headers.
 	set req.http.X-Saved-Origin = req.http.Origin;
 	unset req.http.Origin;
-	
-	## GeoIP and normalizing country codes to lower case, because remembering to use capital letters is just too hard
-	set req.http.X-Country-Code = country.lookup("country/iso_code", std.ip(req.http.X-Real-IP, "0.0.0.0"));
-	set req.http.X-Country-Code = std.tolower(req.http.X-Country-Code);
-	# I could do for example:
-	#if (req.http.X-Country-Code !~ "(fi|se)") {
-	#	set req.http.X-Country-Code = "fi";
-	#} else {
-	#	set req.http.X-Country-Code = "us";
-	#}
-	
-	# I'm using ASN too
-	set req.http.x-asn = asn.lookup("autonomous_system_organization", std.ip(req.http.X-Real-IP, "0.0.0.0"));
-	set req.http.x-asn = std.tolower(req.http.x-asn);
 
 	## I'm normalizing language
 	# For REAL normalizing you should work with Accept-Language only

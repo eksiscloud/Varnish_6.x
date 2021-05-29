@@ -19,13 +19,13 @@ sub bad_bot_detection {
 		|| req.http.User-Agent == "-"							# because I couldn't success with LUA
 		# #
 		|| req.http.User-Agent ~ "360Spider"					# bad 		- done
-		|| req.http.User-Agent ~ "2345Explorer"				# malicious - done
+		|| req.http.User-Agent ~ "2345Explorer"					# malicious - done
 		# A 
 		|| req.http.User-Agent ~ "Acast "						# bad 		- done
 		|| req.http.User-Agent ~ "Accept-Encoding"
 		|| req.http.User-Agent ~ "AccompanyBot"
 		|| req.http.User-Agent ~ "AdAuth"						# bad 		- done
-		|| req.http.User-Agent ~ "adidxbot"					# good
+		|| req.http.User-Agent ~ "adidxbot"						# good
 		|| req.http.User-Agent ~ "admantx"						# bad 		- done
 		|| req.http.User-Agent ~ "Adsbot/"
 		|| req.http.User-Agent ~ "AdsTxtCrawler"				# bad 		- done
@@ -47,21 +47,21 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "AspiegelBot"					# good
 		|| req.http.User-Agent ~ "AvocetCrawler"
 		|| req.http.User-Agent ~ "AVSearch"
-		|| req.http.User-Agent ~ "AwarioRssBot"				# brand/marketing - done
+		|| req.http.User-Agent ~ "AwarioRssBot"					# brand/marketing - done
 		|| req.http.User-Agent ~ "AwarioSmartBot"				# brand/marketing - done
 		|| req.http.User-Agent ~ "axios"						# bad
 		# B
 		|| req.http.User-Agent ~ "Baidu"
 		|| req.http.User-Agent ~ "Barkrowler"
 		|| req.http.User-Agent ~ "BDCbot"
-		|| req.http.User-Agent ~ "bidswitchbot"				# bad
+		|| req.http.User-Agent ~ "bidswitchbot"					# bad
 		|| req.http.User-Agent ~ "Bidtellect"
 		|| req.http.User-Agent ~ "Blackboard Safeassign"
 		|| req.http.User-Agent ~ "BLEXBot"
 		|| req.http.User-Agent ~ "Bloglines"
 		|| req.http.User-Agent ~ "BorneoBot"
 		|| req.http.User-Agent ~ "botify"
-		|| req.http.User-Agent ~ "Buck"						# bad
+		|| req.http.User-Agent ~ "Buck"							# bad
 		|| req.http.User-Agent ~ "BuiltWith"
 		# C
 		|| req.http.User-Agent ~ "CarrierWave"
@@ -76,7 +76,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "checkout-"
 		|| req.http.User-Agent ~ "CISPA"
 		|| req.http.User-Agent ~ "Clarabot"
-		|| req.http.User-Agent ~ "Cliqzbot"					# bad
+		|| req.http.User-Agent ~ "Cliqzbot"						# bad
 		|| req.http.User-Agent ~ "Clone"
 		|| req.http.User-Agent ~ "Cloud mapping experiment"
 		|| req.http.User-Agent ~ "CMS Crawler"
@@ -89,7 +89,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "datagnionbot"
 		|| req.http.User-Agent ~ "Datanyze"
 		|| req.http.User-Agent ~ "Dataprovider"
-		|| req.http.User-Agent ~ "Daum"						# bad
+		|| req.http.User-Agent ~ "Daum"							# bad
 		|| req.http.User-Agent ~ "deepcrawl.com"
 		|| req.http.User-Agent ~ "^demo$"
 		|| req.http.User-Agent ~ "DF Bot"
@@ -135,7 +135,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "Go-http-client"				# bad, the most biggest issue and mostly from China and arabic countries
 		|| req.http.User-Agent ~ "^got "
 		|| req.http.User-Agent ~ "GotSiteMonitor"
-		|| req.http.User-Agent ~ "GrapeshotCrawler"			# bad
+		|| req.http.User-Agent ~ "GrapeshotCrawler"				# bad
 		|| req.http.User-Agent ~ "GRequests"
 		|| req.http.User-Agent ~ "GT-C3595"
 		|| req.http.User-Agent ~ "GuzzleHttp"
@@ -153,7 +153,7 @@ sub bad_bot_detection {
 		# I
 		|| req.http.User-Agent ~ "IAB ATQ"
 		|| req.http.User-Agent ~ "IAS crawler"					# bad
-		|| req.http.User-Agent ~ "ias-"						# bad
+		|| req.http.User-Agent ~ "ias-"							# bad
 		|| req.http.User-Agent ~ "import.io"
 		|| req.http.User-Agent ~ "Incutio"
 		|| req.http.User-Agent ~ "INGRID/"
@@ -217,7 +217,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "NetSystemsResearch"
 		|| req.http.User-Agent ~ "Nextcloud"
 		|| req.http.User-Agent ~ "newspaper"					# python3
-		|| req.http.User-Agent ~ "Nimbostratus-Bot"			# bad
+		|| req.http.User-Agent ~ "Nimbostratus-Bot"				# bad
 		|| req.http.User-Agent ~ "Nmap Scripting Engine"
 		|| req.http.User-Agent ~ "node-fetch"					# malicious
 		|| req.http.User-Agent ~ "NRCAudioBot"
@@ -234,7 +234,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "Pandalytics"
 		|| req.http.User-Agent ~ "panscient.com"
 		|| req.http.User-Agent ~ "PaperLiBot"
-		|| req.http.User-Agent ~ "PetalBot"					# same as AspiegelBot
+		|| req.http.User-Agent ~ "PetalBot"						# same as AspiegelBot
 		|| req.http.User-Agent ~ "PhantomJS"
 		|| req.http.User-Agent ~ "PHist/"
 		|| req.http.User-Agent ~ "Photon/"  					# Automattic
@@ -256,7 +256,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "Poster"						# malicious
 		|| req.http.User-Agent ~ "print\("						# malicious
 		|| req.http.User-Agent ~ "project-resonance"
-		|| req.http.User-Agent ~ "proximic"					# bad, really big issue, mostly from Amazon
+		|| req.http.User-Agent ~ "proximic"						# bad, really big issue, mostly from Amazon
 		|| req.http.User-Agent ~ "PulsePoint-Ads.txt-Crawler"
 		|| req.http.User-Agent ~ "python"
 		|| req.http.User-Agent ~ "Python"
@@ -311,7 +311,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "Slack-ImgProxy"
 		|| req.http.User-Agent ~ "Slurp"
 		|| req.http.User-Agent ~ "SMTBot"
-		|| req.http.User-Agent ~ "Snap URL"					# https://support.article
+		|| req.http.User-Agent ~ "Snap URL"						# https://support.article
 		|| req.http.User-Agent ~ "Sodes/"						# podcaster IP 209.6.245.67
 		|| req.http.User-Agent ~ "Sogou"
 		|| req.http.User-Agent ~ "socialmediascanner"
@@ -360,7 +360,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "WebZIP"
 		|| req.http.User-Agent ~ "Who.is"
 		|| req.http.User-Agent ~ "willnorris"
-		|| req.http.User-Agent ~ "Windows Live Writter"		# malicious
+		|| req.http.User-Agent ~ "Windows Live Writter"			# malicious
 		|| req.http.User-Agent == "Wordpress"					# malicious
 		|| req.http.User-Agent ~ "Wordpress.com"
 		|| req.http.User-Agent ~ "wp.com"
