@@ -17,7 +17,7 @@ sub all_gone {
 		
 		# Old wp-json leak'ish of users/authors. I'm using this only to stop nagging from Bing.
 		elseif (req.url ~ "^/(kirjoittaja|author)") {
-			if (req.url !~ "(adurodiel|atmini|Jagster|Katiska|MKarulinna|osmaja|sinituulia|Sivusto|Sumppu|tehtailija|tiia)") {
+			if (req.url !~ "(adurodiel|atmini|jagster|katiska|mkarulinna|osmaja|sinituulia|sivusto|sumppu|tehtailija|tiia)") {
 				return(synth(810, "Gone"));
 			}
 		}

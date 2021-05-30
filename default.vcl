@@ -24,6 +24,9 @@ import geoip2;		# Load the GeoIP2 by MaxMind
 
 ## I'm using sub-vcls only to keep default.vcl a little bit easier to read
 
+# Let's Encrypt gets its own backend
+include "/etc/varnish/letsencrypt.vcl";
+
 # All common vcl_recv
 include "/etc/varnish/ext/common.vcl";
 
@@ -37,10 +40,7 @@ include "/etc/varnish/ext/woocommerce_common.vcl";
 include "/etc/varnish/ext/addons/cors.vcl";
 
 # Monit
-include "/etc/varnish/ext/addons/monit.vcl";
-
-# Let's Encrypt; this was just for Hitch and has nothing to do right now
-#include "/etc/varnish/ext/addons/letsencrypt.vcl";
+#include "/etc/varnish/ext/addons/monit.vcl";
 
 # Some URL manipulations
 include "/etc/varnish/ext/redirect/manipulate.vcl";
@@ -304,7 +304,7 @@ sub vcl_recv {
 	set req.http.x-asn = std.tolower(req.http.x-asn);
 	
 	# 2nd: Actual blocking: (customers from these are knocking my VPN etc way too often)
-	if (req.http.x-asn ~ "(censys|carinet|abc consultancy|frantech)") {
+	if (req.http.x-asn ~ "(censys|carinet|abc consultancy|frantech|singlehop)") {
 		return(synth(403, "Forbidden organization: " + std.toupper(req.http.x-asn)));
 	}
 	
@@ -558,6 +558,13 @@ sub vcl_backend_response {
 	
 	## Sitemaps
 	if (bereq.url ~ "sitemap") {
+		unset beresp.http.cache-control;
+		set beresp.http.cache-control = "max-age=86400"; # 24h
+		set beresp.ttl = 86400s; # 24h
+	}
+
+	## Tags
+	if (bereq.url ~ "(avainsana|tag)") {
 		unset beresp.http.cache-control;
 		set beresp.http.cache-control = "max-age=86400"; # 24h
 		set beresp.ttl = 86400s; # 24h
@@ -885,7 +892,7 @@ sub vcl_synth {
   </head>
   <body>
     <h1>Error "} + resp.status + " " + resp.reason + {"</h1>
-    <p>"} + resp.reason + " from IP " + req.http.X-Real-IP + {"</p>
+    <p>"} + resp.reason + " from IP " + std.ip(req.http.X-Real-IP, "0.0.0.0") + {"</p>
     <h3>Guru Meditation:</h3>
     <p>XID: "} + req.xid + {"</p>
     <hr>

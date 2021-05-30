@@ -1,6 +1,6 @@
 sub tech_things {
 
-	# Local ones
+	## Local ones
 	if (
 		   req.http.User-Agent == "KatiskaWarmer"
 		|| req.http.User-Agent == "Varnish Health Probe"
@@ -15,7 +15,7 @@ sub tech_things {
 			}
 		}
 	
-	# UptimeRobot
+	## UptimeRobot
 	if (req.http.User-Agent ~ "UptimeRobot") {
 		if (req.url ~ "^/(pong|tietosuojaseloste|latest|login|user)") {
 			return(pass);
@@ -24,14 +24,15 @@ sub tech_things {
 		}
 	}
 	
-	# Let's Encrypt
-	if (req.http.User-Agent ~ "Let's Encrypt validation server") {
-		if (req.url ~ "^/.well-known/acme-challenge/") {
-			return(pipe);
-		} else {
-			return(synth(404, "Not found"));
-		}
-	}
+	## Let's Encrypt
+	# Has its own backend, so commented
+	#if (req.http.User-Agent ~ "Let's Encrypt validation server") {
+	#	if (req.url ~ "^/.well-known/acme-challenge/") {
+	#		return(pipe);
+	#	} else {
+	#		return(synth(404, "Not found"));
+	#	}
+	#}
 		
 
 

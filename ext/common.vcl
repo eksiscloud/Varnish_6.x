@@ -66,8 +66,8 @@ sub common_rules {
 	req.method != "PATCH" &&
 	req.method != "DELETE"
 	) {
-	# Non-RFC2616 or CONNECT which is weird. */
-	# Why send the packet upstream, while the visitor is using a non-valid HTTP method? */
+	# Non-RFC2616 or CONNECT which is weird.
+	# Why send the packet upstream, while the visitor is using a non-valid HTTP method?
 		return(synth(405, "Non-valid HTTP method!"));
 	}
 	
@@ -90,9 +90,15 @@ sub common_rules {
 	## Enable smart refreshing, aka. ctrl+F5 will flush that page
 	# Remember your header Cache-Control must be set something else than no-cache
 	# Otherwise everything will miss
-#	if (req.http.Cache-Control ~ "no-cache" && (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ purge)) {
-#		set req.hash_always_miss = true;
-#	}
+	if (req.http.Cache-Control ~ "no-cache" && (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ purge)) {
+		set req.hash_always_miss = true;
+	}
+	
+	## Page that Monit will ping
+	# Change this URL to something that will NEVER be a real URL for the hosted site, it will be effectively inaccessible.
+	if (req.url == "^/monit-zxcvb") {
+		return(synth(200, "OK"));
+	}
 	
 	## 410 Gone redirects
 	call all_gone;
@@ -171,7 +177,7 @@ sub common_rules {
 		# Stop bots and knockers seeking holes using 403.vcl
 		# I don't let search agents and similar to forbidden urls. Otherwise Fail2ban would ban theirs IPs too.
 		# I get error for testing purposes, but Fail2ban has whitelisted my IP.
-		if (req.http.User-Agent != "Nice bot") {
+		if (req.http.User-Agent != "nice") {
 			call stop_pages;
 		}
 	
@@ -187,27 +193,24 @@ sub common_rules {
 	}
 
 	## Pass Let's Encrypt
-	if (req.url ~ "^/\.well-known/acme-challenge/") {
-		return(pass);
-	}
+	# I'm using separate backend, so commented
+	#if (req.url ~ "^/\.well-known/acme-challenge/") {
+	#	return(pass);
+	#}
 	
 	## Large static files are delivered directly to the end-user without waiting for Varnish to fully read the file first.
-	# I have to use here custom cookies made in all-common, I reckon.
 	# The job will be done at vcl_backend_response
 	# But is this really needed nowadays?
 	if (req.url ~ "^[^?]*\.(avi|mkv|mov|mp3|mp4|mpeg|mpg|ogg|ogm|wav)(\?.*)?$") {
-		unset req.http.cookie-wp;
-		unset req.http.cookie-moodle;
+		unset req.http.cookie;
 		return(hash);
 	}
 
 	## Cache all static files by Removing all Cookies for static files
-	# I have to use here custom cookies made in all-common, I reckon.
 	# Remember, do you really need to cache static files that don't cause load? Only if you have memory left.
 	# Here I decide to cache these static files. I exclude images because they are handled by the CDN.
 	if (req.http.host !~ "cdn." && req.url ~ "^[^?]*\.(7z|bmp|bz2|css|csv|doc|docx|eot|flac|flv|gz|ico|js|otf|pdf|png|ppt|pptx|rtf|svg|swf|tar|tbz|tgz|ttf|txt|txz|webm|woff|woff2|xls|xlsx|xml|xz|zip)(\?.*)?$") {
-		unset req.http.cookie-wp;
-		unset req.http.cookie-moodle;
+		unset req.http.cookie;
 		return(hash);
 	}
 	

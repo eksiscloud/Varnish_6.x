@@ -16,6 +16,19 @@ sub vcl_recv {
 	
 	call common_rules;
 
+	## Wordpress REST API
+	# For some reason this isn't working if in wordpress_common.vcl
+	if (req.url ~ "/wp-json/wp/v2/") {
+		# Whitelisted IP will pass, but only when logged in
+		if (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ whitelist) {
+			return(pass);
+		} else {
+		# Must be logged in
+			if (req.http.cookie !~ "wordpress_logged_in") {
+				return(synth(403, "Unauthorized request"));
+			}
+		}
+	}
 
 	# Needed for Monit
 	if (req.url ~ "/pong") {
@@ -24,7 +37,7 @@ sub vcl_recv {
 
 	# Check the Cookies for wordpress-comment items I reckon
 	if (req.http.Cookie ~ "comment_") {
-	return (pass);
+		return (pass);
 	}
 	
 	# Keep this last

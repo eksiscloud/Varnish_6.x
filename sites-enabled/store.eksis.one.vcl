@@ -13,13 +13,33 @@ sub vcl_recv {
 
 	call common_rules;
 
-	# drops stage site
-	if (req.url ~ "/stage") {
-		return (pass);
+	## Limit logins by acl whitelist
+	if (req.url ~ "^/wp-login.php" && (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist)) {
+		# I can't ban finnish IPs
+		if (req.http.X-Country-Code ~ "fi" || req.http.x-language ~ "fi") {
+			return(synth(403, "Access Denied " + req.http.X-Real-IP));
+		} else {
+		# other knockers I can ban
+			return(synth(666, "Forbidden action from " + req.http.X-Real-IP));
+		}
 	}
 
-	# drops amp; IDK if really needed, but there is no point even try because Google is caching AMP-pages
-	if (req.url ~ "/amp/") {
+	## Wordpress REST API
+	# For some reason this isn't working if in wordpress_common.vcl
+	if (req.url ~ "/wp-json/wp/v2/") {
+		# Whitelisted IP will pass, but only when logged in
+		if (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ whitelist) {
+			return(pass);
+		} else {
+		# Must be logged in
+			if (req.http.cookie !~ "wordpress_logged_in") {
+				return(synth(403, "Unauthorized request"));
+			}
+		}
+	}
+
+	# drops stage site
+	if (req.url ~ "/stage") {
 		return (pass);
 	}
 

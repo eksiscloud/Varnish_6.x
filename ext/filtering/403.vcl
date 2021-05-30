@@ -415,7 +415,22 @@ if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 			return(synth(666, "Security issue"));
 		}
 	}
-		
+
+	## I have one site using category wordpress
+	if (req.http.host !~ "www.eksis.one") {
+		if (req.url ~ "^/wordpress") {
+			if (
+			   req.http.X-County-Code ~ "fi"
+			|| req.http.x-language ~ "fi" 
+			|| req.http.x-agent == "nice"
+				) {
+				return(synth(403, "Forbidden referer: " + req.http.Referer));
+			} else {
+				return(synth(666, "Forbidden referer: " + req.http.Referer));
+			}
+		}
+	}
+
 	# Fake referers
 	# These shouldn't be active, because nginx is taking care of them
 	if (
