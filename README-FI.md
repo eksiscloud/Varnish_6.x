@@ -1,8 +1,8 @@
 
 # varnish_6.6
-Tämä on (lähes) ajantasainen kopio itse käyttämästäni Nginx+Varnish+Apache2 pinosta. Hoidan useamman sivuston, filtteröin turhat botit sekä ison osan koputtelijoista, käytössä on GEoIP jne.
+Tämä on (lähes) ajantasainen kopio käyttämästäni Nginx+Varnish+Apache2 pinosta. Hoidan useamman sivuston, filtteröin turhat botit sekä ison osan koputtelijoista, käytössä on GeoIP jne.
 
-Suurimman osan pitäisi toimia myös vanhemmilla Varnish 6.x versioilla (<6.4), mutta silloin on käännettävä cookie VMOD. Tai käytettävä perinteistä fegex-hässäkkää.
+Suurimman osan pitäisi toimia myös vanhemmilla Varnish 6.x versioilla (<6.4), mutta silloin on käännettävä cookie VMOD. Tai käytettävä perinteistä regex-hässäkkää.
 
 Ole hereillä - koska kyseessä on kopio live-järjestelmästä, joten jos hyödynnät, niin korvaa ainakin urlit.
 Samasta syystä mukana on ratkaisuja, jotka sopivat minulle, mutta eivät taatusti sinulle.
@@ -25,7 +25,7 @@ Käytössä on:
 
 Käytän hieman, ehkä liikaakin call-kutsuja, mutta ne helpottavat default.vcl tiedoston lukemista.
 - common.vcl sisältää kaikkia virtual hosteja koskevia sääntöjä ja sitä kutsutaan virtual hostin vcl_recv osassa
-- wordpress-common.vcl sisältää jokaista WordPress-sivustoa koskevia sääntäjä ja rajoituksia, ja sitä kutsutaan sivuston vcl:ssä viimeisenä
+- wordpress-common.vcl sisältää jokaista WordPress-sivustoa koskevia sääntöjä ja rajoituksia, ja sitä kutsutaan sivuston vcl:ssä viimeisenä
 - woocommerce-common.vcl on vain WooCommercea koskevia asioita, ja sitä kutsutaan woocommercea käyttävien sivustojen vcl:ssä
 
 Yleistä säätöä tekee
@@ -36,6 +36,7 @@ Suodattavia asioita tekevät:
 - ext/filtering/403.vcl joka estää turhat kolkuttelut (jos url on tiedossa, joten logeja tulee seurattua)
 - ext/filtering/nice-bot.vcl päästää hyödylliset user agentit sisälle
 - ext/filtering/probes.vcl on serverin tekniikaan liittyvät, esim. sivutojen toimivuutta seuraavat
+- ext/filtering/asn.vcl suodattaa ASN-tiedon mukaan. Se täydentää geo-blokkausta, kun koko maata ei voi estää, mutta määrätyn palveluntarjoajan verkosta tulee poikkeuksellisen paljon sontaa
 
 Täysin hyödyttömiä header-säätöjä ovat:
 - ext/general/cheshire_cat.vcl joka esittää Irvikissan kuvan
@@ -57,6 +58,6 @@ Olen yrittänyt kommentoida suunnilleen kaiken tekemäni. Suurin osa on täysin 
 Minulla tämä rakennelma toimii. Ainakin jotenkin. Kannattaa silti pitää kirkkaana mielessä, että joudun joka viikko korjaamaan jotain, kun huomaan Varnishin tekevän ihan muuta kuin mitä toivoin sen toteuttavan.
 
 
-Bannaamiset ovat aina vaarallisia. Olen onnistunut estämään parhaimmillaan kaikki kävijäni. Iso osa Let's Encryptin boteista on Fail2Bannin blokkaamia. Sama juttu osan Googlen ja Bingin bottien kanssa. Joten vaikka estäisitkin raskaalla kädellä, niin ole hereillä bannien kanssa.
+Bannaamiset ovat aina vaarallisia. Olen onnistunut estämään parhaimmillaan kaikki kävijäni. Iso osa Let's Encryptin boteista on Fail2Bannin blokkaamia oman virheen takia. Sama juttu osan Googlen ja Bingin bottien kanssa. Joten vaikka estäisitkin raskaalla kädellä, niin ole hereillä bannien kanssa.
 
 Käyttämäni TTL:t ovat tehty aivan fiilispohjalta. Minulla ei ole minkäänlaista näkemystä, suunnitelmasta puhumattakaan.
