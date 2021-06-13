@@ -4,7 +4,7 @@ Tämä on (lähes) ajantasainen kopio käyttämästäni Nginx+Varnish+Apache2 pi
 
 Suurimman osan pitäisi toimia myös vanhemmilla Varnish 6.x versioilla (<6.4), mutta silloin on käännettävä cookie VMOD. Tai käytettävä perinteistä regex-hässäkkää.
 
-Ole hereillä - koska kyseessä on kopio live-järjestelmästä, joten jos hyödynnät, niin korvaa ainakin urlit.
+Ole hereillä - koska kyseessä on kopio live-järjestelmästä, niin jos hyödynnät, korvaa ainakin urlit.
 Samasta syystä mukana on ratkaisuja, jotka sopivat minulle, mutta eivät taatusti sinulle.
 
 Ylipäätään kannattaa aina olla varovainen, kun kopypeistaa asioita.
