@@ -15,10 +15,12 @@ if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 	|| req.url ~ "^/[1-9]/"
 	|| req.url ~ "^/[1-9][1-9][1-9][1-9]/"
 #	|| req.url ~ "^/[a-z]/"
+	|| req.url ~ "\?daksldlkdsadas=1"
 		# Plugins /wp-content/plugins
 	|| req.url ~ "/cherry-plugin/"
 	|| req.url ~ "/ct-ultimate-gdpr/"
 	|| req.url ~ "/e-signature/"
+	|| req.url ~ "/fancy-product-designer/"
 	|| req.url ~ "/formcraft/"
 	|| req.url ~ "/ioptimization/"
 	|| req.url ~ "/iva-business-hours-pro/"
@@ -28,6 +30,7 @@ if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 	|| req.url ~ "/SimplePie/"
 	|| req.url ~ "/store-locator-le/"
 	|| req.url ~ "/super-forms/"
+	|| req.url ~ "/theplus_elementor_addon/"
 	|| req.url ~ "/woocommerce-upload-files/"
 	|| req.url ~ "/worprees-plugin-bug-dar/"
 	|| req.url ~ "/wp-curriculo-vitae/"
@@ -84,6 +87,7 @@ if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 	|| req.url ~ "\.aspx"
 	|| req.url ~ "Account/ValidateCode/"
 	|| req.url ~ "Account/LoginToIbo"
+	|| req.url ~ "^/actions/"
 	|| req.url ~ "^/actuator/"
 	|| req.url ~ "^/adform/"				# ad company, bot is using regular UA
 	|| req.url ~ "^/Admin"
@@ -140,6 +144,7 @@ if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 	|| req.url ~ "^/database/"
 	|| req.url ~ "^/database.sql"
 	|| req.url ~ "/db_dump.sql"
+	|| req.url ~ "/dns-query"
 	|| req.url ~ "^/config/database.yml"
 	|| req.url ~ "^/config/databases.yml"
 	|| req.url ~ "^/db/"
@@ -214,7 +219,8 @@ if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 		# K
 	|| req.url ~ "^/katiska.info"
 	|| req.url ~ "/katiskainfo.sql"
-	|| req.url ~ "^/kauppa/wp-json"
+#	|| req.url ~ "^/kauppa/wp-json"
+	|| req.url ~ "/kerbynet"
 		# L
 	|| req.url ~ "/themes/loader.php"
 	|| req.url ~ "^/\.local"
@@ -249,6 +255,7 @@ if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 	|| req.url ~ "^/new/"
 	|| req.url ~ "/new_pluginwp.php"
 	|| req.url ~ "^/news/"
+	|| req.url ~ "/nice%20ports%2C/"
 	|| req.url ~ "nmaplowercheck"
 		# O
 	|| req.url ~ "^/.old"
@@ -256,6 +263,7 @@ if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 	|| req.url ~ "^/OLD/"
 	|| req.url ~ "/owa/"
 		# P
+	|| req.url ~ "^/paypal/"
 	|| req.url ~ "phpMyAdmin"
 	|| req.url ~ "^/phpmyadmin/.*$"
 	|| req.url ~ "^/phppgadmin/.*$"
@@ -337,8 +345,10 @@ if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 	|| req.url ~ "/superforms"
 	|| req.url ~ ".suspected"
 	|| req.url ~ "^/\.svn"
+	|| req.url ~ "swp_"
 	|| req.url ~ "^/SYS/"
 		# T
+	|| req.url ~ "/td/v1/optin/"
 	|| req.url ~ "telerik"
 	|| req.url ~ "Telerik"
 	|| req.url ~ "/telescope/"
@@ -348,9 +358,9 @@ if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 	|| req.url ~ "/Text/Diff/"
 	|| req.url ~ "^/themes/"
 	|| req.url ~ "/theplus_elementor_addon/"
-	|| req.url ~ "^TheUploader"
-	|| req.url ~ "^theuploader"
-	|| req.url ~ "^The Uploader"
+	|| req.url ~ "^/TheUploader"
+	|| req.url ~ "^/theuploader"
+	|| req.url ~ "^/The Uploader"
 	|| req.url ~ "^/tmp/"
 	|| req.url ~ "/toutu/"
 	|| req.url ~ "^/TP/"
@@ -495,6 +505,8 @@ if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 		} 
 	}
 
+	## Unnecessary requests
+	if (req.url ~ "apple-app-site-association") { return(synth(403, "Forbidden")); }
 	
 # whitelisting ends here
 }

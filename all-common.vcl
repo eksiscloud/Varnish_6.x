@@ -59,5 +59,6 @@ sub vcl_recv {
 	# Cleaning everything
 	unset req.http.cookie;
 
+
 	## Now we do everything per domains which are declared in all-vhost.vcl
 }

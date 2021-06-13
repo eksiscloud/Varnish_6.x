@@ -39,9 +39,6 @@ include "/etc/varnish/ext/woocommerce_common.vcl";
 # CORS
 include "/etc/varnish/ext/addons/cors.vcl";
 
-# Monit
-#include "/etc/varnish/ext/addons/monit.vcl";
-
 # Some URL manipulations
 include "/etc/varnish/ext/redirect/manipulate.vcl";
 
@@ -53,6 +50,9 @@ include "/etc/varnish/ext/redirect/404.vcl";
 
 # 410 Gone
 include "/etc/varnish/ext/redirect/410sites.vcl";
+
+# Banning by ASN
+include "/etc/varnish/ext/filtering/asn.vcl";
 
 # Probes and similar good stuff
 include "/etc/varnish/ext/filtering/probes.vcl";
@@ -272,9 +272,9 @@ sub vcl_recv {
 	# return(pipe);
 
 	# My personal safenet when (not if...) I'll make some funny to Varnish
-	#if (req.http.host == "store.katiska.info") {
-	#	return(pipe);
-	#}
+	if (req.http.host == "store.katiska.info") {
+		return(pipe);
+	}
 
 	### The work starts here
 	###
@@ -293,8 +293,8 @@ sub vcl_recv {
 	#	set req.http.X-Country-Code = "us";
 	#}
 	
-	# 2nd: Actual blocking:
-	if (req.http.X-Country-Code ~ "(id|hk|tw)") {
+	# 2nd: Actual blocking: (mostly I do geo-blocking in iptables, but this is much easier way)
+	if (req.http.X-Country-Code ~ "(bd|bg|cn|cr|ru|hk|id|pl|sg|tw)") {
 		return(synth(403, "Forbidden country: " + std.toupper(req.http.X-Country-Code)));
 	}
 	
@@ -303,10 +303,11 @@ sub vcl_recv {
 	set req.http.x-asn = asn.lookup("autonomous_system_organization", std.ip(req.http.X-Real-IP, "0.0.0.0"));
 	set req.http.x-asn = std.tolower(req.http.x-asn);
 	
-	# 2nd: Actual blocking: (customers from these are knocking my VPN etc way too often)
-	if (req.http.x-asn ~ "(censys|carinet|abc consultancy|frantech|singlehop)") {
-		return(synth(403, "Forbidden organization: " + std.toupper(req.http.x-asn)));
-	}
+	# 2nd: Actual blocking: (customers from these are knocking security holes etc. way too often)
+	# Finding out ASN from whois-data isn't so straight forwarded
+	# It is quite often desc. (if told) or whole or partially same as NetName.
+	# You can find it out using ASN lookup like https://hackertarget.com/as-ip-lookup/
+	call asn_name;
 	
 	## Normalize the header, remove the port (in case you're testing this on various TCP ports)
 	set req.http.host = std.tolower(req.http.host);
@@ -329,7 +330,7 @@ sub vcl_recv {
 	
 	## Remove the proxy header
 	unset req.http.Proxy;
-	
+
 	## First remove the Google Analytics added parameters, useless for backend
 	if (req.url ~ "(\?|&)(utm_source|utm_medium|utm_campaign|utm_content|gclid|fbclid|cx|ie|cof|siteurl)=") {
 		set req.url = regsuball(req.url, "&(utm_source|utm_medium|utm_campaign|utm_content|gclid|fbclid|cx|ie|cof|siteurl)=([A-z0-9_\-\.%25]+)", "");
@@ -557,11 +558,11 @@ sub vcl_backend_response {
 	}
 	
 	## Sitemaps
-	if (bereq.url ~ "sitemap") {
-		unset beresp.http.cache-control;
-		set beresp.http.cache-control = "max-age=86400"; # 24h
-		set beresp.ttl = 86400s; # 24h
-	}
+	#if (bereq.url ~ "sitemap") {
+	#	unset beresp.http.cache-control;
+	#	set beresp.http.cache-control = "max-age=86400"; # 24h
+	#	set beresp.ttl = 86400s; # 24h
+	#}
 
 	## Tags
 	if (bereq.url ~ "(avainsana|tag)") {
@@ -640,9 +641,9 @@ sub vcl_backend_response {
 	
 	## Stupid knockers trying different kind of executables or archives
 	# 404 notices at backend, like Wordpress, doesn't disappear because this happends after backend, of course
-	if (bereq.url !~ "(/wp-json/wp-discourse/|/wp-content/uploads/caos|sitemap-)") {  # all give 404 sometimes, so this is just failsafe
+	if (bereq.url !~ "(wp-json|caos|sitemap|lib/ajax)") {  # all of those give 404 sometimes, so this is just failsafe
 		if (beresp.status == 404 && bereq.url ~ "/([a-z0-9_\.-]+).(asp|aspx|php|js|jsp|rar|zip|tar|gz)") {
-			if (bereq.http.X-Country-Code !~ "fi" || bereq.http.x-bot != "nice") {
+			if (bereq.http.X-Country-Code !~ "fi" && bereq.http.x-bot != "nice") {
 				set beresp.status = 666;
 				set beresp.ttl = 24h; # longer TTL for foreigners
 			} else {
@@ -784,12 +785,14 @@ sub vcl_purge {
 
 	## Only handle actual PURGE HTTP methods, everything else is discarded
 	if (req.method == "PURGE") {
-	# restart request
+		# restart request
 		set req.http.X-Purge = "Yes";
 		# let's get right away fresh stuff
 		set req.method = "GET";
 		return (restart);
 	}
+
+# End of vcl_purge
 }
 
 
@@ -804,22 +807,72 @@ sub vcl_synth {
 	## forbidden error 403
 	if (resp.status == 403) {
 		set resp.status = 403;
-		set resp.reason = "Forbidden";
-		synthetic(std.fileread("/etc/varnish/error/403.html"));
+		#synthetic(std.fileread("/etc/varnish/error/403.html"));
+		set resp.http.Content-Type = "text/html; charset=utf-8";
+		set resp.http.Retry-After = "5";
+		synthetic( {"<!DOCTYPE html>
+		<html>
+			<head>
+				<title>Error "} + resp.status + " " + resp.reason + {"</title>
+			</head>
+			<body>
+				<h1>Error "} + resp.status + " " + resp.reason + {"</h1>
+				<p>"} + resp.reason + " from IP " + std.ip(req.http.X-Real-IP, "0.0.0.0") + {"</p>
+				<h3>Guru Meditation:</h3>
+				<p>XID: "} + req.xid + {"</p>
+				<hr>
+				<p>Varnish cache server</p>
+			</body>
+		</html>
+		"} );
 		return (deliver);
 	}
 		
 	## Forbidden url
 	if (resp.status == 429) {
 		set resp.status = 429;
-		synthetic(std.fileread("/etc/varnish/error/429.html"));
+		#synthetic(std.fileread("/etc/varnish/error/429.html"));
+		set resp.http.Content-Type = "text/html; charset=utf-8";
+		set resp.http.Retry-After = "5";
+		synthetic( {"<!DOCTYPE html>
+		<html>
+			<head>
+				<title>Error "} + resp.status + " " + resp.reason + {"</title>
+			</head>
+			<body>
+				<h1>Error "} + resp.status + " " + resp.reason + {"</h1>
+				<p>"} + resp.reason + " from IP " + std.ip(req.http.X-Real-IP, "0.0.0.0") + {"</p>
+				<h3>Guru Meditation:</h3>
+				<p>XID: "} + req.xid + {"</p>
+				<hr>
+				<p>Varnish cache server</p>
+			</body>
+		</html>
+		"} );
 		return (deliver);
 	}
 		
 	## System is down
 	if (resp.status == 503) {
 		set resp.status = 503;
-		synthetic(std.fileread("/etc/varnish/error/503.html"));
+		#synthetic(std.fileread("/etc/varnish/error/503.html"));
+		set resp.http.Content-Type = "text/html; charset=utf-8";
+		set resp.http.Retry-After = "5";
+		synthetic( {"<!DOCTYPE html>
+		<html>
+			<head>
+				<title>Error "} + resp.status + " " + resp.reason + {"</title>
+			</head>
+			<body>
+				<h1>Error "} + resp.status + " " + resp.reason + {"</h1>
+				<p>"} + resp.reason + " from IP " + std.ip(req.http.X-Real-IP, "0.0.0.0") + {"</p>
+				<h3>Guru Meditation:</h3>
+				<p>XID: "} + req.xid + {"</p>
+				<hr>
+				<p>Varnish cache server</p>
+			</body>
+		</html>
+		"} );
 		return (deliver);
 	} 
 	
@@ -886,23 +939,23 @@ sub vcl_synth {
 	set resp.http.Content-Type = "text/html; charset=utf-8";
 	set resp.http.Retry-After = "5";
 	synthetic( {"<!DOCTYPE html>
-<html>
-  <head>
-    <title>Error "} + resp.status + " " + resp.reason + {"</title>
-  </head>
-  <body>
-    <h1>Error "} + resp.status + " " + resp.reason + {"</h1>
-    <p>"} + resp.reason + " from IP " + std.ip(req.http.X-Real-IP, "0.0.0.0") + {"</p>
-    <h3>Guru Meditation:</h3>
-    <p>XID: "} + req.xid + {"</p>
-    <hr>
-    <p>Varnish cache server</p>
-  </body>
-</html>
-"} );
-    return (deliver);
+		<html>
+			<head>
+				<title>Error "} + resp.status + " " + resp.reason + {"</title>
+			</head>
+			<body>
+				<h1>Error "} + resp.status + " " + resp.reason + {"</h1>
+				<p>"} + resp.reason + " from IP " + std.ip(req.http.X-Real-IP, "0.0.0.0") + {"</p>
+				<h3>Guru Meditation:</h3>
+				<p>XID: "} + req.xid + {"</p>
+				<hr>
+				<p>Varnish cache server</p>
+			</body>
+		</html>
+	"} );
+	return (deliver);
 
-
+# End of sub
 } 
 
 

@@ -1,5 +1,6 @@
 sub wp_basics {
-	# Only for Wordpresses
+	
+	### Only for Wordpresses
 	
 	## I have strange redirection issue with all WordPresses
 	## Must be a problem with cookies/caching/nonce, but I don't understand how.
@@ -7,6 +8,7 @@ sub wp_basics {
 	if (
 		   req.url ~ "&_wpnonce"
 		|| req.url ~ "&reauth=1"
+		|| req.url ~ "&redirect_to"
 		) {
 			return(pipe);
 		}
@@ -37,7 +39,7 @@ sub wp_basics {
 	
 	## Fix Wordpress visual editor issues, must be the first one as url requests to work
 	# Backend of Wordpress
-	if (req.url ~ "/wp-((login|admin)|comments-post.php|cron|)" || req.url ~ "/login" || req.url ~ "preview=true") {
+	if (req.url ~ "/wp-((login|admin)|my-account|comments-post.php|cron|)" || req.url ~ "/login" || req.url ~ "preview=true") {
 		return(pass);
 	}
 
@@ -47,14 +49,17 @@ sub wp_basics {
 		return(pass);
 	}
 
+	# Email-link after registration
+	if (req.url ~ "/wp-json/wp-offload-ses/") {
+		return(pipe);
+	}
+
 	## Normalize the query arguments.
 	# 'If...' structure is for Wordpress, so change/add something else when needed
 	# If std.querysort is any earlier it will break things, like giving error 500 when logging out.
-	if (req.url !~ "wp-admin" || req.url !~ "wp-login") {
+	if (req.url !~ "(wp-admin|wp-login|wp-json)") {
 		set req.url = std.querysort(req.url);
 	}
-	
-
 
 	## Don't cache wordpress related pages
 	if (req.url ~ "(signup|activate|mail|logout)") {

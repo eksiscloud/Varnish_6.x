@@ -16,6 +16,7 @@ sub cute_bot_allowance {
 		|| req.http.User-Agent ~ "GoogleImageProxy" #anonymizes Gmail openings and is a human
 		|| req.http.User-Agent ~ "Googlebot-Video"
 		|| req.http.User-Agent ~ "AppEngine-Google" #snapchat
+		|| req.http.User-Agent == "Chrome Privacy Preserving Prefetch Proxy"
 		|| req.http.User-Agent == "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.246 Mozilla/5.0" # the actual gmail bot
 		) { 
 			set req.http.x-bot = "nice"; 

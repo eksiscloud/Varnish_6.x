@@ -6,7 +6,7 @@ sub vcl_recv {
 	# Your lifelines: 
 	# Turn off cache
 	# or make Varnish act like dumb proxy
-	#return(pass);
+	return(pass);
 	#return(pipe);
 
 	## This caches almost nothing
@@ -38,7 +38,7 @@ sub vcl_recv {
 	}
 
 	# Email-link to Gravity form by WP Offload
-	if (req.url ~ "^/wp-json/wp-offload-ses/v1/") {
+	if (req.url ~ "/wp-json/wp-offload-ses/v1/") {
 		return(pass);
 	}
 

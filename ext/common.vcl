@@ -1,6 +1,9 @@
 sub common_rules {
 	### These are common to every virtual hosts
 	
+	## Let's clean path to sitemaps
+	if (req.url ~ "sitemap") { return(pipe); }
+	
 	## Who can do BAN, PURGE and REFRESH
 	# Remember to use capitals when doing, size matters...
 	if (req.method == "BAN") {

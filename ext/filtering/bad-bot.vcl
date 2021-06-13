@@ -37,6 +37,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "Amazon CloudFront"			# malicious - done
 		|| req.http.User-Agent == "AmazonMusic"
 		|| req.http.User-Agent ~ "amp-wp"
+		|| req.http.User-Agent ~ "Anarchy99"
 		|| req.http.User-Agent ~ "Anchorage DMP"				# bad		- done
 		|| req.http.User-Agent ~ "AndroidDownloadManager"
 		|| req.http.User-Agent ~ "Apache-HttpClient"			# malicious - done
@@ -177,6 +178,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "Ktor"
 		|| req.http.User-Agent ~ "kubectl"						# malicious
 		# L
+		|| req.http.User-Agent ~ "l9tcpid"
 		|| req.http.User-Agent ~ "l9explore"
 		|| req.http.User-Agent ~ "Lavf"
 		|| req.http.User-Agent ~ "Leap"
@@ -234,6 +236,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "Pandalytics"
 		|| req.http.User-Agent ~ "panscient.com"
 		|| req.http.User-Agent ~ "PaperLiBot"
+		|| req.http.User-Agent ~ "PR-CY.RU"
 		|| req.http.User-Agent ~ "PetalBot"						# same as AspiegelBot
 		|| req.http.User-Agent ~ "PhantomJS"
 		|| req.http.User-Agent ~ "PHist/"
@@ -358,6 +361,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "weborama-fetcher"
 		|| req.http.User-Agent ~ "webtech"
 		|| req.http.User-Agent ~ "WebZIP"
+		|| req.http.User-Agent ~ "WellKnownBot"
 		|| req.http.User-Agent ~ "Who.is"
 		|| req.http.User-Agent ~ "willnorris"
 		|| req.http.User-Agent ~ "Windows Live Writter"			# malicious
@@ -389,6 +393,7 @@ sub bad_bot_detection {
 		## CFNetwork, Darwin are always bots, but some are useful. 2345Explorer same thing, but practically always harmful
 		## Dalvik is VM of android
 		|| req.http.User-Agent ~ "eSobiSubscriber"
+		|| req.http.User-Agent ~ "Chrome/[CHROME_VERSION] Mobile Safari/[WEBKIT_VERSION]"  # mostly https://mytuner-radio.com/ lying its UA
 #		|| req.http.User-Agent ~ "Opera/9.80 (Windows NT 6.1; WOW64) Presto/2.12.388 Version/12.18"
 		|| req.http.User-Agent ~ "Opera/9.80 (Windows NT 5.1; U; en) Presto/2.10.289 Version/12.01"
 #		|| req.http.User-Agent ~ "Safari/14608.5.12 CFNetwork/978.2 Darwin/18.7.0 (x86_64)" #Maybe Apple, it is checking out mostly only touch-icon.png

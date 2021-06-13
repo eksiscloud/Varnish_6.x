@@ -10,9 +10,22 @@ sub this_way {
 		# known links from elsewhere
 		elseif (req.url ~ "^/koulutukset/sumppupro") { return(synth(701, "https://store.katiska.info/")); }
 		elseif (req.url ~ "^/kurssit/allergisen-koiran-eliminaatio-kaytannossa") { return(synth(701, "https://www.katiska.info/tieto/koiran-allergia-hiiva-iho/allergisen-koiran-eliminaatio-kaytannossa/")); }
+		elseif (req.url ~ "^/kurssit/hiiva-ikuinen-riesa") { return(synth(701, "https://www.katiska.info/tieto/koira-sairaus-elimet/onko-koiran-hiiva-ikuinen-riesa/")); }
+		elseif (req.url ~ "^/kurssit/koiran-narastys") { return(synth(701, "https://www.katiska.info/tieto/koira-terveys-narastys/koiran-narastys/")); }
 		elseif (req.url ~ "^/kurssit/kurkistus-kuivamuoniin") { return(synth(701, "https://www.katiska.info/tieto/koira-kuivamuona-taysruoka/kurkistus-kuivamuoniin/")); }
+		elseif (req.url ~ "^/kurssit/lihaa-vatsan-taydelta") { return(synth(701, "https://www.katiska.info/tieto/koira-ruokinta-liha/koiralle-lihaa-vatsan-taydelta/")); }
+		elseif (req.url ~ "^/kurssit/liikkuvan-koiran-ruokinta") { return(synth(701, "https://www.katiska.info/tieto/liikkuvan-ruokinta-yleisesti/liikkuvan-koiran-ruokinta/")); }
+		elseif (req.url ~ "^/kurssit/liikkuvan-koiran-rutiinitarkastus") { return(synth(701, "https://www.katiska.info/tieto/lihashuolto/koiran-lihaksiston-rutiinitarkastus/")); }
+		elseif (req.url ~ "^/kurssit/pennun-ruoka-ja-kasvu") { return(synth(701, "https://www.katiska.info/tieto/koira-kasvava-pentu/pennun-ruokinta-ja-kasvu-2/")); }
+		elseif (req.url ~ "^/kurssit/perustyokalut") { return(synth(701, "https://www.katiska.info/tieto/ruoka/koiran-ruokinnan-laskeminen-perustyokalut/")); }
+		elseif (req.url ~ "^/kurssit/ravintokouluttaja") { return(synth(701, "https://store.katiska.info/tuote/ravintokouluttaja/")); }
+		elseif (req.url ~ "^/kurssit/ruokinnan-idea") { return(synth(701, "https://www.katiska.info/tieto/podcastit-vlog/ruokinnan-idea-podcast/")); }
+		elseif (req.url ~ "^/ravitsemus/hiilihydraatit-ravitsemus/wiki") { return(synth(701, "https://www.koiranravitsemus.fi/aihe/Hiilihydraatit")); }
+		elseif (req.url ~ "^/ravitsemus/rasva-ravitsemus/rasva-on-aina-rasva") { return(synth(701, "https://www.katiska.info/tieto/rasvat/rasva-ruokinnassa/")); }
 		elseif (req.url ~ "^/sanakirja/avital-calcium") { return(synth(701, "https://www.katiska.info/tieto/lisaravinteiden-annostus/avital-calcium/")); }
 		elseif (req.url ~ "^/sanakirja/probalans-be-balans") { return(synth(701, "https://www.katiska.info/tieto/lisaravinteiden-annostus/probalans-be-balans/")); }
+		elseif (req.url ~ "^/selko/$") { return(synth(701, "https://selko.katiska.info/")); }
+		elseif (req.url ~ "^/tieto/infokortti") { return(synth(701, "https://www.katiska.info/tieto/avainsana/infokortti/")); }
 		elseif (req.url ~ "^/tieto/koira-ruoka-lisaravinne/lisaravinteiden-annostus-hakemisto") { return(synth(701, "https://www.katiska.info/tieto/lisaravinteiden-annostus/lisaravinteiden-annostus-hakemisto/")); }
 		elseif (req.url ~ "^/tieto/koirat/podcastit-vlog/103-mahdoton-kysymys-mika-on-hyva-ruokamerkki-koiralle") { return(synth(701, "https://www.katiska.info/tieto/podcastit-vlog/103-mahdoton-kysymys-mika-on-hyva-ruokamerkki-koiralle/")); }
 		elseif (req.url ~ "^/tieto/koirat/podcastit-vlog/106-nrc-uskovaisuus") { return(synth(701, "https://www.katiska.info/tieto/podcastit-vlog/106-nrc-uskovaisuus/")); }
@@ -49,16 +62,23 @@ sub this_way {
 		elseif (req.url ~ "^/wp-content/uploads/2011/03/73014sj5qwz4hp-300x204.jpg") { return(synth(701, "https://cdn.katiska.info/kb/73014sj5qwz4hp.jpg")); }
 		elseif (req.url ~ "^/wp-content/uploads/2011/05/070926-181638-300x276.jpg") { return(synth(701, "https://cdn.katiska.info/kb/070926-181638.jpg")); }
 		elseif (req.url ~ "^/wp-content/uploads/2011/07/3307717696_a4f3b65005_o-300x209.jpg") { return(synth(701, "https://cdn.katiska.info/kb/3307717696_a4f3b65005_o.jpg")); }
+		elseif (req.url ~ "^/wp-content/uploads/2011/07/4551462096_2424b24711_b-200x300.jpg") { return(synth(701, "https://cdn.katiska.info/kb/4551462096_2424b24711_b.jpg")); }
 		elseif (req.url ~ "^/wp-content/uploads/2011/10/mala-koira-300x203.jpg") { return(synth(701, "https://cdn.katiska.info/kb/mala-koira.jpg")); }
+		elseif (req.url ~ "^/wp-content/uploads/2013/04/IMG_0738-e1365753541793-224x300.jpg") { return(synth(701, "https://cdn.katiska.info/kb/IMG_0738-e1365753541793.jpg")); }
 		elseif (req.url ~ "^/wp-content/uploads/2014/01/how-much-is-much-574x1024.jpg") { return(synth(701, "https://cdn.katiska.info/kb/how-much-is-much.jpg")); }
 		elseif (req.url ~ "^/wp-content/uploads/2014/05/ID-10071393-300x237.jpg") { return(synth(701, "https://cdn.katiska.info/kb/ID-10071393.jpg")); }
 		elseif (req.url ~ "^/wp-content/uploads/2014/11/20130609-untitled-001-300x216.jpg") { return(synth(701, "https://cdn.katiska.info/kb/20130609-untitled-001.jpg")); }
+		elseif (req.url ~ "^/wp-content/uploads/2015/03/pahkinankuori-292x300.jpg") { return(synth(701, "https://cdn.katiska.info/kb/pahkinankuori.jpg")); }
 		elseif (req.url ~ "^/wp-content/uploads/2015/08/koira-vai-susi-1024x410.jpg") { return(synth(701, "https://cdn.katiska.info/kb/koira-vai-susi.jpg")); }
+		elseif (req.url ~ "^/wp-content/uploads/2015/11/trust-luomu-239x300.jpg") { return(synth(701, "https://cdn.katiska.info/kb/trust-luomu.jpg")); }
 		# Another redirects. Can be cleaned after some times when Google/Bing/Duck are happy
+		elseif (req.url ~ "^/e-julkaisut/muut-e-kirjat/abc-antioksidantit-diat") { return(synth(701, "https://www.katiska.info/tieto/koira-tarve-vitamiini/antioksidantit/")); }
 		elseif (req.url ~ "^/infokortit") { return(synth(701, "https://www.katiska.info/tieto/avainsana/infokortti/")); }
 		elseif (req.url ~ "(cart|checkout|my-account|ostoskori)") { return(synth(701, "https://store.katiska.info/")); }
 		elseif (req.url ~ "^/ejulkaisut/") { return(synth(701, "https://store.katiska.info/")); }
 		elseif (req.url ~ "^/kaffepaussin\-aika/feed/") { return(synth(701, "https://www.katiska.info/feed/podcast/kaffepaussi")); }
+		elseif (req.url ~ "^/ruokinta/raaka-aineet/kaalikeittoa-ja-nokkosta") { return(synth(701, "https://www.katiska.info/tieto/koira-tarve-mineraali/fytaatti/")); }
+		elseif (req.url ~ "^/ruokinta/raaka-aineet/pellavansiemen") { return(synth(701, "https://www.katiska.info/tieto/koira-tarve-yleinen/kuitu-lihasta/")); }
 		elseif (req.url ~ "^/tagit") { return(synth(701, "https://www.katiska.info/avainsanat/")); }
 		elseif (req.url ~ "^/tieto/koirat/kurssit/agility\-ja\-koiran\-lihaksisto") { return(synth(701, "https://www.katiska.info/tieto/lihaksisto-ja-luusto/agility-ja-koiran-lihaksisto/")); }
 		elseif (req.url ~ "^/tieto/koirat/kurssit/koiralle\-lihaa\-vatsan\-taydelta") { return(synth(701, "https://www.katiska.info/tieto/koira-ruokinta-liha/koiralle-lihaa-vatsan-taydelta/")); }
