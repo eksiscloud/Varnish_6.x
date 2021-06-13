@@ -6,7 +6,6 @@ sub vcl_recv {
 	# Your lifelines: 
 	# Turn off cache
 	# or make Varnish act like dumb proxy
-	
 	#return(pipe);
 	
 	# No cache, no fixed headers, no nothing
@@ -23,13 +22,13 @@ sub vcl_recv {
 		|| req.http.x-language ~ "fi" 
 		|| req.http.x-agent == "nice"
 		) {
-			return(synth(403, "Forbidden referer: " + req.http.X-Real-IP));
+			return(synth(403, "Forbidden request from: " + req.http.X-Real-IP));
 		} else {
-			return(synth(666, "Forbidden referer: " + req.http.X-Real-IP));
+			return(synth(666, "Forbidden request from: " + req.http.X-Real-IP));
 		}
 	}
 	
-	#return(pass);
+	return(pass);
 	
 	### just testing
 	

@@ -13,10 +13,11 @@ sub asn_name {
 		|| req.http.x-asn == "dreamhost-as"					# New Dream Network, LLC, US
 		|| req.http.x-asn ~ "dreamscape"					# Vodien Internet Solutions Pte Ltd, HK, SG, AU
 		|| req.http.x-asn ~ "go-daddy-com-llc"				# GoDaddy.com US (GoDaddy isn't serving any useful services too often)
-		|| req.http.x-asn ~ "idcloudhost"					# PT. SIBER SEKURINDO TEKNOLOGI, ID
+		|| req.http.x-asn ~ "idcloudhost"					# PT. SIBER SEKURINDO TEKNOLOGI, PT Cloud Hosting Indonesia, ID
 		|| req.http.x-asn ~ "int-network"					# IP Volume inc, SC
 		|| req.http.x-asn ~ "logineltdas"					# Karolio IT paslaugos, LT, US, GB
 		|| req.http.x-asn == "ponynet"						# FranTech Solutions, US
+		|| req.http.x-asn ~ "scalaxy"						# xWEBltd, actually RU using NL and identifying as GB
 		|| req.http.x-asn == "squitter-networks"			# ABC Consultancy etc, NL
 		|| req.http.x-asn ~ "whg-network"					# Web Hosted Group Ltd, GB
 		|| req.http.x-asn == "wii"							# Wholesale Internet, Inc US

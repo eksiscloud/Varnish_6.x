@@ -6,9 +6,16 @@ sub vcl_recv {
 	# for stop caching uncomment
 	#return(pass);
 	# for dumb TCL-proxy uncomment
-	#
+	#return(pipe);
 	
-	# Stop knocking
+	# Normalize hostname to avoid double caching
+	set req.http.host = regsub(req.http.host,
+	"^koiranravitsemus\.fi$", "www.koiranravitsemus.fi");
+	
+	## General rules common to every backend by common.vcl
+	call common_rules;
+	
+	## Stop knocking
 	if (
 		   req.url ~ "wp-login.php"
 		|| req.url ~ "xmlrpc.php"
@@ -24,16 +31,13 @@ sub vcl_recv {
 		}
 	}
 	
-	return(pipe);
+	return(pass);
 	
 	##### Doesn't work, that's why pipe
 	
 	## MediaWiki doesn't let cache anything, because it loves to be dynamic for everybody. So, MediaWiki is setting vary:cookie and prgma: no-cache.
 	## My wiki aren't that dynamic so I'll adjust those two later at backend_response.
-	
-	# Normalize hostname to avoid double caching
-	set req.http.host = regsub(req.http.host,
-	"^koiranravitsemus\.fi$", "www.koiranravitsemus.fi");
+
 	
 	# Let's help MediaWiki cache by responsive skins
 	unset req.http.x-wap; # Requester shouldn't be allowed to supply arbitrary X-WAP header

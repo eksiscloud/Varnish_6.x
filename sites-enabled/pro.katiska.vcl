@@ -21,9 +21,9 @@ sub vcl_recv {
 		|| req.http.x-language ~ "fi" 
 		|| req.http.x-agent == "nice"
 		) {
-			return(synth(403, "Forbidden referer: " + req.http.X-Real-IP));
+			return(synth(403, "Forbidden request from: " + req.http.X-Real-IP));
 		} else {
-			return(synth(666, "Forbidden referer: " + req.http.X-Real-IP));
+			return(synth(666, "Forbidden request from: " + req.http.X-Real-IP));
 		}
 	}
 	

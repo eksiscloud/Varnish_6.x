@@ -16,33 +16,33 @@ sub vcl_recv {
 		set req.http.cookie-git = req.http.cookie;
 	}
 	
-	# Discourses (waste of time, must pipe to work)
+	# Discourses (waste of time, must pipe)
 	elseif (
 		req.http.host ~ "kaffein.jagster.fi"
 		|| req.http.host ~ "proto.eksis.one"
 		|| req.http.host ~ "meta.katiska.info"
 	) {
-		cookie.parse(req.http.cookie);
+#		cookie.parse(req.http.cookie);
 		# https://meta.discourse.org/t/list-of-cookies-used-by-discourse/83690
-		cookie.keep("email,destination_url,sso_destination_url,authentication_data,fsl,_t,_bypass_cache,_forum_session,dosp,");
-		set req.http.cookie = cookie.get_string();
+#		cookie.keep("email,destination_url,sso_destination_url,authentication_data,fsl,_t,_bypass_cache,_forum_session,dosp,");
+#		set req.http.cookie = cookie.get_string();
 		set req.http.cookie-dc = req.http.cookie;
 	}
 	
-	# MediaWiki
+	# MediaWiki (must pass with all cookies)
 	elseif (req.http.host ~ "www.koiranravitsemus.fi") {
-		cookie.parse(req.http.cookie);
+#		cookie.parse(req.http.cookie);
 		# MediaWiki sets prefix from conf
-		cookie.keep("mikromakro_");
-		set req.http.cookie = cookie.get_string();
+#		cookie.keep("mikromakro_");
+#		set req.http.cookie = cookie.get_string();
 		set req.http.cookie-wiki = req.http.cookie;
 	}
 	
-	# Moodle (waste of time, must pipe to work)
+	# Moodle (waste of time, must pass to work)
 	elseif (req.http.host ~ "pro.") {
-		cookie.parse(req.http.cookie);
-		cookie.keep("MoodleSession,MoodleTest,MOODLEID");
-		set req.http.cookie = cookie.get_string();
+#		cookie.parse(req.http.cookie);
+#		cookie.keep("MoodleSession,MoodleTest,MOODLEID");
+#		set req.http.cookie = cookie.get_string();
 		set req.http.cookie-moodle = req.http.cookie;
 	}
 	
