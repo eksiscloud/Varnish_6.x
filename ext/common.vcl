@@ -1,9 +1,6 @@
 sub common_rules {
 	### These are common to every virtual hosts
 	
-	## Let's clean path to sitemaps
-	if (req.url ~ "sitemap") { return(pipe); }
-	
 	## Who can do BAN, PURGE and REFRESH
 	# Remember to use capitals when doing, size matters...
 	if (req.method == "BAN") {
@@ -103,13 +100,13 @@ sub common_rules {
 		return(synth(200, "OK"));
 	}
 	
-	## 410 Gone redirects
+	## 410 Gone redirects by 410sites.vcl
 	call all_gone;
 	
-	## Steady and easy 301 redirections
+	## Steady and easy 301 redirections by 301sites.vcl
 	call this_way;
 	
-	## Global handling of 404 and 410
+	## Global handling of 404 and 410 from 404.vcl
 	call global-redirect;
 
 	## Implementing websocket support

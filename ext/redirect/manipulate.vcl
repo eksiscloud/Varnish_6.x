@@ -16,12 +16,14 @@ sub new_direction {
 		elseif (req.url ~ "\?s=(.*)juonti") { set req.url = regsub(req.url, "\?s=(.*)juonti", "\?s=juominen"); }
 		elseif (req.url ~ "\?s=(kasvis\%C3\%B6ljy|kasvis\%C3\%B6ljyvertailu)") { set req.url = regsub(req.url, "\?s=(kasvis\%C3\%B6ljy|kasvis\%C3\%B6ljyvertailu)", "\?s=kasvi\%C3\%B6ljy"); }
 		elseif (req.url ~ "\?s=liha(py\%C3\%B6rykk\%C3\%A4|py\%C3\%B6ryk\%C3\%A4t)") { set req.url = regsub(req.url, "\?s=liha(py\%C3\%B6rykk\%C3\%A4|py\%C3\%B6ryk\%C3\%A4t)", "\?s=lihapulla"); }
+		elseif (req.url ~ "\?s=luuharventuma") { set req.url = regsub(req.url, "\?s=luuharventuma", "\?s=osteoporoosi"); }
 		elseif (req.url ~ "\?s=maksa(pulla|py\%C3\%B6rykk\%C3\%A4|py\%C3\%B6ryk\%C3\%A4t)") { set req.url = regsub(req.url, "\?s=maksa(pulla|py\%C3\%B6rykk\%C3\%A4|py\%C3\%B6ryk\%C3\%A4t)", "\?s=maksa\+vitamiinipulla"); }
 		elseif (req.url ~ "\?s=m\%C3\%A4k\%C3\%A4r\%C3\%A4inen") { set req.url = regsub(req.url, "\?s=m\%C3\%A4k\%C3\%A4r\%C3\%A4inen", "\?s=m\%C3\%A4k\%C3\%A4r\%C3\%A4"); }
 		elseif (req.url ~ "\?s=vitamiinin(tarve|tarpeet)") { set req.url = regsub(req.url, "\?s=vitamiinin(tarve|tarpeet)", "\?s=vitamiinin\+tarve"); }
 		elseif (req.url ~ "\?s=proteiininl\%C3\%A4hde") { set req.url = regsub(req.url, "\?s=proteiininl\%C3\%A4hde", "\?s=proteiinien+l\%C3\%A4hde"); }
 		elseif (req.url ~ "\?s=(punkki|punkin)esto") { set req.url = regsub(req.url, "\?s=(punkki|punkin)esto", "\?s=punkkih\%C3\%A4\%C3\%A4t\%C3\%B6"); }
 		elseif (req.url ~ "\?s=rabdomyoloosi") { set req.url = regsub(req.url, "\?s=rabdomyoloosi", "\?s=asidoosi"); }
+		elseif (req.url ~ "\?s=raakaliha") { set req.url = regsub(req.url, "\?s=raakaliha", "\?s=raaka\+liha"); }
 		elseif (req.url ~ "\?s=rutiinitarkastus") { set req.url = regsub(req.url, "\?s=rutiinitarkastus", "\?s=lihaksiston\+rutiinitarkastus"); }
 		elseif (req.url ~ "\?s=ruuansulatuksen\+nopeus") { set req.url = regsub(req.url, "\?s=ruuansulatuksen\+nopeus", "\?s=ruuansulatuksen\+kesto"); }
 		elseif (req.url ~ "\?s=syyl\%C3\%A4$") { set req.url = regsub(req.url, "\?s=syyl\%C3\%A4$", "\?s=syyl\%C3\%A4t"); }

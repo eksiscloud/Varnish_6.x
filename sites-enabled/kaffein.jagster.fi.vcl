@@ -10,57 +10,6 @@ sub vcl_recv {
 	# or make Varnish act like dumb proxy
 	#return(pipe);
 
-	#call common_rules;
-
-	# Stop knocking
-	if (
-		   req.url ~ "wp-login.php"
-		|| req.url ~ "xmlrpc.php"
-		) {
-		if (
-		   req.http.X-County-Code ~ "fi"
-		|| req.http.x-language ~ "fi" 
-		|| req.http.x-agent == "nice"
-		) {
-			return(synth(403, "Forbidden request: " + req.http.X-Real-IP));
-		} else {
-			return(synth(666, "Forbidden request: " + req.http.X-Real-IP));
-		}
-	}
-
-	## Who can do BAN, PURGE and REFRESH
-	# Remember to use capitals when doing, size matters...
-	if (req.method == "BAN") {
-		if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ purge) {
-			return (synth(405, "Banning not allowed for " + req.http.X-Real-IP));
-		}
-		ban("obj.http.x-url ~ " + req.http.x-ban-url +
-			" && obj.http.x-host ~ " + req.http.x-ban-host);
-		# Throw a synthetic page so the request won't go to the backend.
-		return(synth(200, "Ban added"));
-	}
-	
-	if (req.method == "PURGE") {
-		if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ purge) {
-			return (synth(405, "Purging not allowed for " + req.http.X-Real-IP));
-		} 
-		# WP Rocket
-		if (req.http.X-Purge-Method == "regex") {
-			ban("req.url ~ " + req.url + " && req.http.host ~ " + req.http.host);
-			return (synth(200, "Banned."));
-		} else {
-			return (purge);
-		}
-	}
-	
-	if (req.method == "REFRESH") {
-		if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ purge) {
-			return(synth(405, "Refreshing not allowed for " + req.http.X-Real-IP));
-		}
-		set req.method = "GET";
-		set req.hash_always_miss = true;
-	}
-
 	## Only deal with "normal" types
 	# This should do at Nginx?
 	if (req.method != "GET" &&
@@ -86,8 +35,6 @@ sub vcl_recv {
 		# These are nice bots, so let them through using nice-bot.vcl and using just one UA
 		call cute_bot_allowance;
 		
-		## Special cases
-		
 		# Now we stop known useless ones who's not from whitelisted IPs using bad-bot.vcl
 		# This should not be active if Nginx do what it should do because I have bot filtering there
 		if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
@@ -101,8 +48,29 @@ sub vcl_recv {
 			call stop_pages;
 		}
 
-	# Must pipe, otherwise I just get error 500
-	return(pipe);
+	## Stop knocking
+	if (req.url ~ "(wp-login|xmlrpc).php") {
+		if (
+		   req.http.X-County-Code ~ "fi"
+		|| req.http.x-language ~ "fi" 
+		|| req.http.x-agent == "nice"
+		) {
+			return(synth(403, "Forbidden request from: " + req.http.X-Real-IP));
+		} else {
+			return(synth(666, "Forbidden request from: " + req.http.X-Real-IP));
+		}
+	}
+	elseif (req.url ~"/(robots.txt|humans.txt|sitemap)") {
+		return(hash);
+	}
+	elseif (req.url ~ "^[^?]*\.(7z|bmp|bz2|css|csv|doc|docx|eot|flac|flv|gz|ico|js|otf|pdf|png|ppt|pptx|rtf|svg|swf|tar|tbz|tgz|ttf|txt|txz|webm|woff|woff2|xls|xlsx|xml|xz|zip)(\?.*)?$") {
+		unset req.http.cookie;
+		return(hash);
+	}
+	else {
+		# Must pipe, otherwise I just get error 500
+		return(pipe);
+	}
 
 	
 	# Cache all others requests if they reach this point

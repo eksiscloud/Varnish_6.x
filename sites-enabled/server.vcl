@@ -1,6 +1,6 @@
 ## Same as _default in Nginx; handling IP of the server ##
 sub vcl_recv {
-  if (req.http.host == "104.248.141.204") {
+  if (req.http.host == "104.248.141.204" || req.http.host == "_") {
 		set req.backend_hint = default;
 
 	# Your lifelines: 
@@ -8,6 +8,10 @@ sub vcl_recv {
 	# or make Varnish act like dumb proxy
 	#return(pass);
 	#return(pipe);
+
+	if (req.http.host == "_") {
+		return(synth(666, "Access Denied from " + req.http.X-Real-IP));
+	}
 
 	if (req.url ~ "^/.well-known/acme-challenge/") {
 		return(synth(403, "Access Denied from " + req.http.X-Real-IP));

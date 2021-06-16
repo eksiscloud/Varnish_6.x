@@ -170,15 +170,15 @@ backend gitea {
 	.probe = sondi-git;				# We have chance to recycle the probe
 }
 
-# www.koiranravitsemus.fi by MediaWiki
-backend wiki {
-	.host = "127.0.0.1";
-	.port = "82";
-	.first_byte_timeout = 300s;		# How long to wait before we receive a first byte from our backend?
-	.connect_timeout = 300s;		# How long to wait for a backend connection?
-	.between_bytes_timeout = 300s;	# How long to wait between bytes received from our backend?
-	#.probe = sondi-wiki;			# We have chance to recycle the probe
-}
+# www.koiranravitsemus.fi by MediaWiki - Not in use
+#backend wiki {
+#	.host = "127.0.0.1";
+#	.port = "82";
+#	.first_byte_timeout = 300s;		# How long to wait before we receive a first byte from our backend?
+#	.connect_timeout = 300s;		# How long to wait for a backend connection?
+#	.between_bytes_timeout = 300s;	# How long to wait between bytes received from our backend?
+#	#.probe = sondi-wiki;			# We have chance to recycle the probe
+#}
 
 # proto.eksis.one by Discourse
 backend proto {
@@ -209,7 +209,7 @@ backend meta {
 }
 
 ## ACLs: I can't use client.ip because it is always 127.0.0.1 by Nginx (or any proxy like Apache2)
-## Instead client.ip it has to be like std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist
+# Instead client.ip it has to be like std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist
 
 # Only allow purging from specific IPs
 acl purge {
@@ -271,7 +271,7 @@ sub vcl_recv {
 	## It passes everything right thru Varnish
 	# return(pipe);
 
-	# My personal safenet when (not if...) I'll make some funny to Varnish
+	# My personal safenet moneywise when (not if...) I'll make some funny to Varnish
 	if (req.http.host == "store.katiska.info") {
 		return(pipe);
 	}
@@ -281,13 +281,14 @@ sub vcl_recv {
 	### At main vcl_recv will happend only normalizing etc, where is no return(...) statements because those bypasses other VCLs.
 	### At all-common.vcl is for cookies and similar commmon things for hosts
 	### All domain-VCLs do the rest where return(...) is needed and part of jobs are done using 'call common.vcl'
+	### Exception to rule no-return-statements is everything where the connection will be terminated for good and anything else is not needed
 	
 	## Just an example how to do geo-blocking
 	# 1st: GeoIP and normalizing country codes to lower case, because remembering to use capital letters is just too hard
 	set req.http.X-Country-Code = country.lookup("country/iso_code", std.ip(req.http.X-Real-IP, "0.0.0.0"));
 	set req.http.X-Country-Code = std.tolower(req.http.X-Country-Code);
 	# I could do for example:
-	#if (req.http.X-Country-Code !~ "(fi|se)") {
+	#if (req.http.X-Country-Code ~ "(fi|se)") {
 	#	set req.http.X-Country-Code = "fi";
 	#} else {
 	#	set req.http.X-Country-Code = "us";
@@ -296,6 +297,7 @@ sub vcl_recv {
 	# 2nd: Actual blocking: (mostly I do geo-blocking in iptables, but this is much easier way)
 	# Heads up: Cloudflare and other big CDNs can route traffic through really strange datacenters - like from Turkey to Finland via Senegal
 	if (req.http.X-Country-Code ~ "(bd|bg|cn|cr|ru|hk|id|pl|tw)") {
+		std.log("banned country: " + req.http.X-Country-Code);
 		return(synth(403, "Forbidden country: " + std.toupper(req.http.X-Country-Code)));
 	}
 	
@@ -306,7 +308,7 @@ sub vcl_recv {
 	
 	# 2nd: Actual blocking: (customers from these are knocking security holes etc. way too often)
 	# Finding out ASN from whois-data isn't so straight forwarded
-	# It is quite often desc. (if told) or whole or partially same as NetName.
+	# It is quite often descr. (if told) or whole or partially same as NetName.
 	# You can find it out using ASN lookup like https://hackertarget.com/as-ip-lookup/
 	call asn_name;
 	
@@ -332,7 +334,7 @@ sub vcl_recv {
 	## Remove the proxy header
 	unset req.http.Proxy;
 
-	## First remove the Google Analytics added parameters, useless for backend
+	## Remove the Google Analytics added parameters, useless for backend
 	if (req.url ~ "(\?|&)(utm_source|utm_medium|utm_campaign|utm_content|gclid|fbclid|cx|ie|cof|siteurl)=") {
 		set req.url = regsuball(req.url, "&(utm_source|utm_medium|utm_campaign|utm_content|gclid|fbclid|cx|ie|cof|siteurl)=([A-z0-9_\-\.%25]+)", "");
 		set req.url = regsuball(req.url, "\?(utm_source|utm_medium|utm_campaign|utm_content|gclid|fbclid|cx|ie|cof|siteurl)=([A-z0-9_\-\.%25]+)", "?");
@@ -340,7 +342,8 @@ sub vcl_recv {
 		set req.url = regsub(req.url, "\?$", "");
 	}
 	
-	## Strip querystring ?nocache
+	
+	## Strip querystring ?nocache, 3rd party doesn't tell when caching or not
 	set req.url = regsuball(req.url, "\?nocache", "");
 	
 	## Strip a plain HTML anchor #, server doesn't need it.
@@ -353,6 +356,7 @@ sub vcl_recv {
 		set req.url = regsub(req.url, "\?$", "");
 	}
 	
+	## URL changes by manipulate.vcl, mostly fixed search strings
 	call new_direction;
 	
 	## Awstats needs the host 
@@ -368,7 +372,6 @@ sub vcl_recv {
 
 	## I'm normalizing language
 	# For REAL normalizing you should work with Accept-Language only
-	# But I could do something like:
 	set req.http.x-language = std.tolower(req.http.Accept-Language);
 	unset req.http.Accept-Language;
 	if (req.http.x-language ~ "fi") {
@@ -424,11 +427,13 @@ sub vcl_hash {
 	}
 
 	# hash cookies for requests that have them 
+	# used with single WooCommerce etc.
 #	if (req.http.Cookie) {
 #		hash_data(req.http.Cookie);
 #	}
 
 	## Cookie madness
+	# Is this really needed?
 	
 	if (req.http.cookie-wp) {
 		set req.http.Cookie = req.http.cookie-wp;
@@ -454,7 +459,14 @@ sub vcl_hash {
 		unset req.http.cookie-moodle;
 	}
 	
-	### /Cookie madness
+	### Not in use
+#	if (req.http.cookie-wiki) {
+#		set req.http.Cookie = req.http.cookie-wiki;
+#		hash_data(req.http.Cookie);
+#		unset req.http.cookie-moodle;
+#	}
+	
+	## /Cookie madness
 
 	## The end
 	return (lookup);
@@ -493,12 +505,12 @@ sub vcl_miss {
 #
 sub vcl_backend_response {
 
-	## Add name of backend in varnishncsa log (I don't do with that much, because I have only one active backend)
-	# You can finds slow replying backends (over 3 sec) with that:
+	## Add name of backend in varnishncsa log (I don't do with that much, because I have only a couple active backends)
+	# You can find slow replying backends (over 3 sec) with that:
 	# varnishncsa -b -F '%t "%r" %s %{Varnish:time_firstbyte}x %{VCL_Log:backend}x' | awk '$7 > 3 {print}'
 	# or
 	# varnishncsa -b -F '%t "%r" %s %{Varnish:time_firstbyte}x %{VCL_Log:backend}x' -q "Timestamp:Beresp[3] > 3 or Timestamp:Error[3] > 3"
-	std.log("backend:" + beresp.backend.name);
+	std.log("backend: " + beresp.backend.name);
 	
 	## Backend is down, stop caching
 	if (beresp.status >= 500 && bereq.is_bgfetch) {
@@ -532,8 +544,8 @@ sub vcl_backend_response {
 	## Cache some responses only short period
 	# Can I do beresp.status == 302 || beresp.status == 307 ?
 	if (beresp.status == 404) {
-		set beresp.http.cache-control = "max-age: 120";
-		set beresp.ttl = 300s; # 5min
+		set beresp.http.cache-control = "max-age=300";
+		set beresp.ttl = 3600s; # 1h
 	}
 	
 	## 301/410 are quite static
@@ -541,6 +553,20 @@ sub vcl_backend_response {
 		unset beresp.http.cache-control;
 		set beresp.http.cache-control = "max-age=2592000"; # 30d
 		set beresp.ttl = 31536000s;
+	}
+	
+	## 301 and 410 are quite steady, again, so let Varnish cache resuls from backend
+	# I don't understand meaning of this and what is this doing differently than earlier statements?
+	if (beresp.status == 301 && beresp.http.location ~ "^https?://[^/]+/") {
+		set bereq.http.host = regsuball(beresp.http.location, "^https?://([^/]+)/.*", "\1");
+		set bereq.url = regsuball(beresp.http.location, "^https?://([^/]+)", "");
+		return(retry);
+	}
+	
+	if (beresp.status == 410 && beresp.http.location ~ "^https?://[^/]+/") {
+		set bereq.http.host = regsuball(beresp.http.location, "^https?://([^/]+)/.*", "\1");
+		set bereq.url = regsuball(beresp.http.location, "^https?://([^/]+)", "");
+		return(retry);
 	}
 	
 	## RSS and other feeds like podcast can be cached
@@ -558,12 +584,19 @@ sub vcl_backend_response {
 		set beresp.ttl = 604800s; # 1wk
 	}
 	
+	## ads.txt and sellers.json is really static to me, but let's be on safe side
+	if (bereq.url ~ "^/(ads.txt|sellers.json)") {
+		unset beresp.http.cache-control;
+		set beresp.http.cache-control = "max-age=604800";
+		set beresp.ttl = 604800s; # 1wk
+	}
+	
 	## Sitemaps
-	#if (bereq.url ~ "sitemap") {
-	#	unset beresp.http.cache-control;
-	#	set beresp.http.cache-control = "max-age=86400"; # 24h
-	#	set beresp.ttl = 86400s; # 24h
-	#}
+	if (bereq.url ~ "sitemap") {
+		unset beresp.http.cache-control;
+		set beresp.http.cache-control = "max-age=86400"; # 24h
+		set beresp.ttl = 86400s; # 24h
+	}
 
 	## Tags
 	if (bereq.url ~ "(avainsana|tag)") {
@@ -574,7 +607,7 @@ sub vcl_backend_response {
 
 	## Search results, mostly Wordpress if I'm guessing right
 	# Normally those querys should pass but I want to cache answers
-	# Caching or not doesn't matter because users don't search too often
+	# Caching or not doesn't matter because users don't search too often anyway
 	if (bereq.url ~ "/\?s=") {
 		unset beresp.http.cache-control;
 		set beresp.http.cache-control = "max-age=120";
@@ -582,7 +615,7 @@ sub vcl_backend_response {
 	}
 	
 	## I have an issue with one cache-control value from WordPress
-	if (bereq.url ~ "/icons\.ttf\?pozjks") {
+	if (bereq.url ~ "/icons.ttf\?pozjks") {
 		unset beresp.http.set-cookie;
 		set beresp.http.cache-control = "max-age=31536000"; 
 	}
@@ -595,7 +628,7 @@ sub vcl_backend_response {
 	#	set beresp.ttl = 300s;
 	#}
 	
-	## Some admin-ajax.php can be cached by Varnish
+	## Some admin-ajax.php calls can be cached by Varnish
 	# Except... it is almost always POST and that is uncacheable
 	if (bereq.url ~ "admin-ajax.php" && bereq.http.cookie !~ "wordpress_logged_in" ) {
 		unset beresp.http.set-cookie;
@@ -612,6 +645,7 @@ sub vcl_backend_response {
 	}
 	
 	## Not found images from different caches after I started CDN; yes, these should redirect on server but I don't know how
+	# shows as ordinary 404 at logs of Wordpress of course
 	if (beresp.status == 404 && bereq.url ~ ".jpg") {
 		set beresp.status = 410;
 	}
@@ -626,9 +660,10 @@ sub vcl_backend_response {
 	#	set beresp.do_gzip = true;
 	#}
 	
-	## Keep the response in cache for 6 hours if the response has validating headers.
+	## Keep the response in cache for 24 hours if the response has validating headers.
+	# 6 hours isn't nearly same as other TTLs. Should I use this at all?
 	if (beresp.http.ETag || beresp.http.Last-Modified) {
-		set beresp.keep = 6h;
+		set beresp.keep = 24h;
 	}
 	
 	## Just an example how to vary by country from GeoIP VMOD
@@ -652,19 +687,6 @@ sub vcl_backend_response {
 				set beresp.ttl = 1h; # shorter TTL for more trustful ones
 			}
 		}
-	}
-		
-	## 301 and 410 are quite steady, so let Varnish cache resuls from backend
-	if (beresp.status == 301 && beresp.http.location ~ "^https?://[^/]+/") {
-		set bereq.http.host = regsuball(beresp.http.location, "^https?://([^/]+)/.*", "\1");
-		set bereq.url = regsuball(beresp.http.location, "^https?://([^/]+)", "");
-		return(retry);
-	}
-	
-	if (beresp.status == 410 && beresp.http.location ~ "^https?://[^/]+/") {
-		set bereq.http.host = regsuball(beresp.http.location, "^https?://([^/]+)/.*", "\1");
-		set bereq.url = regsuball(beresp.http.location, "^https?://([^/]+)", "");
-		return(retry);
 	}
 	
 	## Caching static files improves cache ratio, but eats RAM and doesn't make your site faster. 
@@ -730,7 +752,7 @@ sub vcl_deliver {
 	#	set resp.http.vary = "X-Forwarded-Proto, Accept-Encoding";
 	#}
 
-	## Let's add the origin
+	## Let's add the origin by cors.vcl
 	call cors;
 	
 	# Origin should be in vary too
@@ -740,7 +762,7 @@ sub vcl_deliver {
 		set resp.http.Vary = "Origin";
 	}
 	
-	## Just some unneeded headers
+	## Just some unneeded headers from debugs.vcl
 	call diagnose;
 	
 	## Expires is unneeded because cache-control overrides it
@@ -769,8 +791,8 @@ sub vcl_deliver {
 	set resp.http.Your-IP-City = city.lookup("city/names/en", std.ip(req.http.X-Real-IP, "0.0.0.0"));
 	set resp.http.Your-IP-GPS = city.lookup("location/latitude", std.ip(req.http.X-Real-IP, "0.0.0.0")) + " " + city.lookup("location/longitude", std.ip(req.http.X-Real-IP, "0.0.0.0"));
 	set resp.http.Your-IP-ASN = asn.lookup("autonomous_system_organization", std.ip(req.http.X-Real-IP, "0.0.0.0"));
-	call headers_x;
-	call header_smiley;
+	call headers_x;		# x-heads.vcl
+	call header_smiley;	# cheshire_cat.vcl
 
 
 	# That's it
@@ -879,16 +901,16 @@ sub vcl_synth {
 	
 	## robots.txt for those sites that not generate theirs own
 	# doesn't work with Wordpress
-	if (resp.status == 601) {
-		set resp.status = 200;
-		set resp.reason = "OK";
-		set resp.http.Content-Type = "text/plain; charset=utf8";
-		synthetic( {"
-		User-agent: *
-		Disallow: /
-		"} );
-		return(deliver);
-	}
+	#if (resp.status == 601) {
+	#	set resp.status = 200;
+	#	set resp.reason = "OK";
+	#	set resp.http.Content-Type = "text/plain; charset=utf8";
+	#	synthetic( {"
+	#	User-agent: *
+	#	Disallow: /
+	#	"} );
+	#	return(deliver);
+	#}
 
 	## 301/302 redirects using custom status
 	if (resp.status == 701) {

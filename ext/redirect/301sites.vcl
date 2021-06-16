@@ -8,10 +8,19 @@ sub this_way {
 		elseif (req.url ~ "^/twitter-redirect") { return(synth(701, "https://twitter.com/katiskatweet")); }
 		elseif (req.url ~ "^/youtube-redirect/") { return(synth(701, "https://www.youtube.com/channel/UCxHt-5Vwd8oE_cUGGQqXruw")); }
 		# known links from elsewhere
+		elseif (req.url ~ "^/avainsana") { return(synth(701, "https://www.katiska.info/tieto/katiskan-kaytto-sisalto/avainsanat-eli-tagit/")); }
+		elseif (req.url ~ "^/blogi/avainsana") { return(synth(701, "https://www.katiska.info/tieto/katiskan-kaytto-sisalto/avainsanat-eli-tagit/")); }
 		elseif (req.url ~ "^/koulutukset/sumppupro") { return(synth(701, "https://store.katiska.info/")); }
+		elseif (req.url ~ "^/kurssit/agi-faktori-i") { return(synth(701, "https://www.katiska.info/tieto/fyysisesta-treenista/agilityn-riskit/")); }
+		elseif (req.url ~ "^/kurssit/agility-ja-lihaksisto") { return(synth(701, "https://www.katiska.info/tieto/lihaksisto-ja-luusto/agility-ja-koiran-lihaksisto/")); }
+		elseif (req.url ~ "^/kurssit/allergia-pahkinankuoressa") { return(synth(701, "https://www.katiska.info/tieto/koiran-allergia-hiiva-iho/koiran-allergia-pahkinankuoressa/")); }
 		elseif (req.url ~ "^/kurssit/allergisen-koiran-eliminaatio-kaytannossa") { return(synth(701, "https://www.katiska.info/tieto/koiran-allergia-hiiva-iho/allergisen-koiran-eliminaatio-kaytannossa/")); }
+		elseif (req.url ~ "^/kurssit/ehjana-elakkeelle") { return(synth(701, "https://www.katiska.info/tieto/fyysisesta-treenista/kilpakoira-ehjana-elakkeelle/")); }
+		elseif (req.url ~ "^/kurssit/ensimmainen-koira") { return(synth(701, "https://www.katiska.info/tieto/koira-kasvava-pentu/ikioma-ensimmainen-koira/")); }
+		elseif (req.url ~ "^/kurssit/haimatulehdus") { return(synth(701, "https://www.katiska.info/tieto/koira-sairaus-elimet/sairas-haima-koiran-haimatulehdus/")); }
 		elseif (req.url ~ "^/kurssit/hiiva-ikuinen-riesa") { return(synth(701, "https://www.katiska.info/tieto/koira-sairaus-elimet/onko-koiran-hiiva-ikuinen-riesa/")); }
 		elseif (req.url ~ "^/kurssit/koiran-narastys") { return(synth(701, "https://www.katiska.info/tieto/koira-terveys-narastys/koiran-narastys/")); }
+		elseif (req.url ~ "^/kurssit/koiran-ruokinta-perusteet") { return(synth(701, "https://www.katiska.info/tieto/ruoka/koiran-ruokinta-perusteet/")); }
 		elseif (req.url ~ "^/kurssit/kurkistus-kuivamuoniin") { return(synth(701, "https://www.katiska.info/tieto/koira-kuivamuona-taysruoka/kurkistus-kuivamuoniin/")); }
 		elseif (req.url ~ "^/kurssit/lihaa-vatsan-taydelta") { return(synth(701, "https://www.katiska.info/tieto/koira-ruokinta-liha/koiralle-lihaa-vatsan-taydelta/")); }
 		elseif (req.url ~ "^/kurssit/liikkuvan-koiran-ruokinta") { return(synth(701, "https://www.katiska.info/tieto/liikkuvan-ruokinta-yleisesti/liikkuvan-koiran-ruokinta/")); }
@@ -20,12 +29,16 @@ sub this_way {
 		elseif (req.url ~ "^/kurssit/perustyokalut") { return(synth(701, "https://www.katiska.info/tieto/ruoka/koiran-ruokinnan-laskeminen-perustyokalut/")); }
 		elseif (req.url ~ "^/kurssit/ravintokouluttaja") { return(synth(701, "https://store.katiska.info/tuote/ravintokouluttaja/")); }
 		elseif (req.url ~ "^/kurssit/ruokinnan-idea") { return(synth(701, "https://www.katiska.info/tieto/podcastit-vlog/ruokinnan-idea-podcast/")); }
+		elseif (req.url ~ "^/kurssit/ruuansulatuksen-perusteet") { return(synth(701, "https://www.katiska.info/tieto/koira-sisaelimisto/koiran-ruuansulatuksen-perusteet/")); }
+		elseif (req.url ~ "^/kurssit/sairas-haima") { return(synth(701, "https://www.katiska.info/tieto/koira-sairaus-elimet/sairas-haima-koiran-haimatulehdus/")); }
+		elseif (req.url ~ "^/kurssit/urheilukoirien-palauttaminen") { return(synth(701, "https://www.katiska.info/tieto/palauttaminen/urheileva-koira-ja-palauttaminen/")); }
 		elseif (req.url ~ "^/ravitsemus/hiilihydraatit-ravitsemus/wiki") { return(synth(701, "https://www.koiranravitsemus.fi/aihe/Hiilihydraatit")); }
 		elseif (req.url ~ "^/ravitsemus/rasva-ravitsemus/rasva-on-aina-rasva") { return(synth(701, "https://www.katiska.info/tieto/rasvat/rasva-ruokinnassa/")); }
 		elseif (req.url ~ "^/sanakirja/avital-calcium") { return(synth(701, "https://www.katiska.info/tieto/lisaravinteiden-annostus/avital-calcium/")); }
 		elseif (req.url ~ "^/sanakirja/probalans-be-balans") { return(synth(701, "https://www.katiska.info/tieto/lisaravinteiden-annostus/probalans-be-balans/")); }
 		elseif (req.url ~ "^/selko/$") { return(synth(701, "https://selko.katiska.info/")); }
-		elseif (req.url ~ "^/tieto/infokortti") { return(synth(701, "https://www.katiska.info/tieto/avainsana/infokortti/")); }
+		elseif (req.url == "^/tieto/infokortti/") { return(synth(701, "https://www.katiska.info/tieto/avainsana/infokortti/")); }
+		elseif (req.url ~ "^/tieto/koira-aloittelijat") { return(synth(701, "https://www.katiska.info/tieto/avainsana/perusteet/")); }
 		elseif (req.url ~ "^/tieto/koira-ruoka-lisaravinne/lisaravinteiden-annostus-hakemisto") { return(synth(701, "https://www.katiska.info/tieto/lisaravinteiden-annostus/lisaravinteiden-annostus-hakemisto/")); }
 		elseif (req.url ~ "^/tieto/koirat/podcastit-vlog/103-mahdoton-kysymys-mika-on-hyva-ruokamerkki-koiralle") { return(synth(701, "https://www.katiska.info/tieto/podcastit-vlog/103-mahdoton-kysymys-mika-on-hyva-ruokamerkki-koiralle/")); }
 		elseif (req.url ~ "^/tieto/koirat/podcastit-vlog/106-nrc-uskovaisuus") { return(synth(701, "https://www.katiska.info/tieto/podcastit-vlog/106-nrc-uskovaisuus/")); }
@@ -97,6 +110,7 @@ sub this_way {
 		elseif (req.url ~ "^/tieto/rotuasiaa/podcast\-terveemmat\-mediasekarotuiset/") { return(synth(701, "https://www.katiska.info/tieto/podcastit-vlog/podcast-137-terveemmat-mediasekarotuiset/")); }
 		elseif (req.url ~ "/koira-sisaelimisto/wiki") { return(synth(701, "https://meta.katiska.info/c/terve-koira/7")); }
 		elseif (req.url ~ "^/kurssit/raakaruokinnan-suunnittelu") { return(synth(701, "https://www.katiska.info/tieto/koira-ruokinta-liha/koiran-raakaruokinnan-suunnittelu/")); }
+		
 
 	}
 	

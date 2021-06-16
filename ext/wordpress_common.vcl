@@ -13,16 +13,15 @@ sub wp_basics {
 			return(pipe);
 		}
 	
-	# admin-ajax can be a little bit faster
+	## admin-ajax can be a little bit faster, sometimes
 	# This must be before passing wp-admin
 	if (req.url ~ "admin-ajax.php" && req.http.cookie !~ "wordpress_logged_in" ) {
 		return (hash);
 	}
 	
-	# Stop behaving bad
+	## Stop behaving bad
 	if (
 		   req.url ~ "/adminer"
-		|| req.url ~ "^/vendor/"
 		|| req.http.User-Agent ~ "jetmon"
 		|| req.http.User-Agent ~ "Jetpack by WordPress.com"
 		) {
@@ -49,7 +48,7 @@ sub wp_basics {
 		return(pass);
 	}
 
-	# Email-link after registration
+	## Email-link after registration
 	if (req.url ~ "/wp-json/wp-offload-ses/") {
 		return(pipe);
 	}

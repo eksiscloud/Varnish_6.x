@@ -29,14 +29,15 @@ sub vcl_recv {
 		set req.http.cookie-dc = req.http.cookie;
 	}
 	
+	### Not in use ###
 	# MediaWiki (must pass with all cookies)
-	elseif (req.http.host ~ "www.koiranravitsemus.fi") {
+#	elseif (req.http.host ~ "www.koiranravitsemus.fi") {
 #		cookie.parse(req.http.cookie);
 		# MediaWiki sets prefix from conf
 #		cookie.keep("mikromakro_");
 #		set req.http.cookie = cookie.get_string();
-		set req.http.cookie-wiki = req.http.cookie;
-	}
+#		set req.http.cookie-wiki = req.http.cookie;
+#	}
 	
 	# Moodle (waste of time, must pass to work)
 	elseif (req.http.host ~ "pro.") {

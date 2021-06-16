@@ -320,7 +320,6 @@ if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 	|| req.url ~ "^/searchreplacegetweb"
 	|| req.url ~ "^/search-replace-web"
 	|| req.url ~ "^/secret_sauce"
-	|| req.url ~ "^/sellers.json"
 	|| req.url ~ "serviceAg/rest/loginProcess/login"
 	|| req.url ~ "^/shared/"
 	|| req.url ~ "^/shell"

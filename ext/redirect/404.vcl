@@ -2,13 +2,15 @@ sub global-redirect {
 #
 ## Normally we do 404/410 redirects per every vhost.conf, but sometimes it is easier to tune up globally for all vhosts
 ## 
+## This sub may vanish someday; it is too much overlapping with other
+
 
 	## redirect 301
 	
 	# Old sitemap
-	if (req.url ~ "^/sitemap.xml") {
-		return(synth(720, "https://" + req.http.host + "/sitemap_index.xml"));
-	}
+	#if (req.url ~ "^/sitemap.(xml|xml.gz)") {
+	#	return(synth(720, "https://" + req.http.host + "/sitemap_index.xml"));
+	#}
 	
 	# I have some strange problems with Google and old Mailster links
 	if (req.url ~ "^/mailster/form") {
