@@ -272,9 +272,9 @@ sub vcl_recv {
 	# return(pipe);
 
 	# My personal safenet moneywise when (not if...) I'll make some funny to Varnish
-	if (req.http.host == "store.katiska.info") {
-		return(pipe);
-	}
+	#if (req.http.host == "store.katiska.info") {
+	#	return(pipe);
+	#}
 
 	### The work starts here
 	###

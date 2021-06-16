@@ -6,10 +6,11 @@ sub vcl_recv {
 	# Your lifelines: 
 	# Turn off cache
 	# or make Varnish act like dumb proxy
-	return(pass);
+	#return(pass);
 	#return(pipe);
 
-	## This caches almost nothing
+	## This caches nothing but I get basic filtering
+	## Setup is faulty somewhere because otherwise logging out gives error 500
 
 	call common_rules;
 
@@ -25,7 +26,11 @@ sub vcl_recv {
 				return(synth(403, "Unauthorized request"));
 			}
 		}
+	} else {
+		return(pipe);
 	}
+
+	### Below this nothing applies
 
 	# drops stage site
 	if (req.url ~ "/stage") {
@@ -47,12 +52,12 @@ sub vcl_recv {
 		return (pass);
 	}
 	
-	# Page of contact form
+	# Page of contact form (Gravity)
 	if (req.url ~ "/(tiedustelut)") {
 		return (pass);
 	}
 	
-	# Gravity form 
+	# Gravity form of one product
 	if (req.url ~ "/puhelinajan-lisatiedot") {
 		return(pass);
 	}
