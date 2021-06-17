@@ -16,6 +16,7 @@ sub vcl_recv {
 		#set req.http.cookie-git = req.http.cookie;
 	}
 	
+	
 	# Discourses (waste of time, must pipe)
 	elseif (
 		req.http.host ~ "kaffein.jagster.fi"

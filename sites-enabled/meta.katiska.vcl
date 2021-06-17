@@ -1,7 +1,7 @@
 ## Discourse ##
 sub vcl_recv {
-	if (req.http.host == "meta.katiska.info") {
-		set req.backend_hint = meta;
+  if (req.http.host == "meta.katiska.info") {
+	set req.backend_hint = meta;
 
 	# Your lifelines: 
 	# Turn off cache
@@ -43,7 +43,7 @@ sub vcl_recv {
 		# Stop bots and knockers seeking holes using 403.vcl
 		# I don't let search agents and similar to forbidden urls. Otherwise Fail2ban would ban theirs IPs too.
 		# I get error for testing purposes, but Fail2ban has whitelisted my IP.
-		if (req.http.User-Agent != "nice") {
+		if (req.http.x-bots != "nice") {
 			call stop_pages;
 		}
 
@@ -62,16 +62,15 @@ sub vcl_recv {
 	elseif (req.url ~"/(robots.txt|humans.txt|sitemap)") {
 		return(hash);
 	}
-#	elseif (req.url ~ "^[^?]*\.(7z|bmp|bz2|css|csv|doc|docx|eot|flac|flv|gz|ico|js|otf|pdf|png|ppt|pptx|rtf|svg|swf|tar|tbz|tgz|ttf|txt|txz|webm|woff|woff2|xls|xlsx|xml|xz|zip)(\?.*)?$") {
-#		unset req.http.cookie;
-#		return(hash);
-#	}
 	else {
 		# Must pipe, otherwise I just get error 500
 		return(pipe);
 	}
 	
-	}
-
-# The of the sub
+	# Cache all others requests if they reach this point
+	return(hash);
+	
+  #The end of the host
+  }
+# The end of the sub
 }
