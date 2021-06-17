@@ -10,10 +10,12 @@ sub vcl_recv {
 	#return(pass);
 	#return(pipe);
 	
-	# Normalize hostname to avoid double caching
+	## Normalize hostname to avoid double caching
+	# I like to keep triple-w
 	set req.http.host = regsub(req.http.host,
 	"^eksis\.one$", "www.eksis.one");
 	
+	## General rules common to every backend by common.vcl
 	call common_rules;
 	
 	## Limit logins by acl whitelist
@@ -64,8 +66,13 @@ sub vcl_recv {
 	# Keep this last
 	call wp_basics;
 	
-	# Cache all others requests if they reach this point
-	return (hash);
+	## Keep this last because wordpress_common.vcl limits more and tells cache all others etc.
+	call wp_basics;
+	
+	## Cache all others requests if they reach this point.
+	return(hash);
+	
+  # The end of host
   }
+# The end of sub-vcl
 }
-
