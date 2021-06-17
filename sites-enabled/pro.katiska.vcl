@@ -9,13 +9,13 @@ sub vcl_recv {
 	#return(pass);
 	#return(pipe);
 	
+	### No real caching, Moodle has its own caching system
+	
+	## Common rules to every sites by common.vcl
 	call common_rules;
 	
-	# Stop knocking
-	if (
-		   req.url ~ "wp-login.php"
-		|| req.url ~ "xmlrpc.php"
-		) {
+	## Stop knocking
+	if (req.url ~ "(wp-login|xmlrpc).php") {
 		if (
 		   req.http.X-County-Code ~ "fi"
 		|| req.http.x-language ~ "fi" 
@@ -27,20 +27,29 @@ sub vcl_recv {
 		}
 	}
 	
-	return(pass);
-	
-	### just testing
-	
-	if (req.url ~ "^/(theme|pix)/") { 
-		unset req.http.cookie-moodle; 
+	## Still too curious?
+	if (req.url ~ "^/(ads.txt|sellers.json)") {
+		return(synth(403, "Forbidden request from: " + req.http.X-Real-IP));
 	}
 	
-	if (req.url ~ "/(login|my|user|courses|admin|tool|h5p|cohort|backup|grade|mod|cache|filter)") {
-		return (pass);
+	## Needed for uptime
+	if (req.url == "^/pong") {
+		return(pipe);
+	}
+	
+	## The only caching that can be done and after that everything will pass
+	if (req.url ~ "^/(theme|pix|)") { 
+		unset req.http.cookie; 
+	} 
+	elseif (req.url ~ "^/(robots|humans).txt") { 
+		return(hash);
+	}
+	else {
+		return(pass);
 	}
 
-
-  # The host ends here
+	
+  # the host ends here
   }
-# The end of the sub
+# the end of sub
 }

@@ -4,8 +4,8 @@ sub vcl_recv {
 
 	### Cookies: Varnish >6.4 (same as earlier libvmod-cookie)
 	
-	## Keepning needed cookies and deleting rest. Setting up flag, because I don't want to send every cookie to every hosts.
-	# Well, filtering per site type is quite meaningless, though. And adds more hassling.
+	## Keeping needed cookies and deleting rest.
+	# Well, filtering per sitetype is quite meaningless, though. And adds more hassling.
 	
 	# Gitea (almost nothing can be cached)
 	if (req.http.host ~ "git.eksis.one") {

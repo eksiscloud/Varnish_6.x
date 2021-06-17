@@ -8,15 +8,13 @@ sub vcl_recv {
 	# or make Varnish act like dumb proxy
 	#return(pipe);
 	
-	# No cache, no fixed headers, no nothing
+	### No real caching, Moodle has its own caching system
 	
+	## Common rules to every sites by common.vcl
 	call common_rules;
 	
-	# Stop knocking
-	if (
-		   req.url ~ "wp-login.php"
-		|| req.url ~ "xmlrpc.php"
-		) {
+	## Stop knocking
+	if (req.url ~ "(wp-login|xmlrpc).php") {
 		if (
 		   req.http.X-County-Code ~ "fi"
 		|| req.http.x-language ~ "fi" 
@@ -28,23 +26,29 @@ sub vcl_recv {
 		}
 	}
 	
-	return(pass);
+	## Still too curious?
+	if (req.url ~ "^/(ads.txt|sellers.json)") {
+		return(synth(403, "Forbidden request from: " + req.http.X-Real-IP));
+	}
 	
-	### just testing
+	## Needed for uptime
+	if (req.url == "^/pong") {
+		return(pipe);
+	}
 	
-	if (req.url ~ "^/(theme|pix)/") { 
-		unset req.http.cookie-moodle; 
-	} else {
+	## The only caching that can be done and after that everything will pass
+	if (req.url ~ "^/(theme|pix|)") { 
+		unset req.http.cookie; 
+	} 
+	elseif (req.url ~ "^/(robots|humans).txt") { 
+		return(hash);
+	}
+	else {
 		return(pass);
 	}
 
-	## or...
 	
-    #if (req.url ~ "/(login|my|user|courses|admin|tool|h5p|cohort|backup|grade|mod|cache|filter|") {
-		#return (pass);
-	 #}
-	
-  # host ends here
+  # the host ends here
   }
 # the end of sub
 }

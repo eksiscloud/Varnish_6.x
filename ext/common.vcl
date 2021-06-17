@@ -177,7 +177,7 @@ sub common_rules {
 		# Stop bots and knockers seeking holes using 403.vcl
 		# I don't let search agents and similar to forbidden urls. Otherwise Fail2ban would ban theirs IPs too.
 		# I get error for testing purposes, but Fail2ban has whitelisted my IP.
-		if (req.http.User-Agent != "nice") {
+		if (req.http.x-bots != "nice") {
 			call stop_pages;
 		}
 	
@@ -195,18 +195,18 @@ sub common_rules {
 	## Large static files are delivered directly to the end-user without waiting for Varnish to fully read the file first.
 	# The job will be done at vcl_backend_response
 	# But is this really needed nowadays?
-#	if (req.url ~ "^[^?]*\.(avi|mkv|mov|mp3|mp4|mpeg|mpg|ogg|ogm|wav)(\?.*)?$") {
-#		unset req.http.cookie;
-#		return(hash);
-#	}
+	if (req.url ~ "^[^?]*\.(avi|mkv|mov|mp3|mp4|mpeg|mpg|ogg|ogm|wav)(\?.*)?$") {
+		unset req.http.cookie;
+		return(hash);
+	}
 
 	## Cache all static files by Removing all Cookies for static files
 	# Remember, do you really need to cache static files that don't cause load? Only if you have memory left.
 	# Here I decide to cache these static files. I exclude images because they are handled by the CDN.
-#	if (req.http.host !~ "cdn." && req.url ~ "^[^?]*\.(7z|bmp|bz2|css|csv|doc|docx|eot|flac|flv|gz|ico|js|otf|pdf|png|ppt|pptx|rtf|svg|swf|tar|tbz|tgz|ttf|txt|txz|webm|woff|woff2|xls|xlsx|xml|xz|zip)(\?.*)?$") {
-#		unset req.http.cookie;
-#		return(hash);
-#	}
+	if (req.http.host !~ "cdn." && req.url ~ "^[^?]*\.(7z|bmp|bz2|css|csv|doc|docx|eot|flac|flv|gz|ico|js|otf|pdf|png|ppt|pptx|rtf|svg|swf|tar|tbz|tgz|ttf|txt|txz|webm|woff|woff2|xls|xlsx|xml|xz|zip)(\?.*)?$") {
+		unset req.http.cookie;
+		return(hash);
+	}
 	
 # The end
 }

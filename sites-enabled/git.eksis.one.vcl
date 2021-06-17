@@ -10,14 +10,12 @@ sub vcl_recv {
 	#return(pipe);
 
 	### Gitea is quite impossible to cache with Varnish. To keep return(pass) is the best option.
-
+	
+	## Common rules to every site
 	call common_rules;
 	
-	# Stop knocking
-	if (
-		   req.url ~ "wp-login.php"
-		|| req.url ~ "xmlrpc.php"
-		) {
+	## Stop knocking
+	if (req.url ~ "(wp-login|xmlrpc).php") {
 		if (
 		   req.http.X-County-Code ~ "fi"
 		|| req.http.x-language ~ "fi" 
@@ -28,8 +26,14 @@ sub vcl_recv {
 			return(synth(666, "Forbidden request from: " + req.http.X-Real-IP));
 		}
 	}
+	
+	## Still too curious?
+	if (req.url ~ "^/(ads.txt|sellers.json)") {
+		return(synth(403, "Forbidden request from: " + req.http.X-Real-IP));
+	}
+	
 
-	# Only directory-likes and standard pages can be cached
+	## Only directory-likes and standard pages can be cached
 	if (
 	req.url !~ "/explore/"
 	&& req.url !~ "/licenses.txt"
