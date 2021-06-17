@@ -26,20 +26,16 @@ sub vcl_recv {
 		}
 	}
 	
-	## Still too curious?
+	## All I can do... I'm using if-elseif-else just more realiable way to reach return(pass)
+	# Still too curious?
 	if (req.url ~ "^/(ads.txt|sellers.json)") {
 		return(synth(403, "Forbidden request from: " + req.http.X-Real-IP));
 	}
-	
-	## Needed for uptime
-	if (req.url == "^/pong") {
+	# Needed for uptime
+	elseif (req.url == "^/pong") {
 		return(pipe);
 	}
-	
-	## The only caching that can be done and after that everything will pass
-	if (req.url ~ "^/(theme|pix|)") { 
-		unset req.http.cookie; 
-	} 
+	# humans.txt never change
 	elseif (req.url ~ "^/(robots|humans).txt") { 
 		return(hash);
 	}
