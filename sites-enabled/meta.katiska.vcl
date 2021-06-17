@@ -62,10 +62,10 @@ sub vcl_recv {
 	elseif (req.url ~"/(robots.txt|humans.txt|sitemap)") {
 		return(hash);
 	}
-	elseif (req.url ~ "^[^?]*\.(7z|bmp|bz2|css|csv|doc|docx|eot|flac|flv|gz|ico|js|otf|pdf|png|ppt|pptx|rtf|svg|swf|tar|tbz|tgz|ttf|txt|txz|webm|woff|woff2|xls|xlsx|xml|xz|zip)(\?.*)?$") {
-		unset req.http.cookie;
-		return(hash);
-	}
+#	elseif (req.url ~ "^[^?]*\.(7z|bmp|bz2|css|csv|doc|docx|eot|flac|flv|gz|ico|js|otf|pdf|png|ppt|pptx|rtf|svg|swf|tar|tbz|tgz|ttf|txt|txz|webm|woff|woff2|xls|xlsx|xml|xz|zip)(\?.*)?$") {
+#		unset req.http.cookie;
+#		return(hash);
+#	}
 	else {
 		# Must pipe, otherwise I just get error 500
 		return(pipe);

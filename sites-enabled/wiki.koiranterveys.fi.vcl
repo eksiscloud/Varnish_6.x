@@ -1,3 +1,5 @@
+### Old starting point, not in use
+
 sub vcl_recv {
   if (req.http.host == "wiki.koiranterveys.fi") {
 		set req.backend_hint = default;
@@ -7,10 +9,6 @@ sub vcl_recv {
 	#return(pass);
 	# for dumb TCL-proxy uncomment
 	#return(pipe);
-	
-	if (req.http.Authorization || req.http.Cookie ~ "session" || req.http.Cookie ~ "Token") {
-		return (pass);
-	}
 	
   }
 }

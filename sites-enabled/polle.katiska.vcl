@@ -9,6 +9,7 @@ sub vcl_recv {
 	# for dumb TCL-proxy uncomment
 	#return(pipe);
 	
+	## General rules common to every backend by common.vcl
 	call common_rules;
 	
 	## Limit logins by acl whitelist
@@ -36,27 +37,29 @@ sub vcl_recv {
 		}
 	}
 
-	# serving general robots.txt that disallow all
+	## serving general robots.txt that disallow all
 	# doesn't work...
-	if (req.url ~ "/robots.txt") {
+	if (req.url ~ "^/robots.txt") {
 		return(synth(601));
 	}
 	
-	# drops stage site totally
+	## drops stage site totally
 	if (req.url ~ "/stage") {
 		return(pipe);
 	}
 
-	# drops Mailster
+	## drops Mailster
 	if (req.url ~ "/postilista/") {
 		return(pass);
 	}
 
-	# Keep this last
+	## Keep this last because wordpress_common.vcl limits more and tells cache all others etc.
 	call wp_basics;
-
-	# Cache all others requests if they reach this point
+	
+	## Cache all others requests if they reach this point. None should come to here, ever, because of wp_basics.
 	return(hash);
+	
+  # The end of host
   }
+# The end of sub-vcl
 }
-

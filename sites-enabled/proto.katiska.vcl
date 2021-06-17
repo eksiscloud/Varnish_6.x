@@ -1,4 +1,4 @@
-## Jekyll (commenting by Disqus) ##
+## Jekyll (commenting by Disqus) Not active now ##
 sub vcl_recv {
 	if (req.http.host == "proto.katiska.info") {
 		set req.backend_hint = default;
@@ -10,14 +10,6 @@ sub vcl_recv {
 	#return(pipe);
 
 	call common_rules;
-
-	# Needed for Monit
-	if (req.url ~ "/pong") {
-		return (pipe);
-	}
-
-	# Keep this last
-	call wp_basics;
 
 	# Cache all others requests if they reach this point
 	return (hash);

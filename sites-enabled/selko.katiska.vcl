@@ -9,6 +9,7 @@ sub vcl_recv {
 	#return(pass);
 	#return(pipe);
 
+	## General rules common to every backend by common.vcl
 	call common_rules;
 	
 	## Limit logins by acl whitelist
@@ -36,21 +37,50 @@ sub vcl_recv {
 		}
 	}
 
-	# drops stage site
-	if (req.url ~ "/stage") {
+	## Discourse as commenting system
+	if (req.url ~ "/wp-json/wp-discourse/v1/discourse-comments") {
+		return(pass);
+	}
+	
+	## Tag list 
+	# Actually, tags are quite static so commented. But I'll give a bit shorter TTL later
+	if (req.url ~ "^/tieto/avainsana/") {
 		return(pass);
 	}
 
-	# Needed for Monit
-	if (req.url ~ "/pong") {
-	return(pipe);
+	## Drops stage site totally
+	if (req.url ~ "/stage") {
+		return(pipe);
 	}
 
-	call common_rules;
+	## Landing pages with form/mailing list (needs nonce)
+	# I'm not sure if pass helps with nonce
+	if (req.url ~ "/laskeutumissivut") {
+		return(pass);
+	}
+
+	## Drops Mailster/contact form
+	if (req.url ~ "/postilista") {
+		return(pass);
+	}
+
+	## Pass contact form
+	if (req.url ~ "/tiedustelut") {
+		return(pass);
+	}
+
+	## Needed for Monit
+	if (req.url ~ "/pong") {
+		return (pipe);
+	}
+
+	## Keep this last because wordpress_common.vcl limits more and tells cache all others etc.
+	call wp_basics;
 	
-	## Everything else
-	
-	# Cache all others requests if they reach this point
+	## Cache all others requests if they reach this point. None should come to here, ever, because of wp_basics.
 	return(hash);
+	
+  # The end of host
   }
+# The end of sub-vcl
 }

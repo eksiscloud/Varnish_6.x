@@ -11,6 +11,7 @@ sub new_direction {
 		# Searches
 		if (req.url ~ "\?s=koira$") { set req.url = regsub(req.url, "\?s=koira$", "/tieto/katiskan-kaytto-sisalto/asian-loytaminen/"); return(restart); } # why I need restart here?
 		elseif (req.url ~ "\?s=a2-vitamiini") { set req.url = regsub(req.url, "\?s=a2-vitamiini", "\?s=a-vitamiini"); }
+		elseif (req.url ~ "\?s=d3$") { set req.url = regsub(req.url, "\?s=d3$", "\?s=d-vitamiini"); }
 		elseif (req.url ~ "\?s=be$") { set req.url = regsub(req.url, "\?s=be$", "\?s=be-vitamiini"); }
 		elseif (req.url ~ "\?s=glucosamiini") { set req.url = regsub(req.url, "\?s=glucosamiini", "\?s=glukosamiini"); }
 		elseif (req.url ~ "\?s=(.*)juonti") { set req.url = regsub(req.url, "\?s=(.*)juonti", "\?s=juominen"); }

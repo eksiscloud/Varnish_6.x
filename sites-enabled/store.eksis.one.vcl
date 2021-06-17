@@ -9,20 +9,11 @@ sub vcl_recv {
 	#return(pass);
 	return(pipe);
 
-	## This caches almost nothing
+	### This caches nothing but I get basic filtering
+	### Setup is faulty somewhere because otherwise logging out gives error 500
 
+	## General rules common to every backend by common.vcl
 	call common_rules;
-
-	## Limit logins by acl whitelist
-	if (req.url ~ "^/wp-login.php" && (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist)) {
-		# I can't ban finnish IPs
-		if (req.http.X-Country-Code ~ "fi" || req.http.x-language ~ "fi") {
-			return(synth(403, "Access Denied " + req.http.X-Real-IP));
-		} else {
-		# other knockers I can ban
-			return(synth(666, "Forbidden action from " + req.http.X-Real-IP));
-		}
-	}
 
 	## Wordpress REST API
 	# For some reason this isn't working if in wordpress_common.vcl
@@ -36,26 +27,40 @@ sub vcl_recv {
 				return(synth(403, "Unauthorized request"));
 			}
 		}
+	} else {
+		return(pipe);
 	}
+
+	### Below this nothing applies
 
 	# drops stage site
 	if (req.url ~ "/stage") {
-		return (pass);
+		return (pipe);
 	}
 
 	# Needed for Monit
 	if (req.url ~ "/pong") {
-	return (pipe);
+		return (pipe);
+	}
+
+	# Email-link to Gravity form by WP Offload
+	if (req.url ~ "/wp-json/wp-offload-ses/v1/") {
+		return(pass);
 	}
 
 	# Pass the Store related
 	if (req.url ~ "/(koulutukset-2|tuote)") {
-	return (pass);
+		return (pass);
 	}
 	
-	# Page of contact form
+	# Page of contact form (Gravity)
 	if (req.url ~ "/(tiedustelut)") {
-	return (pass);
+		return (pass);
+	}
+	
+	# Gravity form of one product
+	if (req.url ~ "/puhelinajan-lisatiedot") {
+		return(pass);
 	}
 
 	# WooCommerce common
@@ -66,6 +71,9 @@ sub vcl_recv {
 	
 	# Cache all others requests if they reach this point
 	return (hash);
+  
+  # The end of host
   }
+# The end of sub-vcl
 }
 

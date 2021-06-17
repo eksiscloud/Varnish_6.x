@@ -88,10 +88,10 @@ sub vcl_recv {
 	## Keep this last because wordpress_common.vcl limits more and tells cache all others etc.
 	call wp_basics;
 	
-	## Cache all others requests if they reach this point. None should come to here, ever.
+	## Cache all others requests if they reach this point.
 	return(hash);
 	
-	#the of host
+  # The end of host
   }
-  # The end of sub-vcl
+# The end of sub-vcl
 }

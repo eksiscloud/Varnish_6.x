@@ -9,8 +9,15 @@ sub wc_basics {
 	
 	# Pass the Woocommerce related
 	# 'tuote¨is product on finnish
-	if (req.url ~ "(cart|my-account|checkout|tuote|wc-api|addons|logout|lost-password)") {
-		return (pass);
+	# If I have 'logout' among others logging out doesn't work and gives error 500.
+	# I'm using plugin Peter's Login Redirect - conflict? Have to check it.
+	if (req.url ~ "(cart|my-account|checkout|tuote|wc-api|addons|lost-password)") {
+		return(pass);
+	}
+
+	# But if I pipe logput, it works. Matter of nonce?
+	if (req.url ~ "logout") {
+		return (pipe);
 	}
 
 	# Pass through the WooCommerce's add to cart 

@@ -428,45 +428,9 @@ sub vcl_hash {
 
 	# hash cookies for requests that have them 
 	# used with single WooCommerce etc.
-#	if (req.http.Cookie) {
-#		hash_data(req.http.Cookie);
-#	}
-
-	## Cookie madness
-	# Is this really needed?
-	
-	if (req.http.cookie-wp) {
-		set req.http.Cookie = req.http.cookie-wp;
+	if (req.http.Cookie) {
 		hash_data(req.http.Cookie);
-		unset req.http.cookie-wp;
 	}
-	
-	if (req.http.cookie-git) {
-		set req.http.Cookie = req.http.cookie-git;
-		hash_data(req.http.Cookie);
-		unset req.http.cookie-git;
-	}
-	
-	if (req.http.cookie-dc) {
-		set req.http.Cookie = req.http.cookie-dc;
-		hash_data(req.http.Cookie);
-		unset req.http.cookie-dc;
-	}
-	
-	if (req.http.cookie-moodle) {
-		set req.http.Cookie = req.http.cookie-moodle;
-		hash_data(req.http.Cookie);
-		unset req.http.cookie-moodle;
-	}
-	
-	### Not in use
-#	if (req.http.cookie-wiki) {
-#		set req.http.Cookie = req.http.cookie-wiki;
-#		hash_data(req.http.Cookie);
-#		unset req.http.cookie-moodle;
-#	}
-	
-	## /Cookie madness
 
 	## The end
 	return (lookup);
@@ -709,7 +673,8 @@ sub vcl_backend_response {
 	# Heads up: some sites may need to set cookie!
 	if (
 		bereq.url !~ "(wp-(login|admin)|login|admin-ajax|cart|my-account|wc-api|checkout|addons|logout|resetpass|lost-password|tuote|\?wc-ajax=get_refreshed_fragments)" &&
-		bereq.http.cookie !~ "wordpress_|resetpass|wp-postpass" &&
+		bereq.http.cookie !~ "(wordpress_|resetpass|wp-postpass)" &&
+		bereq.http.cookie !~ "(woocommerce_|wp_woocommerce)" &&
 		beresp.status != 302 &&
 		bereq.method == "GET"
 		) { 
@@ -900,17 +865,17 @@ sub vcl_synth {
 	} 
 	
 	## robots.txt for those sites that not generate theirs own
-	# doesn't work with Wordpress
-	#if (resp.status == 601) {
-	#	set resp.status = 200;
-	#	set resp.reason = "OK";
-	#	set resp.http.Content-Type = "text/plain; charset=utf8";
-	#	synthetic( {"
-	#	User-agent: *
-	#	Disallow: /
-	#	"} );
-	#	return(deliver);
-	#}
+	# doesn't work with Wordpress where if under construction plugin is on
+	if (resp.status == 601) {
+		set resp.status = 200;
+		set resp.reason = "OK";
+		set resp.http.Content-Type = "text/plain; charset=utf8";
+		synthetic( {"
+		User-agent: *
+		Disallow: /
+		"} );
+		return(deliver);
+	}
 
 	## 301/302 redirects using custom status
 	if (resp.status == 701) {

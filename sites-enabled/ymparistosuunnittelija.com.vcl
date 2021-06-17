@@ -10,11 +10,20 @@ sub vcl_recv {
 	#return(pipe);
 
 
-	# Normalize hostname as www. to avoid double caching
+	## Normalize hostname to www. to avoid double caching
+	# I like to keep triple-w
 	set req.http.host = regsub(req.http.host,
 	"^ymparistosuunnittelija\.com$", "www.ymparistosuunnittelija.com");
 	
+	## General rules common to every backend by common.vcl
 	call common_rules;
+
+	## Limit logins to finnish only
+	if (req.url ~ "^/wp-login.php") {
+		if (req.http.X-Country-Code !~ "fi" && req.http.x-language !~ "fi") {
+			return(synth(666, "Forbidden action from " + req.http.X-Real-IP));
+		}
+	}
 
 	## Wordpress REST API
 	# For some reason this isn't working if in wordpress_common.vcl
@@ -32,7 +41,7 @@ sub vcl_recv {
 
 	# Needed for Monit
 	if (req.url ~ "/pong") {
-	return (pipe);
+		return (pipe);
 	}
 
 	# Check the Cookies for wordpress-comment items I reckon
@@ -40,10 +49,13 @@ sub vcl_recv {
 		return (pass);
 	}
 	
-	# Keep this last
+	# Keep this last. Rules from wordpress_common.vcl
 	call wp_basics;
 	
 	# Cache all others requests if they reach this point
 	return (hash);
+  
+  # The end of host
   }
+# The end of sub-vcl
 }
