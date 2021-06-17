@@ -56,20 +56,20 @@ sub common_rules {
 	#}
 	
 	## Only deal with "normal" types
-	# This should do at Nginx?
-	if (req.method != "GET" &&
-	req.method != "HEAD" &&
-	req.method != "PUT" &&
-	req.method != "POST" &&
-	req.method != "TRACE" &&
-	req.method != "OPTIONS" &&
-	req.method != "PATCH" &&
-	req.method != "DELETE"
-	) {
-	# Non-RFC2616 or CONNECT which is weird.
-	# Why send the packet upstream, while the visitor is using a non-valid HTTP method?
-		return(synth(405, "Non-valid HTTP method!"));
-	}
+	## Just an example. I'm dealing this at Nginx.
+	#if (req.method != "GET" &&
+	#req.method != "HEAD" &&
+	#req.method != "PUT" &&
+	#req.method != "POST" &&
+	#req.method != "TRACE" &&
+	#req.method != "OPTIONS" &&
+	#req.method != "PATCH" &&
+	#req.method != "DELETE"
+	#) {
+	## Non-RFC2616 or CONNECT which is weird.
+	## Why send the packet upstream, while the visitor is using a non-valid HTTP method?
+	#	return(synth(405, "Non-valid HTTP method!"));
+	#}
 	
 	## Auth requests shall be passed
 	if (req.http.Authorization || req.method == "POST") {
