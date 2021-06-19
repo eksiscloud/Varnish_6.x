@@ -43,16 +43,20 @@ sub vcl_recv {
 			return(synth(666, "Forbidden request from: " + req.http.X-Real-IP));
 		}
 	}
-	elseif (req.url ~"/(robots.txt|humans.txt|sitemap)") {
+
+	## These are quite static, except sitemap, but it is just matter of TTL
+	if (req.url ~"/(robots.txt|humans.txt|sitemap)") {
 		return(hash);
 	}
-	else {
-		# Must pipe, otherwise I just get error 500
-		return(pipe);
-	}
-	
-	# Cache all others requests if they reach this point
-	return(hash);
+
+	## The only things I can cache from Discourse.
+	# Yes, I'm usin S3 as CDN, but loading from RAM is always faster than jumps to CDN edge.
+	if (req.url ~ "(^/uploads/|^/assets/|^/user_avatar/)") {
+      return (hash);
+   }
+
+	# And that's it. Nothing else. Must pipe or get error 500. And pipe means too that anything in vcl_backend_response amd vcl_delivet won't apply.
+	return(pipe);
 	
   #The end of the host
   }

@@ -778,7 +778,7 @@ sub vcl_deliver {
 		return(synth(666, "Requests not allowed for " + req.url));
 	}
 	
-	# Moodle: Revert back to original Cache-Control header before delivery to client
+	## Moodle: Revert back to original Cache-Control header before delivery to client
 	if (resp.http.X-Orig-Cache-Control) {
 		set resp.http.Cache-Control = resp.http.X-Orig-Cache-Control;
 		unset resp.http.X-Orig-Cache-Control;
@@ -814,7 +814,6 @@ sub vcl_deliver {
 	
 	## Remove some headers, because the client doesn't need them
 	unset resp.http.Server;
-	set resp.http.Server = "Caffeine v64.19.57";
 	unset resp.http.X-Powered-By;
 	unset resp.http.X-Varnish;
 	unset resp.http.Via;
@@ -823,19 +822,15 @@ sub vcl_deliver {
 	unset resp.http.x-url;
 	unset resp.http.x-host;
 	unset resp.http.Pragma;
-	# these were by MediaWiki
-	#unset resp.http.x-request-id;
-	#unset resp.http.x-frame-options;
-	#unset resp.http.x-content-type-options;
 
 	## Custom headers, not so serious thing 
 	set resp.http.Your-Agent = req.http.User-Agent;
 	set resp.http.Your-IP = req.http.X-Real-IP;
 	# lookup can't be in sub vcl
-	set resp.http.Your-IP-Country = country.lookup("country/names/en", std.ip(req.http.X-Real-IP, "0.0.0.0")) + "/" + std.toupper(req.http.X-Country-Code);
-	set resp.http.Your-IP-City = city.lookup("city/names/en", std.ip(req.http.X-Real-IP, "0.0.0.0"));
-	set resp.http.Your-IP-GPS = city.lookup("location/latitude", std.ip(req.http.X-Real-IP, "0.0.0.0")) + " " + city.lookup("location/longitude", std.ip(req.http.X-Real-IP, "0.0.0.0"));
-	set resp.http.Your-IP-ASN = asn.lookup("autonomous_system_organization", std.ip(req.http.X-Real-IP, "0.0.0.0"));
+		set resp.http.Your-IP-Country = country.lookup("country/names/en", std.ip(req.http.X-Real-IP, "0.0.0.0")) + "/" + std.toupper(req.http.X-Country-Code);
+		set resp.http.Your-IP-City = city.lookup("city/names/en", std.ip(req.http.X-Real-IP, "0.0.0.0"));
+		set resp.http.Your-IP-GPS = city.lookup("location/latitude", std.ip(req.http.X-Real-IP, "0.0.0.0")) + " " + city.lookup("location/longitude", std.ip(req.http.X-Real-IP, "0.0.0.0"));
+		set resp.http.Your-IP-ASN = asn.lookup("autonomous_system_organization", std.ip(req.http.X-Real-IP, "0.0.0.0"));
 	call headers_x;		# x-heads.vcl
 	call header_smiley;	# cheshire_cat.vcl
 

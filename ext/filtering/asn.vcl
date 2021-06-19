@@ -1,7 +1,8 @@
 sub asn_name {
 
+	## If you have just another website for real users maybe It is wise move to ban every single one VPS service you don't need for APIs etc.
 	# Heads up: ASN can and quite often will stop more than just one company
-	# Just coming from some ASN doesn't be reason to hard banning
+	# Just coming from some ASN doesn't be reason to hard banning, but everyone is knocking too often so I'll keep doors closed
 	if (
 		   req.http.x-asn ~ "alibaba"						# Alibaba (US) Technology Co., Ltd., US,CN
 		|| req.http.x-asn ~ "bladeservers"					# LeaseVPS, NL, AU
@@ -19,6 +20,7 @@ sub asn_name {
 		|| req.http.x-asn ~ "networksdelmanana"				# Yaroslav Kharitonova, UY via HN from RU
 		|| req.http.x-asn == "njix"							# laceibaserver.com, DE, US
 		|| req.http.x-asn ~ "online sas"					# IP Pool for Iliad-Entreprises Business Hosting Customers, FR
+		|| req.http.x-asn ~ "planeetta-as"					# Planeetta Internet Oy, FI
 		|| req.http.x-asn ~ "scalaxy"						# xWEBltd, actually RU using NL and identifying as GB
 		|| req.http.x-asn ~ "reliablesite"					# Dedires llc, GB from PSE
 		|| req.http.x-asn == "squitter-networks"			# ABC Consultancy etc, NL
@@ -30,7 +32,8 @@ sub asn_name {
 			return(synth(403, "Forbidden organization: " + std.toupper(req.http.x-asn)));
 		}
 		
-	# These are really bad ones and will be banned by Fail2ban
+	## These are really bad ones and will be banned by Fail2ban
+	# It is just smart to ban theirs IP-space totally in Fail2ban
 	if (
 		   req.http.x-asn ~ "adsafe-"						# Integral Ad Science, Inc., US
 		|| req.http.x-asn == "as_delis"						# Serverion BV, NL
