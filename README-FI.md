@@ -19,7 +19,7 @@ Käytössä on:
 
 ## Varnishin perusteet
 - default.vcl tekee yleiset normalisoinnit lohkossa sub vcl_recv (ei return(...) lausekkeita) ja sen jälkeen kaiken muun
-- all-common.vcl hoitaa cookiet
+- all-cookie.vcl hoitaa cookiet
 - all-vhost kertoo kaikkien sivustojen (virtual hosts) sijainnin ja ottaa ne käyttöön
 - letsencrypt.vcl on Let's Enryptin oma backend
 
@@ -52,6 +52,22 @@ Osa uudelleenohjauksista tehdään Varnishin puolella, vaikka frontina oleva Ngi
 Monet kutsutuista vcl:stä liipaisee virheilmoituksen avulla Fail2Bannin. Ehkä liioittelua?
 
 Olen yrittänyt kommentoida suunnilleen kaiken tekemäni. Suurin osa on täysin perusasioita ja loputkin voisi varmasti tehdä toisin ja paremminkin. Mutta en osaa tämän kummallisempaa.
+
+## Backendit
+Yhtä Discoursea lukuunottamatta kaikki backendit ovat samalla DigitalOceanin VPS:llä Varnishin kanssa. Mitään load balanceria tai sairastuneiden backendien ohjaamista toisaalle ei ole.
+
+- WordPress/WooCommerce ja Moodle ovat Apache2 hoivissa portin 81 takana
+- Yksi Discourse on omalla VPS:llä, kaksi muuta Varnishin kanssa samassa. Jokainen on Dockerin takana, joten backendin kutsu tapahtuu jokaisen foorumin omalla socketilla
+- MediaWiki on Nginxin hoidossa portissa 82 (koska järkevää/helppoa ohjetta Apachelle ei vaan löydy)
+- Gitea on myös omanaan ja sitä kutsutaan socketilla
+
+## Cachen tehokkuus
+- Wordpress menee tehokkaasti cacheen, varsinkin kun suurimpaan osaan ei ole tarvetta kirjautua muilla kuin ylläpidolla. WP Rocket auttaa myös.
+- WooCommerce on heikko, kuten aina. Omat kaupat ovat niin vähäisillä volyymeillä, että asialla ei ole edes merkitystä.
+- Discourse ei sovi yhteen Varnishin kanssa. Käytännössä tehdään perussuodatukset ja sitten komennetaan pipe.
+- MediaWikin cacheamisen järkevyys riippuu päivitystahdista, joten kyse on vain TTL-säädöistä. Cache näkyy kuitenkin vain satunnaisilla kävijöillä ja sellaisilla, joiden kirjautumisesta on yli 30 päivää. Cookie UserName kuljettaa mukanaan käyttäjätunnusta ja on sinällään tarpeeton, mutta jos sen tipauttaa pois, niin sisäänkirjautuminen ei onnistu. Ja jos se löytyy, niin cache ei toimi.
+- Gitea on lähen mahdoton saada uppoamaan Varnisiin, mutta joitain staattisia ja harvoin muuttuvia komponentteja saa cacheen. Vähimmän vaivan tie on tehdä suodatukset ja sitten päästää return(pass) kaikki ohi cachen.
+- Moodle ei vaan toimi, ainakaan vielä. Se, että kirjautuminen jne. toimii jos komentaa pass juoruaa siitä, että ongelma on cookieissa.
 
 ## Vastuunpakoilua
 
