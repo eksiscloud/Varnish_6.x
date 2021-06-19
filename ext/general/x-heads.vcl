@@ -1,6 +1,6 @@
 sub headers_x {
 ## let's set some extra just for fun
-	set resp.http.Server = "Caffeine v64.19.56";
+	#set resp.http.Server = "Caffeine v64.19.56";
 	set resp.http.Powered-By = "Caol ila";
 	set resp.http.Callsign-VPS = "Basic stack";
 	set resp.http.Callsign-W3 = "Laura";

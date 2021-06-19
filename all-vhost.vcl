@@ -16,6 +16,7 @@ include "sites-enabled/git.eksis.one.vcl";
 include "sites-enabled/proto.eksis.one.vcl";
 include "sites-enabled/pro.eksis.one.vcl";
 include "sites-enabled/eksis.eu.vcl";
+include "sites-enabled/stats.eu.vcl";
 include "sites-enabled/eksis.dev.vcl";
 include "sites-enabled/sumppu.info.vcl";
 include "sites-enabled/www.koiranravitsemus.fi.vcl";

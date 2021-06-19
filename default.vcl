@@ -170,7 +170,7 @@ backend gitea {
 	.probe = sondi-git;				# We have chance to recycle the probe
 }
 
-# www.koiranravitsemus.fi by MediaWiki - Not in use
+# www.koiranravitsemus.fi by MediaWiki
 backend wiki {
 	.host = "127.0.0.1";
 	.port = "82";
@@ -178,6 +178,15 @@ backend wiki {
 	.connect_timeout = 300s;		# How long to wait for a backend connection?
 	.between_bytes_timeout = 300s;	# How long to wait between bytes received from our backend?
 	#.probe = sondi-wiki;			# We have chance to recycle the probe
+}
+
+# stats.eksis.eu by Matomo
+backend matomo {
+	.host = "127.0.0.1";
+	.port = "82";
+	.first_byte_timeout = 300s;		# How long to wait before we receive a first byte from our backend?
+	.connect_timeout = 300s;		# How long to wait for a backend connection?
+	.between_bytes_timeout = 300s;	# How long to wait between bytes received from our backend?
 }
 
 # proto.eksis.one by Discourse
@@ -445,6 +454,11 @@ sub vcl_hash {
 	
 	# Moodle 
 	if (req.http.x-host == "moodle") {
+		hash_data(req.http.cookie);
+	}
+	
+	# Matomo 
+	if (req.http.x-host == "matomo") {
 		hash_data(req.http.cookie);
 	}
 	
@@ -762,7 +776,8 @@ sub vcl_deliver {
 	unset resp.http.Expires;
 	
 	## Remove some headers, because the client doesn't need them
-	unset resp.http.Server;	
+	unset resp.http.Server;
+	set resp.http.Server = "Caffeine v64.19.57";
 	unset resp.http.X-Powered-By;
 	unset resp.http.X-Varnish;
 	unset resp.http.Via;
