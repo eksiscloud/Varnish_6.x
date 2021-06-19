@@ -573,6 +573,24 @@ sub vcl_backend_response {
 		return(retry);
 	}
 	
+	## Moodle and static objects
+	if (beresp.http.Cache-Control && bereq.http.x-moodle-ttl && beresp.ttl < std.duration(bereq.http.x-moodle-ttl + "s", 1s) && !beresp.http.WWW-Authenticate ) { 
+		# If max-age < defined in x-moodle-ttl header
+		set beresp.http.X-Orig-Cache-Control = beresp.http.Cache-Control;
+		set beresp.http.Cache-Control = "public, max-age="+bereq.http.X-Long-TTL + ", no-transform";
+		set beresp.ttl = std.duration(bereq.http.x-moodle-cache + "s", 1s);
+        unset bereq.http.x-moodle-cache;
+	}
+    elseif(!beresp.http.Cache-Control && bereq.http.x-moodle-ttl && !beresp.http.WWW-Authenticate ) {
+		set beresp.http.Cache-Control = "public, max-age="+bereq.http.x-moodle-ttl + ", no-transform";
+		set beresp.ttl = std.duration(bereq.http.x-moodle-ttl + "s", 1s);
+		unset bereq.http.X-Long-TTL;
+	}
+	else { 
+		# Don't touch headers if max-age > defined in x-moodle-ttl header
+		unset bereq.http.X-Long-TTL;
+	}
+	
 	## RSS and other feeds like podcast can be cached
 	# Podcast services are checking feed way too often, and I'm quite lazy to publish, so 24h delay is acceptable
 	if (beresp.http.Content-Type ~ "text/xml") {
@@ -624,7 +642,7 @@ sub vcl_backend_response {
 		set beresp.http.cache-control = "max-age=31536000"; 
 	}
 	
-	# MediaWiki
+	## MediaWiki
 	if (bereq.http.host ~ "koiranravitsemus.fi") {
 		if (bereq.http.cookie !~ "(session|UserID|UserName|LoggedOut|Token)") {
 			unset beresp.http.set-cookie; 
@@ -729,6 +747,14 @@ sub vcl_backend_response {
 		return (deliver);
 	}
 
+	## I set X-Trace header, prepending it to X-Trace header received from backend. Useful for troubleshooting
+	if(beresp.http.x-trace && !beresp.was_304) {
+		set beresp.http.X-Trace = regsub(server.identity, "^([^.]+),?.*$", "\1")+"->"+regsub(beresp.backend.name, "^(.+)\((?:[0-9]{1,3}\.){3}([0-9]{1,3})\)","\1(\2)")+"->"+beresp.http.X-Trace;
+	}
+	else {
+		set beresp.http.X-Trace = regsub(server.identity, "^([^.]+),?.*$", "\1")+"->"+regsub(beresp.backend.name, "^(.+)\((?:[0-9]{1,3}\.){3}([0-9]{1,3})\)","\1(\2)");
+	}
+
 	## Unset the old pragma header
 	# Unnecessary filtering 'cos Varnish doesn't care of pragma, but it is ugly in headers
 	unset beresp.http.Pragma;
@@ -752,6 +778,11 @@ sub vcl_deliver {
 		return(synth(666, "Requests not allowed for " + req.url));
 	}
 	
+	# Moodle: Revert back to original Cache-Control header before delivery to client
+	if (resp.http.X-Orig-Cache-Control) {
+		set resp.http.Cache-Control = resp.http.X-Orig-Cache-Control;
+		unset resp.http.X-Orig-Cache-Control;
+	}
 	
 	## MediaWiki doesn't set vary as I want it; this has no point anyway
 	if (req.http.host ~ "koiranravitsemus.fi") {
@@ -771,6 +802,12 @@ sub vcl_deliver {
 	
 	## Just some unneeded headers from debugs.vcl
 	call diagnose;
+	
+	## Moodle: Set X-AuthOK header when authentication succeeded
+	# Not in use here, but some day... so, it will be ready
+	if (req.http.X-AuthOK) {
+		set resp.http.X-AuthOK = req.http.X-AuthOK;
+	}
 	
 	## Expires is unneeded because cache-control overrides it
 	unset resp.http.Expires;
