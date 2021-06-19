@@ -642,13 +642,14 @@ sub vcl_backend_response {
 		set beresp.http.cache-control = "max-age=31536000"; 
 	}
 	
-	## MediaWiki
+	## MediaWiki: TTL when not logged in and there isn't 30d UserName cookie
 	if (bereq.http.host ~ "koiranravitsemus.fi") {
-		if (bereq.http.cookie !~ "(session|UserID|UserName|LoggedOut|Token)") {
-			unset beresp.http.set-cookie; 
-			unset beresp.http.cache-control;
-			set beresp.http.cache-control = "max-age=86400s";
-			set beresp.ttl = 1d;
+		if (bereq.http.cookie !~ "session|UserID|UserName|LoggedOut|Token" 
+			) {		
+				unset beresp.http.set-cookie; 
+				unset beresp.http.cache-control;
+				set beresp.http.cache-control = "max-age=86400s";
+				set beresp.ttl = 1d;
 		}
 	}
 	

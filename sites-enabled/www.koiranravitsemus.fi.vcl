@@ -30,10 +30,10 @@ sub vcl_recv {
 		}
 	}
 	
-	if (req.http.cookie ~ "(session|UserID|UserName|Token|LoggedOut)") {
+	## Cache only if random visitor without 30 d UserName cookie
+	if (req.http.cookie ~ "(session|UserID|UserName|LoggedOut|Token)") {
 		return (pass);
-	} 
-	else {
+	} else {
 		unset req.http.cookie;
 	}
 
