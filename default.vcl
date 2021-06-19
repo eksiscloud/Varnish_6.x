@@ -171,14 +171,14 @@ backend gitea {
 }
 
 # www.koiranravitsemus.fi by MediaWiki - Not in use
-#backend wiki {
-#	.host = "127.0.0.1";
-#	.port = "82";
-#	.first_byte_timeout = 300s;		# How long to wait before we receive a first byte from our backend?
-#	.connect_timeout = 300s;		# How long to wait for a backend connection?
-#	.between_bytes_timeout = 300s;	# How long to wait between bytes received from our backend?
-#	#.probe = sondi-wiki;			# We have chance to recycle the probe
-#}
+backend wiki {
+	.host = "127.0.0.1";
+	.port = "82";
+	.first_byte_timeout = 300s;		# How long to wait before we receive a first byte from our backend?
+	.connect_timeout = 300s;		# How long to wait for a backend connection?
+	.between_bytes_timeout = 300s;	# How long to wait between bytes received from our backend?
+	#.probe = sondi-wiki;			# We have chance to recycle the probe
+}
 
 # proto.eksis.one by Discourse
 backend proto {
@@ -426,11 +426,37 @@ sub vcl_hash {
 		hash_data(server.ip);
 	}
 
-	# hash cookies for requests that have them 
-	# used with single WooCommerce etc.
-	if (req.http.Cookie) {
-		hash_data(req.http.Cookie);
+	## Cookie monster
+	
+	# Gitea 
+	if (req.http.x-host == "gitea") {
+		hash_data(req.http.cookie-git);
 	}
+	
+	# Discourse 
+	if (req.http.x-host == "discourse") {
+		hash_data(req.http.cookie);
+	}
+	
+	# MediaWiki 
+	if (req.http.x-host == "mediawiki") {
+		hash_data(req.http.cookie);
+	}
+	
+	# Moodle 
+	if (req.http.x-host == "moodle") {
+		hash_data(req.http.cookie);
+	}
+	
+	# WordPress/WooCommerce 
+	if (req.http.x-host == "wordpress") {
+		hash_data(req.http.cookie);
+	}
+	
+	# There shouldn't be any meaningful cookies left, but if there is...
+	#if (req.http.cookie) {
+	#	hash_data(req.http.cookie);
+	#}
 
 	## The end
 	return (lookup);
@@ -584,13 +610,15 @@ sub vcl_backend_response {
 		set beresp.http.cache-control = "max-age=31536000"; 
 	}
 	
-	## I tried this with MediaWiki; it did something, but I couldn't put MediaWiki behind Varnish.
-	#if (bereq.http.host ~ "koiranravitsemus.fi") {
-	#	unset beresp.http.cache-control;
-	#	# max-age doesn't go through and I don't know why.
-	#	#set beresp.http.cache-control = "max-age=120";
-	#	set beresp.ttl = 300s;
-	#}
+	# MediaWiki
+	if (bereq.http.host ~ "koiranravitsemus.fi") {
+		if (bereq.http.cookie !~ "(session|UserID|UserName|LoggedOut|Token)") {
+			unset beresp.http.set-cookie; 
+			unset beresp.http.cache-control;
+			set beresp.http.cache-control = "max-age=86400s";
+			set beresp.ttl = 1d;
+		}
+	}
 	
 	## Some admin-ajax.php calls can be cached by Varnish
 	# Except... it is almost always POST and that is uncacheable
@@ -712,10 +740,10 @@ sub vcl_deliver {
 	
 	
 	## MediaWiki doesn't set vary as I want it; this has no point anyway
-	#if (req.http.host ~ "koiranravitsemus.fi") {
-	#	unset resp.http.vary;
-	#	set resp.http.vary = "X-Forwarded-Proto, Accept-Encoding";
-	#}
+	if (req.http.host ~ "koiranravitsemus.fi") {
+		unset resp.http.vary;
+		set resp.http.vary = "X-Forwarded-Proto, Accept-Encoding";
+	}
 
 	## Let's add the origin by cors.vcl
 	call cors;
@@ -962,4 +990,4 @@ sub vcl_fini {
 # Vhosts, needed when multiple virtual hosts is in use
 # must be in this order
 include "all-vhost.vcl";
-include "all-common.vcl";
+include "all-cookies.vcl";

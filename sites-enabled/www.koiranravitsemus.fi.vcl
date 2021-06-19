@@ -15,7 +15,7 @@ sub vcl_recv {
 	"^koiranravitsemus\.fi$", "www.koiranravitsemus.fi");
 	
 	## General rules common to every backend by common.vcl
-	#call common_rules;
+	call common_rules;
 	
 	## Stop knocking
 	if (req.url ~ "(wp-login|xmlrpc).php") {
@@ -29,19 +29,16 @@ sub vcl_recv {
 			return(synth(666, "Forbidden request from: " + req.http.X-Real-IP));
 		}
 	}
-	elseif (req.url ~"/(robots.txt|sitemap)") {
-		return(hash);
-	}
-	#elseif (req.url ~ "^[^?]*\.(7z|bmp|bz2|css|csv|doc|docx|eot|flac|flv|gz|ico|js|otf|pdf|png|ppt|pptx|rtf|svg|swf|tar|tbz|tgz|ttf|txt|txz|webm|woff|woff2|xls|xlsx|xml|xz|zip)(\?.*)?$") {
-	#	unset req.http.cookie;
-	#	return(hash);
-	#}
+	
+	if (req.http.cookie ~ "(session|UserID|UserName|Token|LoggedOut)") {
+		return (pass);
+	} 
 	else {
-		# Must pass, otherwise the site doesn't work
-		return(pipe);
+		unset req.http.cookie;
 	}
 
-
+	## Cache all others requests if they reach this point.
+	return(hash);
 	
   # The end of the host
   }

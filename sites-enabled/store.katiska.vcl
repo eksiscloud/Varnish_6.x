@@ -52,7 +52,7 @@ sub vcl_recv {
 	}
 	
 	# Gravity form of one product
-	if (req.url ~ "/puhelinajan-lisatiedot") {
+	if (req.url ~ "/(puhelinajan-lisatiedot|?gf_token)") {
 		return(pass);
 	}
 

@@ -17,6 +17,7 @@ sub asn_name {
 		|| req.http.x-asn ~ "int-network"					# IP Volume inc, SC
 		|| req.http.x-asn ~ "logineltdas"					# Karolio IT paslaugos, LT, US, GB
 		|| req.http.x-asn == "njix"							# laceibaserver.com, DE, US
+		|| req.http.x-asn ~ "online sas"					# IP Pool for Iliad-Entreprises Business Hosting Customers, FR
 		|| req.http.x-asn ~ "scalaxy"						# xWEBltd, actually RU using NL and identifying as GB
 		|| req.http.x-asn == "squitter-networks"			# ABC Consultancy etc, NL
 		|| req.http.x-asn ~ "tefincomhost"					# Packethub S.A., NordVPN, FI, PA
