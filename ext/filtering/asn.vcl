@@ -16,9 +16,11 @@ sub asn_name {
 		|| req.http.x-asn ~ "idcloudhost"					# PT. SIBER SEKURINDO TEKNOLOGI, PT Cloud Hosting Indonesia, ID
 		|| req.http.x-asn ~ "int-network"					# IP Volume inc, SC
 		|| req.http.x-asn ~ "logineltdas"					# Karolio IT paslaugos, LT, US, GB
+		|| req.http.x-asn ~ "networksdelmanana"				# Yaroslav Kharitonova, UY via HN from RU
 		|| req.http.x-asn == "njix"							# laceibaserver.com, DE, US
 		|| req.http.x-asn ~ "online sas"					# IP Pool for Iliad-Entreprises Business Hosting Customers, FR
 		|| req.http.x-asn ~ "scalaxy"						# xWEBltd, actually RU using NL and identifying as GB
+		|| req.http.x-asn ~ "reliablesite"					# Dedires llc, GB from PSE
 		|| req.http.x-asn == "squitter-networks"			# ABC Consultancy etc, NL
 		|| req.http.x-asn ~ "tefincomhost"					# Packethub S.A., NordVPN, FI, PA
 		|| req.http.x-asn ~ "whg-network"					# Web Hosted Group Ltd, GB
@@ -32,6 +34,7 @@ sub asn_name {
 	if (
 		   req.http.x-asn ~ "adsafe-"						# Integral Ad Science, Inc., US
 		|| req.http.x-asn == "as_delis"						# Serverion BV, NL
+		|| req.http.x-asn ~ "deltahost-as"					# DeltaHost, NL but actually UA
 		|| req.http.x-asn == "dreamhost-as"					# New Dream Network, LLC, US
 		|| req.http.x-asn == "ponynet"						# FranTech Solutions, US
 		) {

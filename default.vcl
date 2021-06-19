@@ -305,7 +305,7 @@ sub vcl_recv {
 	
 	# 2nd: Actual blocking: (mostly I do geo-blocking in iptables, but this is much easier way)
 	# Heads up: Cloudflare and other big CDNs can route traffic through really strange datacenters - like from Turkey to Finland via Senegal
-	if (req.http.X-Country-Code ~ "(bd|bg|cn|cr|ru|hk|id|pl|tw)") {
+	if (req.http.X-Country-Code ~ "(bd|bg|cn|cr|ru|hk|id|pl|tw|ua)") {
 		std.log("banned country: " + req.http.X-Country-Code);
 		return(synth(403, "Forbidden country: " + std.toupper(req.http.X-Country-Code)));
 	}
