@@ -1,6 +1,6 @@
 sub headers_x {
 ## let's set some extra just for fun
-	set resp.http.Server = "Caffeine v64.19.56";	# strange, but if backend is in Nginx this will be overdriven and showing Server: nginx
+	set resp.http.Server = "Caffeine v64.19.57";	# strange, but if backend is in Nginx this will be overdriven and showing Server: nginx
 	set resp.http.Powered-By = "Caol ila";			# perhaps the best mid-price single malt
 	set resp.http.Callsign-VPS = "Basic stack";
 	set resp.http.Callsign-W3 = "Laura";

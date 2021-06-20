@@ -208,5 +208,9 @@ sub common_rules {
 		return(hash);
 	}
 	
+	## Let's clean User-Agent, just to be on safe side
+	set req.http.x-agent = req.http.User-Agent;
+	unset req.http.User-Agent;
+	
 # The end
 }

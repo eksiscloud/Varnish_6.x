@@ -92,6 +92,7 @@ sub this_way {
 		elseif (req.url ~ "^/kaffepaussin\-aika/feed/") { return(synth(701, "https://www.katiska.info/feed/podcast/kaffepaussi")); }
 		elseif (req.url ~ "^/ruokinta/raaka-aineet/kaalikeittoa-ja-nokkosta") { return(synth(701, "https://www.katiska.info/tieto/koira-tarve-mineraali/fytaatti/")); }
 		elseif (req.url ~ "^/ruokinta/raaka-aineet/pellavansiemen") { return(synth(701, "https://www.katiska.info/tieto/koira-tarve-yleinen/kuitu-lihasta/")); }
+		elseif (req.url ~ "^/sitemap.xml") { return(synth(701, "https://www.katiska.info/sitemap_index.xml")); }
 		elseif (req.url ~ "^/tagit") { return(synth(701, "https://www.katiska.info/avainsanat/")); }
 		elseif (req.url ~ "^/tieto/koirat/kurssit/agility\-ja\-koiran\-lihaksisto") { return(synth(701, "https://www.katiska.info/tieto/lihaksisto-ja-luusto/agility-ja-koiran-lihaksisto/")); }
 		elseif (req.url ~ "^/tieto/koirat/kurssit/koiralle\-lihaa\-vatsan\-taydelta") { return(synth(701, "https://www.katiska.info/tieto/koira-ruokinta-liha/koiralle-lihaa-vatsan-taydelta/")); }

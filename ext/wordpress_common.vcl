@@ -38,13 +38,13 @@ sub wp_basics {
 	
 	## Fix Wordpress visual editor issues, must be the first one as url requests to work
 	# Backend of Wordpress
-	if (req.url ~ "/wp-((login|admin)|my-account|comments-post.php|cron|)" || req.url ~ "/login" || req.url ~ "preview=true") {
+	if (req.url ~ "/wp-((login|admin)|my-account|comments-post.php|cron)" || req.url ~ "/login" || req.url ~ "preview=true") {
 		return(pass);
 	}
 
 	## Don't cache logged-in user, password reseting and posts behind password
 	# Frontend of Wordpress
-	if (req.http.cookie ~ "wordpress_logged_in|resetpass|postpass") {
+	if (req.http.cookie ~ "(wordpress_logged_in|resetpass|postpass)") {
 		return(pass);
 	}
 
@@ -79,7 +79,7 @@ sub wp_basics {
 	## Hit everything else
 	# I'm dealing with both, Wordpress and Woocommerce, here even I have Woocommerce spesific vcl too.
 	# Again, 'tuote' is product in finnish
-	if (req.url !~ "wp-(login.php|cron.php|admin)|login|cart|my-account|wc-api|checkout|addons|loggedout|lost-password|tuote") {
+	if (req.url !~ "(wp-(login.php|cron.php|admin)|login|cart|my-account|wc-api|checkout|addons|loggedout|lost-password|tuote)") {
 		unset req.http.cookie;
 	}
 

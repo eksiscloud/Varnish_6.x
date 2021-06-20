@@ -23,7 +23,6 @@ sub asn_name {
 		|| req.http.x-asn ~ "planeetta-as"					# Planeetta Internet Oy, FI
 		|| req.http.x-asn ~ "scalaxy"						# xWEBltd, actually RU using NL and identifying as GB
 		|| req.http.x-asn ~ "reliablesite"					# Dedires llc, GB from PSE
-		|| req.http.x-asn == "squitter-networks"			# ABC Consultancy etc, NL
 		|| req.http.x-asn ~ "tefincomhost"					# Packethub S.A., NordVPN, FI, PA
 		|| req.http.x-asn ~ "whg-network"					# Web Hosted Group Ltd, GB
 		|| req.http.x-asn == "wii"							# Wholesale Internet, Inc US
@@ -40,6 +39,7 @@ sub asn_name {
 		|| req.http.x-asn ~ "deltahost-as"					# DeltaHost, NL but actually UA
 		|| req.http.x-asn == "dreamhost-as"					# New Dream Network, LLC, US
 		|| req.http.x-asn == "ponynet"						# FranTech Solutions, US
+		|| req.http.x-asn == "squitter-networks"			# ABC Consultancy etc, CINTY EU WEB SOLUTIONS, NL
 		) {
 			std.log("banned ASN: " + req.http.x-asn);
 			return(synth(666, "Severe security issues: " + std.toupper(req.http.x-asn)));

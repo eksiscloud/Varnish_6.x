@@ -23,17 +23,6 @@ sub tech_things {
 			return(synth(403, "False Bot"));
 		}
 	}
-	
-	## Let's Encrypt
-	# Has its own backend, so commented
-	#if (req.http.User-Agent ~ "Let's Encrypt validation server") {
-	#	if (req.url ~ "^/.well-known/acme-challenge/") {
-	#		return(pipe);
-	#	} else {
-	#		return(synth(404, "Not found"));
-	#	}
-	#}
-		
 
 
 # And here's the end

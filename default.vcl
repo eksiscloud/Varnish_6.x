@@ -471,6 +471,15 @@ sub vcl_hash {
 	#if (req.http.cookie) {
 	#	hash_data(req.http.cookie);
 	#}
+	
+	## Return of User-Agent, but without caching
+	# Now I can send User-Agent to backend for 404 logging etc.
+	# Vary must be cleaned of course
+	if (req.http.x-agent) {
+		set req.http.User-Agent = req.http.x-agent;
+		unset req.http.x-agent;
+	}
+	
 
 	## The end
 	return (lookup);
@@ -508,6 +517,8 @@ sub vcl_miss {
 # This will alter everything that backend responses back to Varnish
 #
 sub vcl_backend_response {
+
+	#set bereq.http.User-Agent = bereq.http.x-agent;
 
 	## Add name of backend in varnishncsa log (I don't do with that much, because I have only a couple active backends)
 	# You can find slow replying backends (over 3 sec) with that:
@@ -584,11 +595,11 @@ sub vcl_backend_response {
     elseif(!beresp.http.Cache-Control && bereq.http.x-moodle-ttl && !beresp.http.WWW-Authenticate ) {
 		set beresp.http.Cache-Control = "public, max-age="+bereq.http.x-moodle-ttl + ", no-transform";
 		set beresp.ttl = std.duration(bereq.http.x-moodle-ttl + "s", 1s);
-		unset bereq.http.X-Long-TTL;
+		unset bereq.http.x-moodle-ttl;
 	}
 	else { 
 		# Don't touch headers if max-age > defined in x-moodle-ttl header
-		unset bereq.http.X-Long-TTL;
+		unset bereq.http.x-moodle-ttl;
 	}
 	
 	## RSS and other feeds like podcast can be cached
@@ -675,7 +686,7 @@ sub vcl_backend_response {
 		set beresp.status = 410;
 	}
 	
-	# ESI is enabled. IDK if this is enough
+	## ESI is enabled. IDK if this is enough
 	set beresp.do_esi = true;
 	
 	# Same thing here as in vcl_miss 

@@ -15,10 +15,10 @@ sub diagnose {
 		set resp.http.Footprint-of-CO2 = "Greenwash in progress";
 	}
 	
-	# Using ETAG (content based) by backend is more accurate than Last-Modified (time based), 
+	## Using ETAG (content based) by backend is more accurate than Last-Modified (time based), 
 	# but I want to get last-modified because I'm curious, even curiosity kills the cat
 	set resp.http.Modified = resp.http.Last-Modified;
 	unset resp.http.Last-Modified;
-		
+	
 # Ends here
 }
