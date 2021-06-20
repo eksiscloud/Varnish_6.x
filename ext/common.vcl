@@ -172,6 +172,8 @@ sub common_rules {
 		# This should not be active if Nginx do what it should do because I have bot filtering there
 		if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 			call bad_bot_detection;
+		} else {
+			set req.http.x-bot = "tech";
 		}
 		
 		# Stop bots and knockers seeking holes using 403.vcl
@@ -209,6 +211,9 @@ sub common_rules {
 	}
 	
 	## Let's clean User-Agent, just to be on safe side
+	# It will come back at vcl_hash, but without separate cache
+	# I want send User-Agent to backend because that is te only way to show who is actually getting error 404; I don't serve bots other nice ones 
+	# and 404 from real users must fix right away
 	set req.http.x-agent = req.http.User-Agent;
 	unset req.http.User-Agent;
 	

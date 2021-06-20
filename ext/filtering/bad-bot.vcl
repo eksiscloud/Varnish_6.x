@@ -462,7 +462,6 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "HTTPie"
 		|| req.http.User-Agent ~ "Ruby"
 		) {
-			#set req.http.User-Agent = "libs";
 			return (synth(403, "Access Denied " + req.http.X-Real-IP));
 		}
 

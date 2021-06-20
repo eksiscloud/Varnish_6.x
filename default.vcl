@@ -480,7 +480,6 @@ sub vcl_hash {
 		unset req.http.x-agent;
 	}
 	
-
 	## The end
 	return (lookup);
 }
@@ -838,14 +837,17 @@ sub vcl_deliver {
 	## Custom headers, not so serious thing 
 	set resp.http.Your-Agent = req.http.User-Agent;
 	set resp.http.Your-IP = req.http.X-Real-IP;
-	# lookup can't be in sub vcl
+	
+	## Don't show funny stuff to bots
+	if (req.http.x-bot !~ "(nice|bad|libs|tech)") {
+		# lookup can't be in sub vcl
 		set resp.http.Your-IP-Country = country.lookup("country/names/en", std.ip(req.http.X-Real-IP, "0.0.0.0")) + "/" + std.toupper(req.http.X-Country-Code);
 		set resp.http.Your-IP-City = city.lookup("city/names/en", std.ip(req.http.X-Real-IP, "0.0.0.0"));
 		set resp.http.Your-IP-GPS = city.lookup("location/latitude", std.ip(req.http.X-Real-IP, "0.0.0.0")) + " " + city.lookup("location/longitude", std.ip(req.http.X-Real-IP, "0.0.0.0"));
 		set resp.http.Your-IP-ASN = asn.lookup("autonomous_system_organization", std.ip(req.http.X-Real-IP, "0.0.0.0"));
-	call headers_x;		# x-heads.vcl
-	call header_smiley;	# cheshire_cat.vcl
-
+		call headers_x;		# x-heads.vcl
+		call header_smiley;	# cheshire_cat.vcl
+	}
 
 	# That's it
 	return (deliver);
