@@ -13,8 +13,10 @@ sub all_gone {
 		elseif (req.url ~ "^/katiska/videot/kartanon-kannu-2011") { return(synth(810, "Gone")); }
 		elseif (req.url ~ "/koira/mita-kupissa-luuraa-osa-3-perjantai-tuijottelut") { return(synth(810, "Gone")); }
 		elseif (req.url ~ "/lesson") { return(synth(810, "Gone")); }
+		elseif (req.url ~ "^/ratsastus/tag") { return(synth(810, "Gone")); }
 		elseif (req.url ~ "/sensei-") { return(synth(810, "Gone")); }
 		elseif (req.url ~ "^/sitemap-pt-") { return(synth(810, "Gone")); }
+		elseif (req.url ~ "^/tieto/koira-tieto-ruokinta/koira-syominen-yleinen/mita-kupissa-luuraa") { return(synth(810, "Gone")); }
 		elseif (req.url ~ "/tuote-tag") { return(synth(810, "Gone")); }
 		elseif (req.url ~ "^/vendor/") { return(synth(810, "Gone")); }
 		elseif (req.url ~ "/venue") { return(synth(810, "Gone")); }

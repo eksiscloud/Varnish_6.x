@@ -20,6 +20,7 @@ vcl 4.1;
 import directors;	# Load the vmod_directors
 import std;			# Load the std, not STD for god sake
 import cookie;		# Load the cookie, former libvmod-cookie
+import purge;		# Soft/hard purge by Varnish 6.x
 import geoip2;		# Load the GeoIP2 by MaxMind
 
 ## I'm using sub-vcls only to keep default.vcl a little bit easier to read
@@ -41,6 +42,9 @@ include "/etc/varnish/ext/addons/cors.vcl";
 
 # Some URL manipulations
 include "/etc/varnish/ext/redirect/manipulate.vcl";
+
+# Soft/hard purge
+include "/etc/varnish/ext/addons/lets_purge.vcl";
 
 # 301 Redirect
 include "/etc/varnish/ext/redirect/301sites.vcl";
@@ -221,10 +225,10 @@ backend meta {
 # Instead client.ip it has to be like std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist
 
 # Only allow purging from specific IPs
-acl purge {
+acl purger {
 	"localhost";
 	"127.0.0.1";
-	"84.231.164.255";
+	"84.231.4.60";
 	"104.248.141.204";
 	"64.225.73.149";
 	"138.68.111.130";
@@ -235,7 +239,7 @@ acl whitelist {
 	"localhost";
 	"netti.link";		# reverse dns is done only when systemctl restart
 	"127.0.0.1";
-	"84.231.164.255";
+	"84.231.4.60";
 	"104.248.141.204";
 	#"64.225.73.149";
 	"138.68.111.130";
@@ -304,8 +308,9 @@ sub vcl_recv {
 	#}
 	
 	# 2nd: Actual blocking: (mostly I do geo-blocking in iptables, but this is much easier way)
+	# I'll ban ir stop a country only after several tries, it is not a decision made easily (well... it is actually) 
 	# Heads up: Cloudflare and other big CDNs can route traffic through really strange datacenters - like from Turkey to Finland via Senegal
-	if (req.http.X-Country-Code ~ "(bd|bg|cn|cr|ru|hk|id|pl|tw|ua)") {
+	if (req.http.X-Country-Code ~ "(bd|bg|cn|cr|ru|hk|id|my|pl|tw|ua)") {
 		std.log("banned country: " + req.http.X-Country-Code);
 		return(synth(403, "Forbidden country: " + std.toupper(req.http.X-Country-Code)));
 	}
@@ -439,7 +444,7 @@ sub vcl_hash {
 	
 	# Gitea 
 	if (req.http.x-host == "gitea") {
-		hash_data(req.http.cookie-git);
+		hash_data(req.http.cookie);
 	}
 	
 	# Discourse 
@@ -489,6 +494,10 @@ sub vcl_hash {
 #
 sub vcl_hit {
 
+	if (req.method == "PURGE") {
+		call my_purge;
+	}
+	
 	## End of the road, Jack
 	return(deliver);
 }
@@ -506,6 +515,9 @@ sub vcl_miss {
 	#	unset req.http.accept-encoding;
 	#}
 
+	if (req.method == "PURGE") {
+		call my_purge;
+	}
 
 	## Last call
 	return (fetch);
@@ -516,8 +528,6 @@ sub vcl_miss {
 # This will alter everything that backend responses back to Varnish
 #
 sub vcl_backend_response {
-
-	#set bereq.http.User-Agent = bereq.http.x-agent;
 
 	## Add name of backend in varnishncsa log (I don't do with that much, because I have only a couple active backends)
 	# You can find slow replying backends (over 3 sec) with that:

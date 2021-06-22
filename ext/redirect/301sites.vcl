@@ -11,6 +11,7 @@ sub this_way {
 		elseif (req.url ~ "^/avainsana") { return(synth(701, "https://www.katiska.info/tieto/katiskan-kaytto-sisalto/avainsanat-eli-tagit/")); }
 		elseif (req.url ~ "^/blogi/avainsana") { return(synth(701, "https://www.katiska.info/tieto/katiskan-kaytto-sisalto/avainsanat-eli-tagit/")); }
 		elseif (req.url ~ "^/koulutukset/sumppupro") { return(synth(701, "https://store.katiska.info/")); }
+		elseif (req.url == "^/kurssit/$") { return(synth(701, "https://www.katiska.info/tieto/avainsana/webinaari/")); }
 		elseif (req.url ~ "^/kurssit/agi-faktori-i") { return(synth(701, "https://www.katiska.info/tieto/fyysisesta-treenista/agilityn-riskit/")); }
 		elseif (req.url ~ "^/kurssit/agility-ja-lihaksisto") { return(synth(701, "https://www.katiska.info/tieto/lihaksisto-ja-luusto/agility-ja-koiran-lihaksisto/")); }
 		elseif (req.url ~ "^/kurssit/allergia-pahkinankuoressa") { return(synth(701, "https://www.katiska.info/tieto/koiran-allergia-hiiva-iho/koiran-allergia-pahkinankuoressa/")); }
@@ -21,6 +22,7 @@ sub this_way {
 		elseif (req.url ~ "^/kurssit/hiiva-ikuinen-riesa") { return(synth(701, "https://www.katiska.info/tieto/koira-sairaus-elimet/onko-koiran-hiiva-ikuinen-riesa/")); }
 		elseif (req.url ~ "^/kurssit/koiran-narastys") { return(synth(701, "https://www.katiska.info/tieto/koira-terveys-narastys/koiran-narastys/")); }
 		elseif (req.url ~ "^/kurssit/koiran-ruokinta-perusteet") { return(synth(701, "https://www.katiska.info/tieto/ruoka/koiran-ruokinta-perusteet/")); }
+		elseif (req.url ~ "^/kurssit/koiran-virtsatiekivet") { return(synth(701, "https://www.katiska.info/tieto/koira-sairaus-elimet/koiran-virtsatiekivet/")); }
 		elseif (req.url ~ "^/kurssit/kurkistus-kuivamuoniin") { return(synth(701, "https://www.katiska.info/tieto/koira-kuivamuona-taysruoka/kurkistus-kuivamuoniin/")); }
 		elseif (req.url ~ "^/kurssit/lihaa-vatsan-taydelta") { return(synth(701, "https://www.katiska.info/tieto/koira-ruokinta-liha/koiralle-lihaa-vatsan-taydelta/")); }
 		elseif (req.url ~ "^/kurssit/liikkuvan-koiran-ruokinta") { return(synth(701, "https://www.katiska.info/tieto/liikkuvan-ruokinta-yleisesti/liikkuvan-koiran-ruokinta/")); }
@@ -37,9 +39,11 @@ sub this_way {
 		elseif (req.url ~ "^/sanakirja/avital-calcium") { return(synth(701, "https://www.katiska.info/tieto/lisaravinteiden-annostus/avital-calcium/")); }
 		elseif (req.url ~ "^/sanakirja/probalans-be-balans") { return(synth(701, "https://www.katiska.info/tieto/lisaravinteiden-annostus/probalans-be-balans/")); }
 		elseif (req.url ~ "^/selko/$") { return(synth(701, "https://selko.katiska.info/")); }
+		elseif (req.url ~ "supernatural-horsemanship") { return(synth(701, "https://www.jagster.fi/supernatural-horsemanship/")); }
 		elseif (req.url == "^/tieto/infokortti/") { return(synth(701, "https://www.katiska.info/tieto/avainsana/infokortti/")); }
 		elseif (req.url ~ "^/tieto/koira-aloittelijat") { return(synth(701, "https://www.katiska.info/tieto/avainsana/perusteet/")); }
 		elseif (req.url ~ "^/tieto/koira-ruoka-lisaravinne/lisaravinteiden-annostus-hakemisto") { return(synth(701, "https://www.katiska.info/tieto/lisaravinteiden-annostus/lisaravinteiden-annostus-hakemisto/")); }
+		elseif (req.url ~ "^/tieto/koirat/kurssit/lihapohjainen-raakaruokinta-ja-ravintolisat") { return(synth(701, "https://www.katiska.info/tieto/koira-ruokinta-liha/lihapohjainen-raakaruokinta-ja-ravintolisat/")); }
 		elseif (req.url ~ "^/tieto/koirat/podcastit-vlog/103-mahdoton-kysymys-mika-on-hyva-ruokamerkki-koiralle") { return(synth(701, "https://www.katiska.info/tieto/podcastit-vlog/103-mahdoton-kysymys-mika-on-hyva-ruokamerkki-koiralle/")); }
 		elseif (req.url ~ "^/tieto/koirat/podcastit-vlog/106-nrc-uskovaisuus") { return(synth(701, "https://www.katiska.info/tieto/podcastit-vlog/106-nrc-uskovaisuus/")); }
 		elseif (req.url ~ "^/tieto/koirat/podcastit-vlog/113-kysy-ennen-kuin-ostat") { return(synth(701, "https://www.katiska.info/tieto/podcastit-vlog/113-kysy-ennen-kuin-ostat/")); }
@@ -69,6 +73,7 @@ sub this_way {
 		elseif (req.url ~ "^/tieto/koirat/ruokinnan-idea-podcast/3-ymparisto") { return(synth(701, "https://www.katiska.info/tieto/koirat/ruokinnan-idea-podcast/3-ymparisto/")); }
 		elseif (req.url ~ "^/tieto/koirat/ruokinnan-idea-podcast/9-tavat") { return(synth(701, "https://www.katiska.info/tieto/ruokinnan-idea-podcast/9-tavat/")); }
 		elseif (req.url ~ "^/tieto/podcastit-vlog/100-oikeat-tyokalut-ja-tukeva-perusta") { return(synth(701, "https://www.katiska.info/tieto/koirat/podcastit-vlog/100-oikeat-tyokalut-ja-tukeva-perusta/")); }
+		elseif (req.url ~ "tupakantumppeja-puutokseen") { return(synth(701, "https://www.katiska.info/tieto/miksi-koira-syo/kylla-koira-tietaa/")); }
 		# Missing images, because I started to use CDN and changed sizes. It is just URL question, but I don't know how to fix it. This is mostly only for Facebook.
 		elseif (req.url ~ "^/wp-content/uploads/2011/01/061205-132849-237x300.jpg") { return(synth(701, "https://cdn.katiska.info/kb/061205-132849.jpg")); }
 		elseif (req.url ~ "^/wp-content/uploads/2011/01/070402-113223-225x300.jpg") { return(synth(701, "https://cdn.katiska.info/kb/070402-113223.jpg")); }

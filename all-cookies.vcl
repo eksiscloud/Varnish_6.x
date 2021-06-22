@@ -5,6 +5,10 @@ sub vcl_recv {
 	### Cookies: Varnish >6.4 (same as earlier libvmod-cookie)
 	
 	## Keeping needed cookies and deleting rest.
+	# You don't need to hash with every cookie. You can do something like this too:
+	# sub vcl_hash {
+	#	hash_data(cookie.get("language"));
+	# }
 	# Well, filtering per sitetype is quite meaningless, though. And adds more hassling.
 	
 	# Gitea (almost nothing can be cached)
@@ -70,8 +74,10 @@ sub vcl_recv {
 		#set req.http.cookie-wp = req.http.cookie;
 	}
 
-	# Let's clean places
-	#unset req.http.cookie;
+	# Don' let empty cookies travel any further
+	if (req.http.cookie == "") {
+		unset req.http.cookie;
+	}
 
 	## Now we do everything per domains which are declared in all-vhost.vcl
 }

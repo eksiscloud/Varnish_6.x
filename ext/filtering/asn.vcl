@@ -39,7 +39,9 @@ sub asn_name {
 		|| req.http.x-asn ~ "deltahost-as"					# DeltaHost, NL but actually UA
 		|| req.http.x-asn == "dreamhost-as"					# New Dream Network, LLC, US
 		|| req.http.x-asn == "ponynet"						# FranTech Solutions, US
+		|| req.http.x-asn ~ "serverion"						# Serverion BV, NL
 		|| req.http.x-asn == "squitter-networks"			# ABC Consultancy etc, CINTY EU WEB SOLUTIONS, NL
+		|| req.http.x-asn ~ "wellnet"						# xWEBltd, NL is really RU
 		) {
 			std.log("banned ASN: " + req.http.x-asn);
 			return(synth(666, "Severe security issues: " + std.toupper(req.http.x-asn)));

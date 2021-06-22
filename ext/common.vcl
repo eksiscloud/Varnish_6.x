@@ -3,8 +3,17 @@ sub common_rules {
 	
 	## Who can do BAN, PURGE and REFRESH
 	# Remember to use capitals when doing, size matters...
-	if (req.method == "BAN") {
-		if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ purge) {
+	
+	# WP Rocket; I'm not sure how is WP Rocket actually doing ban/purge
+	if (req.http.X-Purge-Method == "regex") {
+		if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ purger) {
+			ban("req.url ~ " + req.url + " && req.http.host ~ " + req.http.host);
+			return (synth(200, "Banned."));
+		}
+	}
+	
+	if (req.method == "BAN" && req.http.X-Purge-Method != "regex") {
+		if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ purger) {
 			return (synth(405, "Banning not allowed for " + req.http.X-Real-IP));
 		}
 		ban("obj.http.x-url ~ " + req.http.x-ban-url +
@@ -13,21 +22,17 @@ sub common_rules {
 		return(synth(200, "Ban added"));
 	}
 	
-	if (req.method == "PURGE") {
-		if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ purge) {
+	# soft/hard purge
+	if (req.method == "PURGE" && req.http.X-Purge-Method != "regex") {
+		if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ purger) {
 			return (synth(405, "Purging not allowed for " + req.http.X-Real-IP));
-		} 
-		# WP Rocket
-		if (req.http.X-Purge-Method == "regex") {
-			ban("req.url ~ " + req.url + " && req.http.host ~ " + req.http.host);
-			return (synth(200, "Banned."));
 		} else {
-			return (purge);
-		}
+		return(hash);
+		 }
 	}
 	
 	if (req.method == "REFRESH") {
-		if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ purge) {
+		if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ purger) {
 			return(synth(405, "Refreshing not allowed for " + req.http.X-Real-IP));
 		}
 		set req.method = "GET";
@@ -36,7 +41,7 @@ sub common_rules {
 	
 	# This just an example how to ban objects or purge all when country codes come from backend
 	#if (req.method == "PURGE") {
-	#	if (!std.ip(req.http.X-Real-IP, "0.0.0.0") ~ purge) {
+	#	if (!std.ip(req.http.X-Real-IP, "0.0.0.0") ~ purger) {
 	#		return (synth(405, "Purging not allowed for " + req.http.X-Real-IP));
 	#	}
 		# Backend gave X-Country-Code to indicate clearing of specific geo-variation
@@ -56,7 +61,8 @@ sub common_rules {
 	#}
 	
 	## Only deal with "normal" types
-	## Just an example. I'm dealing this at Nginx.
+	# Just an example. I'm dealing this at Nginx.
+	# Heads up! BAN/PURGE/REFRESH must be done before this or declared here. Unless those doesn't work.
 	#if (req.method != "GET" &&
 	#req.method != "HEAD" &&
 	#req.method != "PUT" &&
@@ -90,7 +96,7 @@ sub common_rules {
 	## Enable smart refreshing, aka. ctrl+F5 will flush that page
 	# Remember your header Cache-Control must be set something else than no-cache
 	# Otherwise everything will miss
-	if (req.http.Cache-Control ~ "no-cache" && (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ purge)) {
+	if (req.http.Cache-Control ~ "no-cache" && (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ purger)) {
 		set req.hash_always_miss = true;
 	}
 	

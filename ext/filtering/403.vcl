@@ -4,6 +4,7 @@ sub stop_pages {
 ## There is a lot WordPress plugins & themes what you might use, so comment those when needed
 ## I'm killing some of 404 situations at vcl_backend_response. Here only trying an url triggers the error.
 ## Search agents and similar get 403. Otherwise Fail2ban would ban theirs IPs too.
+## Heads up: here is propably somethig that will break your site!
 
 # I'm allowing whitelisted IPs
 if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
@@ -17,6 +18,7 @@ if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 #	|| req.url ~ "^/[a-z]/"
 	|| req.url ~ "\?daksldlkdsadas=1"
 		# Plugins /wp-content/plugins
+	|| req.url ~ "/404-to-301/"
 	|| req.url ~ "/cherry-plugin/"
 	|| req.url ~ "/ct-ultimate-gdpr/"
 	|| req.url ~ "/e-signature/"
@@ -25,7 +27,9 @@ if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 	|| req.url ~ "/ioptimization/"
 	|| req.url ~ "/iva-business-hours-pro/"
 	|| req.url ~ "/kaswara/"
+	|| req.url ~ "/log-http-requests/"
 	|| req.url ~ "/official-facebook-pixel/"
+	|| req.url ~ "/quadmenu/"
 	|| req.url ~ "/sf-booking/"
 	|| req.url ~ "/SimplePie/"
 	|| req.url ~ "/store-locator-le/"
@@ -38,6 +42,7 @@ if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 	|| req.url ~ "/wp-file-manager/"
 	|| req.url ~ "/wp-hotel-booking/"
 		# wp-content/themes
+	|| req.url ~ "/themes/loader.php"
 	|| req.url ~ "/themes/themes/sketch/"
 	#|| req.url ~ "/themes/twenty(ten|eleven|thirteen|fourteen|fifteen|sixteen|seventeen|nineteen|twenty)"
 		# /wp-admin/
@@ -222,7 +227,7 @@ if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 #	|| req.url ~ "^/kauppa/wp-json"
 	|| req.url ~ "/kerbynet"
 		# L
-	|| req.url ~ "/themes/loader.php"
+	|| req.url ~ "^/laravel/"
 	|| req.url ~ "^/\.local"
 	|| req.url ~ "login.action"
 	|| req.url ~ "login.asp"
