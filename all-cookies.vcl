@@ -68,7 +68,8 @@ sub vcl_recv {
 		set req.http.x-host = "wordpress";
 		cookie.parse(req.http.cookie);
 		# I'm deleting test_cookie because 'wordpress_' acts like wildcard, I reckon
-		cookie.delete("wordpress_test_Cookie");
+		# But why _pk_ cookies passes?
+		cookie.delete("wordpress_test_Cookie,_pk_");
 		cookie.keep("wordpress_,wp-settings,_wp-session,wordpress_logged_in_,resetpass,woocommerce_cart_hash,woocommerce_items_in_cart,wp_woocommerce_session_");
 		set req.http.cookie = cookie.get_string();
 		#set req.http.cookie-wp = req.http.cookie;

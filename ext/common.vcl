@@ -62,7 +62,7 @@ sub common_rules {
 	
 	## Only deal with "normal" types
 	# Just an example. I'm dealing this at Nginx.
-	# Heads up! BAN/PURGE/REFRESH must be done before this or declared here. Unless those doesn't work.
+	# Heads up! BAN/PURGE/REFRESH must be done before this or declared here. Unless those doesn't work when purging or banning.
 	#if (req.method != "GET" &&
 	#req.method != "HEAD" &&
 	#req.method != "PUT" &&

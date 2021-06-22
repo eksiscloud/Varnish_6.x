@@ -17,10 +17,11 @@
 # Marker to tell the VCL compiler that this VCL has been adapted to the 4.1 format.
 vcl 4.1;
 
-import directors;	# Load the vmod_directors
+#import directors;	# Load the vmod_directors
 import std;			# Load the std, not STD for god sake
 import cookie;		# Load the cookie, former libvmod-cookie
 import purge;		# Soft/hard purge by Varnish 6.x
+import vsthrottle;	# from Varnish-modules https://github.com/varnish/varnish-modules
 import geoip2;		# Load the GeoIP2 by MaxMind
 
 ## I'm using sub-vcls only to keep default.vcl a little bit easier to read
@@ -326,6 +327,13 @@ sub vcl_recv {
 	# You can find it out using ASN lookup like https://hackertarget.com/as-ip-lookup/
 	call asn_name;
 	
+	## Slowing down if someone makes too many requests too fast
+	# 15 requests in a 10 second timeframe. If that rate is exceeded, the user gets blocked for 30 seconds.
+	set client.identity = std.ip(req.http.X-Real-IP, "0.0.0.0");
+	if (vsthrottle.is_denied(client.identity, 15, 10s, 30s)) {
+		return (synth(429, "Too Many Requests. You can retry in " + vsthrottle.blocked(client.identity, 15, 10s, 30s) + " seconds."));
+	} 
+	
 	## Normalize the header, remove the port (in case you're testing this on various TCP ports)
 	set req.http.host = std.tolower(req.http.host);
 	set req.http.host = regsub(req.http.host, ":[0-9]+", "");
@@ -346,6 +354,7 @@ sub vcl_recv {
 	}
 	
 	## Remove the proxy header
+	# Well... Nginx doesn't use it, and I don't use Hitch; unnecessary
 	unset req.http.Proxy;
 
 	## Remove the Google Analytics added parameters, useless for backend
@@ -386,6 +395,7 @@ sub vcl_recv {
 
 	## I'm normalizing language
 	# For REAL normalizing you should work with Accept-Language only
+	# This is now totally waste of resources...
 	set req.http.x-language = std.tolower(req.http.Accept-Language);
 	unset req.http.Accept-Language;
 	if (req.http.x-language ~ "fi") {
@@ -539,6 +549,12 @@ sub vcl_backend_response {
 	## Backend is down, stop caching
 	if (beresp.status >= 500 && bereq.is_bgfetch) {
 		return(abandon);
+	}
+	
+	## Slowing down amount of backend requests to way too anxious ones
+	# If the client IP makes more than 100 requests per second that result in a cache miss, access is prohibited for one minute
+	if (vsthrottle.is_denied(std.ip(bereq.http.X-Real-IP, "0.0.0.0"), 100, 1s, 1m)) {
+		return(error(429, "Too Many Requests"));
 	}
 	
 	## Send User-Agent to backend, but removing it from Vary prevents Varnish to use it caching
