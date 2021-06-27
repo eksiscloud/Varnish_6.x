@@ -1,5 +1,5 @@
 
-## Wordpress (Woocommerce) ##
+## Wordpress ##
 sub vcl_recv {
   if (req.http.host == "eksis.one" || req.http.host == "www.eksis.one") {
 		set req.backend_hint = default;
@@ -62,9 +62,6 @@ sub vcl_recv {
 	if (req.url ~ "/pong") {
 		return (pipe);
 	}
-	
-	# Keep this last
-	call wp_basics;
 	
 	## Keep this last because wordpress_common.vcl limits more and tells cache all others etc.
 	call wp_basics;

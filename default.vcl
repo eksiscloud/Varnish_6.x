@@ -17,7 +17,6 @@
 # Marker to tell the VCL compiler that this VCL has been adapted to the 4.1 format.
 vcl 4.1;
 
-#import directors;	# Load the vmod_directors
 import std;			# Load the std, not STD for god sake
 import cookie;		# Load the cookie, former libvmod-cookie
 import purge;		# Soft/hard purge by Varnish 6.x
@@ -79,6 +78,8 @@ include "/etc/varnish/ext/general/cheshire_cat.vcl";
 
 # X-headers, just for fun
 include "/etc/varnish/ext/general/x-heads.vcl";
+
+## Probes are watching if backends are healthy
 
 probe sondi {
     #.url = "/index.html";  # or you can use just an url
@@ -154,6 +155,7 @@ probe sondi-meta {
 	.threshold = 3;
 }
 
+## Backend tells where a site can be found
 backend default {					# use your servers instead default if you have more than just one
 	.host = "127.0.0.1";			# IP or Hostname of backend
 	.port = "81";					# Apache or whatever is listening
@@ -229,7 +231,7 @@ backend meta {
 acl purger {
 	"localhost";
 	"127.0.0.1";
-	"84.231.4.60";
+	"84.231.6.225";
 	"104.248.141.204";
 	"64.225.73.149";
 	"138.68.111.130";
@@ -240,7 +242,7 @@ acl whitelist {
 	"localhost";
 	"netti.link";		# reverse dns is done only when systemctl restart
 	"127.0.0.1";
-	"84.231.4.60";
+	"84.231.6.225";
 	"104.248.141.204";
 	#"64.225.73.149";
 	"138.68.111.130";
@@ -328,11 +330,13 @@ sub vcl_recv {
 	call asn_name;
 	
 	## Slowing down if someone makes too many requests too fast
+	# These values are way too low. Only one visit at WordPress will trigger it.
+	# Using IP as client.identity is mostly bad idea and it affects to real honest users, not bots.
 	# 15 requests in a 10 second timeframe. If that rate is exceeded, the user gets blocked for 30 seconds.
-	set client.identity = std.ip(req.http.X-Real-IP, "0.0.0.0");
-	if (vsthrottle.is_denied(client.identity, 15, 10s, 30s)) {
-		return (synth(429, "Too Many Requests. You can retry in " + vsthrottle.blocked(client.identity, 15, 10s, 30s) + " seconds."));
-	} 
+	#set client.identity = std.ip(req.http.X-Real-IP, "0.0.0.0");
+	#if (vsthrottle.is_denied(client.identity, 15, 10s, 30s)) {
+	#	return (synth(429, "Too Many Requests. You can retry in " + vsthrottle.blocked(client.identity, 15, 10s, 30s) + " seconds."));
+	#} 
 	
 	## Normalize the header, remove the port (in case you're testing this on various TCP ports)
 	set req.http.host = std.tolower(req.http.host);

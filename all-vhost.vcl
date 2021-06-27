@@ -21,4 +21,3 @@ include "sites-enabled/eksis.dev.vcl";
 include "sites-enabled/sumppu.info.vcl";
 include "sites-enabled/www.koiranravitsemus.fi.vcl";
 #include "sites-enabled/wiki.koiranterveys.fi.vcl";
-
