@@ -1,0 +1,23 @@
+vcl.load vcl-meta_katiska_info-orig /etc/varnish/discourse/meta.katiska.info.vcl
+vcl.load vcl-proto_eksis_one-orig /etc/varnish/discourse/proto.eksis.one.vcl
+vcl.load vcl-kaffein_jagster_fi-orig /etc/varnish/discourse/kaffein.jagster.fi.vcl
+vcl.load vcl-discowikigit-orig /etc/varnish/discourse/discourse.vcl
+vcl.load vcl-matomo-orig /etc/varnish/matomo/matomo.vcl
+vcl.load vcl-moodle-orig /etc/varnish/moodle/moodle.vcl
+vcl.load vcl-server-orig /etc/varnish/server/server.vcl
+vcl.load vcl-wordpress-orig /etc/varnish/wordpress/wordpress.vcl
+vcl.load vcl-woocommerce-orig /etc/varnish/woocommerce/woocommerce.vcl
+vcl.load vcl-zombie-orig /etc/varnish/zombie/zombie.vcl
+vcl.label meta_katiska_info vcl-meta_katiska_info-orig
+vcl.label proto_eksis_one vcl-proto_eksis_one-orig
+vcl.label kaffein_jagster_fi vcl-kaffein_jagster_fi-orig
+vcl.label discowikigit vcl-discowikigit-orig
+vcl.label matomo vcl-matomo-orig
+vcl.label moodle vcl-moodle-orig
+vcl.label server vcl-server-orig
+vcl.label wordpress vcl-wordpress-orig
+vcl.label woocommerce vcl-woocommerce-orig
+vcl.label zombie vcl-zombie-orig
+vcl.load emergency /etc/varnish/emergency.vcl
+vcl.load vcl-root-orig /etc/varnish/default.vcl
+vcl.use vcl-root-orig
