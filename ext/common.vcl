@@ -62,7 +62,7 @@ sub common_rules {
 	
 	## Only deal with "normal" types
 	# Just an example. I'm dealing this at Nginx.
-	# Heads up! BAN/PURGE/REFRESH must be done before this or declared here. Unless those doesn't work when purging or banning.
+	# Heads up! BAN/PURGE/REFRESH must be done before this or declared here. Unless those don't work when purging or banning.
 	#if (req.method != "GET" &&
 	#req.method != "HEAD" &&
 	#req.method != "PUT" &&
@@ -135,12 +135,6 @@ sub common_rules {
 		
 		# These are nice bots, so let them through using nice-bot.vcl and using just one UA
 		call cute_bot_allowance;
-		
-		# robots.txt offers a honey pot to fail2ban, let's serve it
-		# BTW, it has catched never ever anything
-		if (req.url ~ "^/private-wallet/") {
-			return(pipe);
-		}
 
 		# Extra layer of security to xmlrpc.php 
 		# Now I'm onlyone who can use xmlrpc.php
@@ -161,39 +155,16 @@ sub common_rules {
 		#	return(synth(420, "Forbidden Method"));
 		#}
 		
-		# Trying figure out some strange traffic
-		# Basicly, I'll try to find out which service will break down now
-		# case 1
-		#if (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ target && req.http.User-Agent == "Go-http-client/1.1") {
-		#	return(synth(402, "Denied Access"));
-		#}
-		# case 2
-		#if (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ target && req.http.User-Agent == "^$") {
-		#	return(synth(402, "Denied Access"));
-		#}
-		
-		## Special cases
-		
 		# Now we stop known useless ones who's not from whitelisted IPs using bad-bot.vcl
 		# This should not be active if Nginx do what it should do because I have bot filtering there
-		if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
-			call bad_bot_detection;
-		} else {
-			set req.http.x-bot = "tech";
-		}
+		call bad_bot_detection;
 		
 		# Stop bots and knockers seeking holes using 403.vcl
 		# I don't let search agents and similar to forbidden urls. Otherwise Fail2ban would ban theirs IPs too.
 		# I get error for testing purposes, but Fail2ban has whitelisted my IP.
-		if (req.http.x-bots != "nice") {
+		if (req.http.x-bot != "nice") {
 			call stop_pages;
 		}
-	
-		# More or less just an example here. 
-		# I'm cleaning bots and knockers using bad bot and 403 VCLs plus Fail2ban
-		#if (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ forbidden) {
-		#	return(synth(403, "Forbidden IP"));
-		#}
 
 	## AWStats
 	if (req.url ~ "cgi-bin/awsstats.pl") {

@@ -41,6 +41,7 @@ if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 	|| req.url ~ "/wp-db-backup/"
 	|| req.url ~ "/wp-file-manager/"
 	|| req.url ~ "/wp-hotel-booking/"
+	|| req.url ~ "/wp-user-avatar/"
 		# wp-content/themes
 	|| req.url ~ "/themes/loader.php"
 	|| req.url ~ "/themes/themes/sketch/"
@@ -214,6 +215,7 @@ if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 	|| req.url ~ "^/install.php"
 	|| req.url ~ "^/installation$"
 		# J
+	|| req.url ~ "/jenkins/"
 	|| req.url ~ "/jm-ajax/upload_file"
 	|| req.url ~ "/js/html5.php"
 	|| req.url ~ "/js_inst/"
@@ -438,9 +440,9 @@ if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 			|| req.http.x-language ~ "fi" 
 			|| req.http.x-agent == "nice"
 				) {
-				return(synth(403, "Forbidden referer: " + req.http.Referer));
+				return(synth(403, "The site is unreachable"));
 			} else {
-				return(synth(666, "Forbidden referer: " + req.http.Referer));
+				return(synth(666, "The site is unreachable"));
 			}
 		}
 	}

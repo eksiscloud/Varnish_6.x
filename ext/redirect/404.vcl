@@ -2,7 +2,7 @@ sub global-redirect {
 #
 ## Normally we do 404/410 redirects per every vhost.conf, but sometimes it is easier to tune up globally for all vhosts
 ## 
-## This sub may vanish someday; it is too much overlapping with other
+## This sub may vanish someday; it is too much overlapping with others
 
 
 	## redirect 301

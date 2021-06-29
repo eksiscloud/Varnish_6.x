@@ -1,5 +1,8 @@
 ## Common for all subdomains
 ##
+
+################ This now same as all-cookie.vcl, and is should not be. I'm overwrited this and I can't remember why. An accident? Anyway - this isn't in use now
+
 sub vcl_recv {
 
 	### Cookies: Varnish >6.4 (same as earlier libvmod-cookie)
@@ -16,21 +19,18 @@ sub vcl_recv {
 		#set req.http.cookie-git = req.http.cookie;
 	}
 	
-	
 	# Discourses (waste of time, must pipe)
 	elseif (
-		req.http.host ~ "kaffein.jagster.fi"
-		|| req.http.host ~ "proto.eksis.one"
-		|| req.http.host ~ "meta.katiska.info"
+		req.http.host ~ "kaffein.jagster.fi" ||
+		req.http.host ~ "proto.eksis.one" ||
+		req.http.host ~ "meta.katiska.info"
 	) {
 		cookie.parse(req.http.cookie);
 		# https://meta.discourse.org/t/list-of-cookies-used-by-discourse/83690
 		cookie.keep("email,destination_url,sso_destination_url,authentication_data,fsl,_t,_bypass_cache,_forum_session,dosp,");
 		set req.http.cookie = cookie.get_string();
-		#set req.http.cookie-dc = req.http.cookie;
 	}
 	
-	### Not in use ###
 	# MediaWiki (must pass with all cookies)
 #	elseif (req.http.host ~ "www.koiranravitsemus.fi") {
 #		cookie.parse(req.http.cookie);
@@ -45,7 +45,6 @@ sub vcl_recv {
 		cookie.parse(req.http.cookie);
 		cookie.keep("MoodleSession,MoodleTest,MOODLEID");
 		set req.http.cookie = cookie.get_string();
-		#set req.http.cookie-moodle = req.http.cookie;
 	}
 	
 	# Everything else must be pure Wordpress/WooCommerce
@@ -55,9 +54,12 @@ sub vcl_recv {
 		cookie.delete("wordpress_test_Cookie");
 		cookie.keep("wordpress_,wp-settings,_wp-session,wordpress_logged_in_,resetpass,woocommerce_cart_hash,woocommerce_items_in_cart,wp_woocommerce_session_");
 		set req.http.cookie = cookie.get_string();
-		#set req.http.cookie-wp = req.http.cookie;
 	}
 
+	## If there is left any empty cookies...
+	if (req.http.cookie == "") {
+		unset req.http.cookie;
+	}
 
 	## Now we do everything per domains which are declared in all-vhost.vcl
 }

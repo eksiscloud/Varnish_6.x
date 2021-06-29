@@ -299,21 +299,19 @@ sub vcl_recv {
 	### All domain-VCLs do the rest where return(...) is needed and part of jobs are done using 'call common.vcl'
 	### Exception to rule no-return-statements is everything where the connection will be terminated for good and anything else is not needed
 	
+	## Normalize the header, remove the port (in case you're testing this on various TCP ports)
+	set req.http.host = std.tolower(req.http.host);
+	set req.http.host = regsub(req.http.host, ":[0-9]+", "");
+	
 	## Just an example how to do geo-blocking
 	# 1st: GeoIP and normalizing country codes to lower case, because remembering to use capital letters is just too hard
 	set req.http.X-Country-Code = country.lookup("country/iso_code", std.ip(req.http.X-Real-IP, "0.0.0.0"));
 	set req.http.X-Country-Code = std.tolower(req.http.X-Country-Code);
-	# I could do for example:
-	#if (req.http.X-Country-Code ~ "(fi|se)") {
-	#	set req.http.X-Country-Code = "fi";
-	#} else {
-	#	set req.http.X-Country-Code = "us";
-	#}
 	
 	# 2nd: Actual blocking: (mostly I do geo-blocking in iptables, but this is much easier way)
 	# I'll ban ir stop a country only after several tries, it is not a decision made easily (well... it is actually) 
 	# Heads up: Cloudflare and other big CDNs can route traffic through really strange datacenters - like from Turkey to Finland via Senegal
-	if (req.http.X-Country-Code ~ "(bd|bg|cn|cr|ru|hk|id|my|pl|tw|ua)") {
+	if (req.http.X-Country-Code ~ "(bd|bg|cn|cr|ru|hk|id|my|pl|sc|tw|ua)") {
 		std.log("banned country: " + req.http.X-Country-Code);
 		return(synth(403, "Forbidden country: " + std.toupper(req.http.X-Country-Code)));
 	}
@@ -325,7 +323,6 @@ sub vcl_recv {
 	
 	# 2nd: Actual blocking: (customers from these are knocking security holes etc. way too often)
 	# Finding out ASN from whois-data isn't so straight forwarded
-	# It is quite often descr. (if told) or whole or partially same as NetName.
 	# You can find it out using ASN lookup like https://hackertarget.com/as-ip-lookup/
 	call asn_name;
 	
@@ -337,10 +334,6 @@ sub vcl_recv {
 	#if (vsthrottle.is_denied(client.identity, 15, 10s, 30s)) {
 	#	return (synth(429, "Too Many Requests. You can retry in " + vsthrottle.blocked(client.identity, 15, 10s, 30s) + " seconds."));
 	#} 
-	
-	## Normalize the header, remove the port (in case you're testing this on various TCP ports)
-	set req.http.host = std.tolower(req.http.host);
-	set req.http.host = regsub(req.http.host, ":[0-9]+", "");
 	
 	## Let's tune up a bit behavior for healthy backends: Cap grace to 5 min
 	if (std.healthy(req.backend_hint)) {
@@ -369,7 +362,6 @@ sub vcl_recv {
 		set req.url = regsub(req.url, "\?$", "");
 	}
 	
-	
 	## Strip querystring ?nocache, 3rd party doesn't tell when caching or not
 	set req.url = regsuball(req.url, "\?nocache", "");
 	
@@ -392,8 +384,7 @@ sub vcl_recv {
 	set req.http.X-Req-Host = req.http.host;
 	std.log("X-Req-Host:" + req.http.X-Req-Host);
 
-	## Save Origin (for CORS) in a custom header and 
-	## remove Origin from the request so that backend doesn’t add CORS headers.
+	## Save Origin (for CORS) in a custom header and remove Origin from the request so that backend doesn’t add CORS headers.
 	set req.http.X-Saved-Origin = req.http.Origin;
 	unset req.http.Origin;
 
@@ -404,10 +395,6 @@ sub vcl_recv {
 	unset req.http.Accept-Language;
 	if (req.http.x-language ~ "fi") {
 		set req.http.x-language = "fi";
-	#} elseif (req.http.x-language ~ "se") {
-	#	set req.http.x-language = "se"
-	#} elseif (req.http.x-language ~ "en") {
-	#	set req.http.x-language = "en"
 	} else {
 		unset req.http.x-language;
 	}
@@ -415,7 +402,7 @@ sub vcl_recv {
 	## Send Surrogate-Capability headers to announce ESI support to backend
 	set req.http.Surrogate-Capability = "key=ESI/1.0";
 	
-	## At this point we jump to all-common.vcl
+	## At this point we jump to all-cookies.vcl
 } 
 
 
@@ -485,11 +472,6 @@ sub vcl_hash {
 	if (req.http.x-host == "wordpress") {
 		hash_data(req.http.cookie);
 	}
-	
-	# There shouldn't be any meaningful cookies left, but if there is...
-	#if (req.http.cookie) {
-	#	hash_data(req.http.cookie);
-	#}
 	
 	## Return of User-Agent, but without caching
 	# Now I can send User-Agent to backend for 404 logging etc.
@@ -574,7 +556,7 @@ sub vcl_backend_response {
 	# Varnish is using s-maxage as beresp.ttl (max-age is for browser),
 	# Server must reboot about once in month so 1y is ridiculous long
 	# If backend sets s-maxage Varnish will use it, otherwise it will be 1y
-	# Heads up! What should I do with nonce by Wordpress? That can't be cached over 12 hours.
+	# Heads up! What should I do with nonce by Wordpress? That can't be cached over 12 hours says all docs.
 	if (beresp.http.cache-control !~ "s-maxage") {
 		set beresp.ttl = 31536000s;
 		# or if you will pass TTL to other intermediate caches as CDN, otherwise they will use maxage
@@ -614,14 +596,23 @@ sub vcl_backend_response {
 	}
 	
 	## Moodle and static objects
-	if (beresp.http.Cache-Control && bereq.http.x-moodle-ttl && beresp.ttl < std.duration(bereq.http.x-moodle-ttl + "s", 1s) && !beresp.http.WWW-Authenticate ) { 
+	if (
+		beresp.http.Cache-Control && 
+		bereq.http.x-moodle-ttl && 
+		beresp.ttl < std.duration(bereq.http.x-moodle-ttl + "s", 1s) && 
+		!beresp.http.WWW-Authenticate 
+		) { 
 		# If max-age < defined in x-moodle-ttl header
 		set beresp.http.X-Orig-Cache-Control = beresp.http.Cache-Control;
 		set beresp.http.Cache-Control = "public, max-age="+bereq.http.X-Long-TTL + ", no-transform";
 		set beresp.ttl = std.duration(bereq.http.x-moodle-cache + "s", 1s);
-        unset bereq.http.x-moodle-cache;
+		unset bereq.http.x-moodle-cache;
 	}
-    elseif(!beresp.http.Cache-Control && bereq.http.x-moodle-ttl && !beresp.http.WWW-Authenticate ) {
+	elseif (
+		!beresp.http.Cache-Control && 
+		bereq.http.x-moodle-ttl && 
+		!beresp.http.WWW-Authenticate 
+		) {
 		set beresp.http.Cache-Control = "public, max-age="+bereq.http.x-moodle-ttl + ", no-transform";
 		set beresp.ttl = std.duration(bereq.http.x-moodle-ttl + "s", 1s);
 		unset bereq.http.x-moodle-ttl;
@@ -694,7 +685,7 @@ sub vcl_backend_response {
 	}
 	
 	## Some admin-ajax.php calls can be cached by Varnish
-	# Except... it is almost always POST and that is uncacheable
+	# Except... it is almost always POST or OPTIONS and those are uncacheable
 	if (bereq.url ~ "admin-ajax.php" && bereq.http.cookie !~ "wordpress_logged_in" ) {
 		unset beresp.http.set-cookie;
 		set beresp.ttl = 1d;
@@ -730,15 +721,6 @@ sub vcl_backend_response {
 	if (beresp.http.ETag || beresp.http.Last-Modified) {
 		set beresp.keep = 24h;
 	}
-	
-	## Just an example how to vary by country from GeoIP VMOD
-	#if (bereq.http.X-Country-Code) {
-	#	if (!beresp.http.Vary) {
-	#		set beresp.http.Vary = "X-Country-Code";
-	#	} elsif (beresp.http.Vary !~ "X-Country-Code") {
-	#		set beresp.http.Vary = beresp.http.Vary + ", X-Country-Code";
-	#	}
-	#}
 	
 	## Stupid knockers trying different kind of executables or archives
 	# 404 notices at backend, like Wordpress, doesn't disappear because this happends after backend, of course

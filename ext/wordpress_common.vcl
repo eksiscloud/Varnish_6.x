@@ -3,8 +3,9 @@ sub wp_basics {
 	### Only for Wordpresses
 	
 	## I have strange redirection issue with all WordPresses
-	## Must be a problem with cookies/caching/nonce, but I don't understand how.
-	## So, I'm taking a short road here
+	# Must be a problem with cookies/caching/nonce, but I don't understand how.
+	# It might be somekind conflict between/from plugins too.
+	# So, I'm taking a short road here
 	if (
 		   req.url ~ "&_wpnonce"
 		|| req.url ~ "&reauth=1"
@@ -13,7 +14,7 @@ sub wp_basics {
 			return(pipe);
 		}
 	
-	## admin-ajax can be a little bit faster, sometimes
+	## admin-ajax can be a little bit faster, sometimes, but only if GET
 	# This must be before passing wp-admin
 	if (req.url ~ "admin-ajax.php" && req.http.cookie !~ "wordpress_logged_in" ) {
 		return (hash);
@@ -36,7 +37,7 @@ sub wp_basics {
 		}
 	}
 	
-	## Fix Wordpress visual editor issues, must be the first one as url requests to work
+	## Fix Wordpress visual editor issues, must be the first one as url requests to work (well, nit exacly first...)
 	# Backend of Wordpress
 	if (req.url ~ "/wp-((login|admin)|my-account|comments-post.php|cron)" || req.url ~ "/login" || req.url ~ "preview=true") {
 		return(pass);
@@ -55,7 +56,7 @@ sub wp_basics {
 
 	## Normalize the query arguments.
 	# 'If...' structure is for Wordpress, so change/add something else when needed
-	# If std.querysort is any earlier it will break things, like giving error 500 when logging out.
+	# If std.querysort is any earlier it will break things, like giving error 500 when logging out. For me anyway, but I have some other issues with logging out too.
 	if (req.url !~ "(wp-admin|wp-login|wp-json)") {
 		set req.url = std.querysort(req.url);
 	}

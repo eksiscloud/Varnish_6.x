@@ -22,7 +22,7 @@ sub vcl_recv {
 	if (req.url ~ "^/wp-login.php" && (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist)) {
 		# I can't ban finnish IPs
 		if (req.http.X-Country-Code ~ "fi" || req.http.x-language ~ "fi") {
-			return(synth(403, "Access Denied " + req.http.X-Real-IP));
+			return(synth(403, "Access denied from " + req.http.X-Real-IP));
 		} else {
 		# other knockers I can ban
 			return(synth(666, "Forbidden action from " + req.http.X-Real-IP));

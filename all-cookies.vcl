@@ -18,7 +18,6 @@ sub vcl_recv {
 		# https://docs.gitea.io/en-us/config-cheat-sheet/
 		cookie.keep("i_like_gitea,_csrf,redirect_to,lang,gitea_incredible,gitea_awesome");
 		set req.http.cookie = cookie.get_string();
-		#set req.http.cookie-git = req.http.cookie;
 	}
 	
 	
@@ -33,7 +32,6 @@ sub vcl_recv {
 		# https://meta.discourse.org/t/list-of-cookies-used-by-discourse/83690
 		cookie.keep("email,destination_url,sso_destination_url,authentication_data,fsl,_t,_bypass_cache,_forum_session,dosp,");
 		set req.http.cookie = cookie.get_string();
-		#set req.http.cookie-dc = req.http.cookie;
 	}
 	
 	# MediaWiki
@@ -42,7 +40,6 @@ sub vcl_recv {
 		cookie.parse(req.http.cookie);
 		cookie.keep("session,UserID,UserName,LoggedOut,Token");	# I've never seen LoggedOut or Token
 		set req.http.cookie = cookie.get_string();
-		#set req.http.cookie-wiki = req.http.cookie;
 	}
 	
 	# Moodle (waste of time, must pass to work)
@@ -51,7 +48,6 @@ sub vcl_recv {
 		cookie.parse(req.http.cookie);
 		cookie.keep("MoodleSession,MoodleTest,MOODLEID");
 		set req.http.cookie = cookie.get_string();
-		#set req.http.cookie-moodle = req.http.cookie;
 	}
 	
 	# Matomo (no point to cache what so ever)
@@ -60,7 +56,6 @@ sub vcl_recv {
 		cookie.parse(req.http.cookie);
 		cookie.keep("piwik_,MATOMO_");
 		set req.http.cookie = cookie.get_string();
-		#set req.http.cookie-moodle = req.http.cookie;
 	}
 	
 	# Everything else must be pure WordPress/WooCommerce
@@ -72,7 +67,6 @@ sub vcl_recv {
 		cookie.delete("wordpress_test_Cookie,_pk_");
 		cookie.keep("wordpress_,wp-settings,_wp-session,wordpress_logged_in_,resetpass,woocommerce_cart_hash,woocommerce_items_in_cart,wp_woocommerce_session_");
 		set req.http.cookie = cookie.get_string();
-		#set req.http.cookie-wp = req.http.cookie;
 	}
 
 	# Don' let empty cookies travel any further

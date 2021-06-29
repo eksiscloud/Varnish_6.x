@@ -155,6 +155,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "IAB ATQ"
 		|| req.http.User-Agent ~ "IAS crawler"					# bad
 		|| req.http.User-Agent ~ "ias-"							# bad
+		|| req.http.User-Agent ~ "Iframely"
 		|| req.http.User-Agent ~ "import.io"
 		|| req.http.User-Agent ~ "Incutio"
 		|| req.http.User-Agent ~ "INGRID/"
@@ -430,30 +431,8 @@ sub bad_bot_detection {
 			}
 		}
 		
-# These are legit user agent that is used very often by unwanted bot - like any UAs, though. It is often just picking up applestyle favicon.
-# I have this only for documentation.
-#	if (
-#			# Apple's stupid way to identify devices as bots
-#			# Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit/601.2.4 (KHTML, like Gecko) Version/9.0.1 Safari/601.2.4 facebookexternalhit/1.1 Facebot Twitterbot/1.0
-#		req.http.User-Agent ~ "Facebot Twitterbot"
-#			# Apple Watch etc.
-#			# atc/1.0 watchOS/7.4.1 model/Watch5,9 hwp/t8006 build/18T201 (6; dt:233)
-#		|| req.http.User-Agent ~ "atc/"
-#			# iPhone etc.
-#			# "Mozilla/5.0 (iPhone; CPU iPhone OS 14_4_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 LightSpeed [FBAN/MessengerLiteForiOS;FBAV/310.0.0.38.116;FBBV/287543612;FBDV/iPhone9,3;FBMD/iPhone;FBSN/iOS;FBSV/14.4.2;FBSS/2;FBCR/;FBID/phone;FBLC/sv;FBOP/0]
-#		|| req.http.User-Agent ~ "LightSpeed"
-#	) {
-#		if ((std.ip(req.http.X-Real-IP, "0.0.0.0") ~ isplist) || (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ whitelist)) {
-#			# This is actually meaningless
-#			set req.http.User-Agent = "Apple/preview";	
-#		} else {
-#			# if not from domestic/whitelisted IP, there is a big chance it is a bot; foreigners still can use sites, but not get preview to Apple devices
-#			return(synth(403, "Bot detected " + req.http.X-Real-IP));
-#		}
-#	}
-		
 # Allowed only from whitelisted IP, but no bans by Fail2ban either
-# Works only when user agent has not been changed, so this will stop only easy ones
+# Works only when user agent has not been changed, so this will stop only easy ones... guess what, the most are really easy
 	if (
 		   req.http.User-Agent ~ "curl"
 		|| req.http.User-Agent ~ "wget"
@@ -462,7 +441,11 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "HTTPie"
 		|| req.http.User-Agent ~ "Ruby"
 		) {
-			return (synth(403, "Access Denied " + req.http.X-Real-IP));
+			if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
+				return (synth(403, "Access Denied " + req.http.X-Real-IP));
+			} else {
+				set req.http.x-bot = "tech";
+			}
 		}
 
 		# That's all folk.

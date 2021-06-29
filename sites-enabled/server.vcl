@@ -1,6 +1,6 @@
 ## Same as _default in Nginx; handling IP of the server ##
 sub vcl_recv {
-  if (req.http.host == "104.248.141.204" || req.http.host == "_") {
+  if (req.http.host == "104.248.141.204" || req.http.host == "_" || req.http.host == "") {
 		set req.backend_hint = default;
 
 	# Your lifelines: 

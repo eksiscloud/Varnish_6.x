@@ -26,10 +26,5 @@ sub tech_things {
 		}
 	}
 
-	## I just can't shutdown Munin...
-	if (req.http.User-Agent ~ "Munin") {
-		return(synth(403, "Munin"));
-	}
-
 # And here's the end
 }

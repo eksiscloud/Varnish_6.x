@@ -20,5 +20,9 @@ sub diagnose {
 	set resp.http.Modified = resp.http.Last-Modified;
 	unset resp.http.Last-Modified;
 	
+	## Just to be sure who is seeing what
+	if (req.http.x-bot) {
+		set resp.http.debug = req.http.x-bot;
+	}
 # Ends here
 }
