@@ -539,9 +539,10 @@ sub vcl_backend_response {
 	
 	## Slowing down amount of backend requests to way too anxious ones
 	# If the client IP makes more than 100 requests per second that result in a cache miss, access is prohibited for one minute
-	if (vsthrottle.is_denied(std.ip(bereq.http.X-Real-IP, "0.0.0.0"), 100, 1s, 1m)) {
-		return(error(429, "Too Many Requests"));
-	}
+	# These values doesn't work
+	#if (vsthrottle.is_denied(std.ip(bereq.http.X-Real-IP, "0.0.0.0"), 100, 1s, 1m)) {
+	#	return(error(429, "Too Many Requests"));
+	#}
 	
 	## Send User-Agent to backend, but removing it from Vary prevents Varnish to use it caching
 	if (beresp.http.Vary ~ "User-Agent") {

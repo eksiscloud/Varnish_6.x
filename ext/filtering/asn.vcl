@@ -14,6 +14,7 @@ sub asn_name {
 		|| req.http.x-asn ~ "digital energy technologies"	# BG
 		|| req.http.x-asn ~ "dreamscape"					# Vodien Internet Solutions Pte Ltd, HK, SG, AU
 		|| req.http.x-asn ~ "go-daddy-com-llc"				# GoDaddy.com US (GoDaddy isn't serving any useful services too often)
+		|| req.http.x-asn ~ "hvc-as"						# NOC4Hosts Inc., US
 		|| req.http.x-asn ~ "idcloudhost"					# PT. SIBER SEKURINDO TEKNOLOGI, PT Cloud Hosting Indonesia, ID
 		|| req.http.x-asn ~ "int-network"					# IP Volume inc, SC
 		|| req.http.x-asn ~ "internet-it"					# INTERNET IT COMPANY INC, SC
@@ -30,10 +31,10 @@ sub asn_name {
 		) {
 			if (req.url !~ "wp-login") {
 				std.log("stopped ASN: " + req.http.x-asn);
-				return(synth(429, "Forbidden organization: " + std.toupper(req.http.x-asn)));
+				return(synth(666, "Forbidden organization: " + std.toupper(req.http.x-asn)));
 			} else {
 				std.log("banned ASN: " + req.http.x-asn);
-				return(synth(666, "Severe security issues: " + std.toupper(req.http.x-asn)));
+				return(synth(429, "Severe security issues: " + std.toupper(req.http.x-asn)));
 			}
 		}
 		
@@ -51,7 +52,7 @@ sub asn_name {
 		|| req.http.x-asn ~ "wellnet"						# xWEBltd, NL is really RU
 		) {
 			std.log("banned ASN: " + req.http.x-asn);
-			return(synth(666, "Severe security issues: " + std.toupper(req.http.x-asn)));
+			return(synth(429, "Severe security issues: " + std.toupper(req.http.x-asn)));
 		}
 
 # The end of the sub
