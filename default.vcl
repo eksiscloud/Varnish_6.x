@@ -248,11 +248,13 @@ acl whitelist {
 	"138.68.111.130";
 }
 
-# just an example, I use 403.vcl together fail2ban
-#acl forbidden {
-#	"134.209.232.158";
-#	"5.117.231.54";
-#}
+# All of filtering isn't that easy to do using country, ISP, ASN or usear agent. So let's use reverse DNS. Filtering is done at asn.vcl.
+# These are mostly API-services that make theirs business passing the origin service.
+# Quite many hate hot linking and frames because that is one kind of stealing. These, as SEO-sevices, do exacly same.
+# Reverse DNS is done only at starting Varnish, not when reloading. Same can be done using dig or similar and using IP/IPs here.
+acl forbidden {
+	"printfriendly.com";
+}
 
 #################### vcl_init ##################
 # Called when VCL is loaded, before any requests pass through it. Typically used to initialize VMODs.
@@ -725,7 +727,8 @@ sub vcl_backend_response {
 	
 	## Stupid knockers trying different kind of executables or archives
 	# 404 notices at backend, like Wordpress, doesn't disappear because this happends after backend, of course
-	if (bereq.url !~ "(wp-json|caos|sitemap|lib/ajax)") {  # all of those give 404 sometimes, so this is just failsafe
+	# all of excluded urls give 404 sometimes, so this is just failsafe. And just an ordinary 404 gave every now and then 403.
+	if (bereq.url !~ "(wp-json|caos|sitemap|lib/ajax|index.php|/$)") {
 		if (beresp.status == 404 && bereq.url ~ "/([a-z0-9_\.-]+).(asp|aspx|php|js|jsp|rar|zip|tar|gz)") {
 			if (bereq.http.X-Country-Code !~ "fi" && bereq.http.x-bot != "nice") {
 				set beresp.status = 666;
