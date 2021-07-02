@@ -54,6 +54,11 @@ sub asn_name {
 			std.log("banned ASN: " + req.http.x-asn);
 			return(synth(429, "Severe security issues: " + std.toupper(req.http.x-asn)));
 		}
+		
+	## Not ASN but is here anyway: stoping some sites using ACL and reverse DNS:
+	if (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ forbidden) {
+		return (synth(403, "Access Denied " + req.http.X-Real-IP));
+	}
 
 # The end of the sub
 }

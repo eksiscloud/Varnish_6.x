@@ -1,23 +1,15 @@
 sub cors {
 
-	if (req.http.x-host !~ "wordpress") {
-		if (req.http.X-Saved-Origin == "") {
-			set resp.http.Access-Control-Allow-Origin = "https://" + req.http.host;
-		} else {
-			set resp.http.Access-Control-Allow-Origin = req.http.X-Saved-Origin;
-		}
-	} else {
+	if (req.http.X-Saved-Origin == "") {
 		set resp.http.Access-Control-Allow-Origin = "https://" + req.http.host;
-		set resp.http.Access-Control-Allow-Methods = "POST, PUT, GET, OPTIONS, DELETE, BAN, PURGE, REFRESH";
+	} else {
+		set resp.http.Access-Control-Allow-Origin = req.http.X-Saved-Origin;
 	}
 	
 	unset req.http.X-Saved-Origin;
 	
-	#if (req.http.X-Saved-Origin == "") {
-	#	set resp.http.Access-Control-Allow-Origin = "https://" + req.http.host;
-	#} else {
-	#	set resp.http.Access-Control-Allow-Origin = req.http.X-Saved-Origin;
-	#}
+	
+
 	
 	#if (req.http.host ~ "www.katiska.info") {
 	#	set resp.http.Access-Control-Allow-Origin = "*";
