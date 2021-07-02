@@ -25,6 +25,7 @@ if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 	|| req.url ~ "/fancy-product-designer/"
 	|| req.url ~ "/formcraft/"
 	|| req.url ~ "/ioptimization/"
+	|| req.url ~ "/indeed-smart-popup"
 	|| req.url ~ "/iva-business-hours-pro/"
 	|| req.url ~ "/kaswara/"
 	|| req.url ~ "/log-http-requests/"

@@ -28,7 +28,7 @@ sub vcl_recv {
 		# Stop bots and knockers seeking holes using 403.vcl
 		# I don't let search agents and similar to forbidden urls. Otherwise Fail2ban would ban theirs IPs too.
 		# I get error for testing purposes, but Fail2ban has whitelisted my IP.
-		if (req.http.x-bots != "nice") {
+		if (req.http.x-bots != "(nice|tech)") {
 			call stop_pages;
 		}
 

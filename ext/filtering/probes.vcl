@@ -6,6 +6,7 @@ sub tech_things {
 		|| req.http.User-Agent == "Varnish Health Probe"
 		|| req.http.User-Agent ~ "Matomo"
 		|| req.http.User-Agent ~ "Monit"
+		|| req.http.User-Agent ~ "WordPress/"
 		|| req.http.User-Agent ~ "WP Rocket/"
 		) {
 			if (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ whitelist) {
