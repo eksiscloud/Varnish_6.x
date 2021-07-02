@@ -447,6 +447,23 @@ sub bad_bot_detection {
 				set req.http.x-bot = "tech";
 			}
 		}
+		
+# UA git is allowed only with Gitea
+	if (req.http.User-Agent ~ "git/") {
+		if (req.http.host != "git.eksis.one" && std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
+			if (req.http.X-Country-Code ~ "fi" || req.http.x-language ~ "fi") {
+				set req.http.x-bot = "bad";
+				return(synth(403, "Access Denied " + req.http.X-Real-IP));
+			} else {
+				set req.http.x-bot = "bad";
+				return(synth(666, "Forbidden Bot " + req.http.X-Real-IP));
+			} 
+		} else {
+			set req.http.x-bot = "tech";
+			return(pass);
+		}
+	}
+
 
 		# That's all folk.
 }    
