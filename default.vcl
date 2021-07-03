@@ -728,9 +728,9 @@ sub vcl_backend_response {
 	## Stupid knockers trying different kind of executables or archives
 	# 404 notices at backend, like Wordpress, doesn't disappear because this happends after backend, of course
 	# all of excluded urls give 404 sometimes, so this is just failsafe. And just an ordinary 404 gave every now and then 403.
-	if (bereq.url !~ "(wp-json|caos|sitemap|lib/ajax|index.php|/$)") {
-		if (beresp.status == 404 && bereq.url ~ "/([a-z0-9_\.-]+).(asp|aspx|php|js|jsp|rar|zip|tar|gz)") {
-			if (bereq.http.X-Country-Code !~ "fi" && bereq.http.x-bot != "nice") {
+	if (bereq.url !~ "(wp-json|caos|sitemap|lib/ajax)") {
+		if (beresp.status == 404 && bereq.url ~ "/([a-z0-9_\.-]+)\.(asp|aspx|php|js|jsp|rar|zip|tar|gz)") {
+			if (bereq.http.X-Country-Code !~ "fi" && bereq.http.x-bot != "(nice|tech)") {
 				set beresp.status = 666;
 				set beresp.ttl = 24h; # longer TTL for foreigners
 			} else {
