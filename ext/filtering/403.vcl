@@ -493,6 +493,7 @@ if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 		|| req.http.Referer ~ "almatatour.com"
 		|| req.http.Referer ~ "etrafika.net"
 		|| req.http.Referer ~ "suomalaiset-podcastit.fi"
+		|| req.http.Referer ~ "anonymousfox.co"
 		) {
 			if (
 			   req.http.X-County-Code ~ "fi"

@@ -16,7 +16,7 @@ sub vcl_recv {
 	"^eksis\.dev$", "www.eksis.dev");
 
 	## General rules common to every backend by common.vcl
-	call common_rules;
+#	call common_rules;
 	
 	## Limit logins by acl whitelist
 	if (req.url ~ "^/wp-login.php" && (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist)) {
