@@ -34,7 +34,7 @@ sub asn_name {
 				return(synth(666, "Forbidden organization: " + std.toupper(req.http.x-asn)));
 			} else {
 				std.log("banned ASN: " + req.http.x-asn);
-				return(synth(429, "Severe security issues: " + std.toupper(req.http.x-asn)));
+				return(synth(423, "Severe security issues: " + std.toupper(req.http.x-asn)));
 			}
 		}
 		
@@ -53,7 +53,7 @@ sub asn_name {
 		|| req.http.x-asn ~ "wellnet"						# xWEBltd, NL is really RU
 		) {
 			std.log("banned ASN: " + req.http.x-asn);
-			return(synth(429, "Severe security issues: " + std.toupper(req.http.x-asn)));
+			return(synth(423, "Severe security issues: " + std.toupper(req.http.x-asn)));
 		}
 		
 	## Not ASN but is here anyway: stoping some sites using ACL and reverse DNS:
