@@ -47,6 +47,7 @@ sub asn_name {
 		|| req.http.x-asn ~ "dreamhost"						# New Dream Network, LLC, US
 		|| req.http.x-asn ~ "iomart"						# IOMART HOSTING LIMITED. GB
 		|| req.http.x-asn ~ "ponynet"						# FranTech Solutions, US
+		|| req.http.x-asn ~ "selectel"						# Starcrecium Limited, CY is actually RU
 		|| req.http.x-asn ~ "serverion"						# Serverion BV, NL
 		|| req.http.x-asn ~ "squitter-networks"				# ABC Consultancy etc, CINTY EU WEB SOLUTIONS, NL
 		|| req.http.x-asn ~ "wellnet"						# xWEBltd, NL is really RU
