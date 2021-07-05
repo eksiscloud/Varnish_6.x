@@ -244,7 +244,7 @@ acl whitelist {
 	"127.0.0.1";
 	"84.231.6.225";
 	"104.248.141.204";
-	#"64.225.73.149";
+	"64.225.73.149";
 	"138.68.111.130";
 }
 
@@ -534,9 +534,12 @@ sub vcl_backend_response {
 	# varnishncsa -b -F '%t "%r" %s %{Varnish:time_firstbyte}x %{VCL_Log:backend}x' -q "Timestamp:Beresp[3] > 3 or Timestamp:Error[3] > 3"
 	std.log("backend: " + beresp.backend.name);
 	
-	## Backend is down, stop caching
-	if (beresp.status >= 500 && bereq.is_bgfetch) {
-		return(abandon);
+	## Backend is down, stop caching but using ttl+grace instead
+	if (beresp.status == 500 || beresp.status == 502 || beresp.status == 503 || beresp.status == 504) {
+		if (bereq.is_bgfetch) {
+			return(abandon);
+		}
+		set beresp.uncacheable = true;
 	}
 	
 	## Slowing down amount of backend requests to way too anxious ones
@@ -918,6 +921,7 @@ sub vcl_synth {
 			</body>
 		</html>
 		"} );
+		unset req.http.connection;
 		return (deliver);
 	}
 	
@@ -942,6 +946,7 @@ sub vcl_synth {
 			</body>
 		</html>
 		"} );
+		unset req.http.connection;
 		return (deliver);
 	}
 	
@@ -966,6 +971,7 @@ sub vcl_synth {
 			</body>
 		</html>
 		"} );
+		unset req.http.connection;
 		return (deliver);
 	}
 		
@@ -1004,6 +1010,31 @@ sub vcl_synth {
 		Disallow: /
 		"} );
 		return(deliver);
+	}
+
+	## Custom error for banning
+	if (resp.status == 666) {
+		set resp.status = 666;
+		#synthetic(std.fileread("/etc/varnish/error/666.html"));
+		set resp.http.Content-Type = "text/html; charset=utf-8";
+		set resp.http.Retry-After = "5";
+		synthetic( {"<!DOCTYPE html>
+		<html>
+			<head>
+				<title>Error "} + resp.status + " " + resp.reason + {"</title>
+			</head>
+			<body>
+				<h1>Error "} + resp.status + " " + resp.reason + {"</h1>
+				<p>"} + resp.reason + " from IP " + std.ip(req.http.X-Real-IP, "0.0.0.0") + {"</p>
+				<h3>Guru Meditation:</h3>
+				<p>XID: "} + req.xid + {"</p>
+				<hr>
+				<p>Varnish cache server</p>
+			</body>
+		</html>
+		"} );
+		unset req.http.connection;
+		return (deliver);
 	}
 
 	## 301/302 redirects using custom status

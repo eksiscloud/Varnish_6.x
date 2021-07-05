@@ -7,7 +7,7 @@ sub stop_pages {
 ## Heads up: here is propably somethig that will break your site!
 
 # I'm allowing whitelisted IPs
-if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
+#if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 
 #Knock, knock, who's there globally?
 	if (
@@ -94,6 +94,7 @@ if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 	|| req.url ~ "\.aspx"
 	|| req.url ~ "Account/ValidateCode/"
 	|| req.url ~ "Account/LoginToIbo"
+	|| req.url ~ "^/action.php"
 	|| req.url ~ "^/actions/"
 	|| req.url ~ "^/actuator/"
 	|| req.url ~ "^/adform/"				# ad company, bot is using regular UA
@@ -126,6 +127,7 @@ if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 	|| req.url ~ "/brandfolder/"
 		# C
 	|| req.url ~ "^/cache/accesson.php"
+	|| req.url ~ "/.cache.idx.php"
 	|| req.url ~ "/candidate-application-form/"
 	|| req.url ~ "/catalog/bedding-bed-bath.jsp"
 	|| req.url ~ "^/CFIDE/"
@@ -225,7 +227,7 @@ if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 	|| req.url ~ "^/js/mage/"
 	|| req.url ~ "^/js/varien/"
 		# K
-	|| req.url ~ "^/katiska.info"
+	|| req.url ~ "^/katiska\.info"
 	|| req.url ~ "/katiskainfo.sql"
 #	|| req.url ~ "^/kauppa/wp-json"
 	|| req.url ~ "/kerbynet"
@@ -417,6 +419,7 @@ if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 	|| req.url ~ "/wpstaff"
 		# X 
 	|| req.url ~ "^/x.htm"
+	|| req.url ~ "/xpdo.idx.php"
 		# Y
 	|| req.url ~ "^/YMfQ"
 	|| req.url ~ "^/yts/"
@@ -425,7 +428,6 @@ if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 		if (
 		   req.http.X-County-Code ~ "fi" 
 		|| req.http.x-language ~ "fi" 
-		|| req.http.x-bot == "nice"
 		) {
 			return(synth(403, "The site is unreachable"));
 		} else {
@@ -439,7 +441,6 @@ if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 			if (
 			   req.http.X-County-Code ~ "fi"
 			|| req.http.x-language ~ "fi" 
-			|| req.http.x-agent == "nice"
 				) {
 				return(synth(403, "The site is unreachable"));
 			} else {
@@ -498,7 +499,6 @@ if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 			if (
 			   req.http.X-County-Code ~ "fi"
 			|| req.http.x-language ~ "fi" 
-			|| req.http.x-agent == "nice"
 			) {
 				return(synth(403, "Forbidden referer: " + req.http.Referer));
 			} else {
@@ -517,7 +517,7 @@ if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 	if (req.url ~ "apple-app-site-association") { return(synth(403, "Forbidden")); }
 	
 # whitelisting ends here
-}
+#}
 
 # sub will end here
 }

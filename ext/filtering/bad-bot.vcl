@@ -64,6 +64,8 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "botify"
 		|| req.http.User-Agent ~ "Buck"							# bad
 		|| req.http.User-Agent ~ "BuiltWith"
+		|| req.http.User-Agent ~ "BW/"
+		|| req.http.User-Agent ~ "Bytespider"
 		# C
 		|| req.http.User-Agent ~ "CarrierWave"
 		|| req.http.User-Agent ~ "CatchBot"
@@ -149,6 +151,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "HTTP Banner Detection"
 		|| req.http.User-Agent ~ "http.rb"
 		|| req.http.User-Agent ~ "httpx"
+		|| req.http.User-Agent ~ "hu_HU"
 		|| req.http.User-Agent ~ "hubspot"
 		|| req.http.User-Agent ~ "HubSpot"
 		# I
