@@ -10,6 +10,7 @@ sub asn_name {
 		|| req.http.x-asn ~ "chinatelecom"					# a lot and couple more, CN
 		|| req.http.x-asn == "cogent-174"					# BlackHOST Ltd., NL
 		|| req.http.x-asn ~ "contabo"						# Contabo Inc., US
+		|| req.http.x-asn ~ "corporacion dana"				# Computer Company, US but is HN
 		|| req.http.x-asn ~ "cypresstel"					# Cypress Telecom Limited, HK
 		|| req.http.x-asn ~ "digital energy technologies"	# BG
 		|| req.http.x-asn ~ "dreamscape"					# Vodien Internet Solutions Pte Ltd, HK, SG, AU

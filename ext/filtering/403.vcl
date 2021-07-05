@@ -12,7 +12,7 @@ sub stop_pages {
 #Knock, knock, who's there globally?
 	if (
 		# ##
-	   req.url ~ "^//"
+	   req.url ~ "//"
 	|| req.url ~ "^/[1-9]/"
 	|| req.url ~ "^/[1-9][1-9][1-9][1-9]/"
 #	|| req.url ~ "^/[a-z]/"
