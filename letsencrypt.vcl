@@ -1,7 +1,7 @@
 vcl 4.1;
 
 probe bottisondi {
-    .request =
+	.request =
       "HEAD / HTTP/1.1"
       "Host: www.katiska.info"
       "Connection: close"
@@ -10,11 +10,6 @@ probe bottisondi {
 	.interval = 5s;
 	.window = 5;
 	.threshold = 3;
-#				.url = "/ads.txt";
-#				.timeout = 1s;
-#				.interval = 5s;
-#				.window = 5;
-#				.threshold = 3;
 }
 
 backend certbot {
