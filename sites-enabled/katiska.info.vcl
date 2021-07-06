@@ -18,13 +18,10 @@ sub vcl_recv {
 	## General rules common to every backend by common.vcl
 	call common_rules;
 	
-	## Limit logins by acl whitelist
-	if (req.url ~ "^/wp-login.php" && (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist)) {
-		# I can't ban finnish IPs
-		if (req.http.X-Country-Code ~ "fi" || req.http.x-language ~ "fi") {
-			return(synth(403, "Access denied from " + req.http.X-Real-IP));
-		} else {
-		# other knockers I can ban
+	## Limit logins by country and language
+	if (req.url ~ "^/wp-login.php") {
+		# I have only finnish users
+		if (req.http.X-Country-Code !~ "fi" || req.http.x-language !~ "fi") {
 			return(synth(666, "Forbidden action from " + req.http.X-Real-IP));
 		}
 	}
