@@ -48,14 +48,13 @@ backend wiki {
 }
 
 # stats.eksis.eu by Matomo
-# for some reason this doesn't work
-#backend matomo {
-#	.host = "127.0.0.1";
-#	.port = "82";
-#	.first_byte_timeout = 300s;		# How long to wait before we receive a first byte from our backend?
-#	.connect_timeout = 300s;		# How long to wait for a backend connection?
-#	.between_bytes_timeout = 300s;	# How long to wait between bytes received from our backend?
-#}
+backend matomo {
+	.host = "127.0.0.1";
+	.port = "82";
+	.first_byte_timeout = 300s;		# How long to wait before we receive a first byte from our backend?
+	.connect_timeout = 300s;		# How long to wait for a backend connection?
+	.between_bytes_timeout = 300s;	# How long to wait between bytes received from our backend?
+}
 
 # proto.eksis.one by Discourse
 backend proto {
@@ -134,8 +133,7 @@ sub vcl_recv {
 	
 	elseif (req.http.host == "git.eksis.one") { set req.backend_hint = gitea; }
 
-	# for some reason this doesn't work
-	#elseif (req.http.host == "stats.eksis.eu") { set req.backend_hint = matomo; }
+	elseif (req.http.host == "stats.eksis.eu") { set req.backend_hint = matomo; }
 
 	elseif (
 	req.http.host == "104.248.141.204" ||
@@ -145,7 +143,7 @@ sub vcl_recv {
 		set req.backend_hint = default;
 	}
 
-	# Because I'm in deep shit...
+	# Because I'm in deep shit, but Varnish is still alive...
 	return(pipe);
 	
 # That's it. We are ready here.
