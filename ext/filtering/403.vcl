@@ -220,6 +220,7 @@ sub stop_pages {
 		# J
 	|| req.url ~ "/jenkins/"
 	|| req.url ~ "/jm-ajax/upload_file"
+	|| req.url ~ "/jquery-file-upload/"
 	|| req.url ~ "/js/html5.php"
 	|| req.url ~ "/js_inst/"
 	|| req.url ~ "/js/mctabs.php"
