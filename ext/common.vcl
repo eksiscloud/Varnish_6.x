@@ -114,6 +114,11 @@ sub common_rules {
 	
 	## Global handling of 404 and 410 from 404.vcl
 	call global-redirect;
+	
+	## Passing UA tech
+	if (req.http.x-bot == "tech") {
+		return(pass);
+	}
 
 	## Implementing websocket support
 	if (req.http.Upgrade ~ "(?i)websocket") {
@@ -126,45 +131,6 @@ sub common_rules {
 	if (req.http.X-Bypass-Cache == "1" && req.http.User-Agent == "CacheWarmer") {
 		return(pass);
 	}
-	
-	## I must clean up some trashes
-	
-		# Technical probes, so let them at large using probes.vcl
-		# These are useful and I want to know if backend is working etc.
-		call tech_things;
-		
-		# These are nice bots, so let them through using nice-bot.vcl and using just one UA
-		call cute_bot_allowance;
-
-		# Extra layer of security to xmlrpc.php 
-		# Now I'm onlyone who can use xmlrpc.php
-		# Commented because Nginx does this for me
-		#if (req.url ~ "^/xmlrpc.php" && std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
-		#	return(synth(423, "Post not allowed for " + req.http.X-Real-IP));
-		#}
-
-		# I need curl every now and then, others not
-		# Commented, because 420.vcl is doing the job
-		#if (req.http.User-Agent ~ "curl/" && std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
-		#	return(synth(420, "Forbidden Method"));
-		#}
-		
-		# I need libwww-perl too
-		# Commented, because 420.vcl is doing the job
-		#if (req.http.User-Agent ~ "libwww-perl" && (req.http.x-ip !~ whitelist)) {
-		#	return(synth(420, "Forbidden Method"));
-		#}
-		
-		# Now we stop known useless ones who's not from whitelisted IPs using bad-bot.vcl
-		# This should not be active if Nginx do what it should do because I have bot filtering there
-		call bad_bot_detection;
-		
-		# Stop bots and knockers seeking holes using 403.vcl
-		# I don't let search agents and similar to forbidden urls. Otherwise Fail2ban would ban theirs IPs too.
-		# I get error for testing purposes, but Fail2ban has whitelisted my IP.
-		if (req.http.x-bot != "(nice)") {
-			call stop_pages;
-		}
 
 	## AWStats
 	if (req.url ~ "cgi-bin/awsstats.pl") {
@@ -192,6 +158,7 @@ sub common_rules {
 	# I want send User-Agent to backend because that is te only way to show who is actually getting error 404; I don't serve bots other nice ones 
 	# and 404 from real users must fix right away
 	set req.http.x-agent = req.http.User-Agent;
+	if (req.http.x-bot == "") { set req.http.x-bot = "visitor"; }
 	unset req.http.User-Agent;
 	
 # The end

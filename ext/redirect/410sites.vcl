@@ -3,7 +3,7 @@ sub all_gone {
 	If (req.http.host ~ "www.katiska.info") {
 		if (req.url ~ "/lyhyet/") { return(synth(810, "Gone")); }
 		elseif (req.url ~ "/assignment") { return(synth(810, "Gone")); }
-		elseif (req.url ~ "^/author") { return(synth(810, "Gone")); }
+		elseif (req.url ~ "^/author/") { return(synth(810, "Gone")); }
 		elseif (req.url ~ "/blogi/kirjoittajista") { return(synth(810, "Gone")); }
 		elseif (req.url ~ "/catch-22") { return(synth(810, "Gone")); }
 		elseif (req.url ~ "/course_") { return(synth(810, "Gone")); }

@@ -305,30 +305,51 @@ sub vcl_recv {
 	set req.http.host = std.tolower(req.http.host);
 	set req.http.host = regsub(req.http.host, ":[0-9]+", "");
 	
-	## Just an example how to do geo-blocking
-	# 1st: GeoIP and normalizing country codes to lower case, because remembering to use capital letters is just too hard
-	set req.http.X-Country-Code = country.lookup("country/iso_code", std.ip(req.http.X-Real-IP, "0.0.0.0"));
-	set req.http.X-Country-Code = std.tolower(req.http.X-Country-Code);
+	## I must clean up some trashes
+	# I should not use return(...) statement here because it passes everything, but these should stop trashes right away
 	
-	# 2nd: Actual blocking: (mostly I do geo-blocking in iptables, but this is much easier way)
-	# I'll ban ir stop a country only after several tries, it is not a decision made easily (well... it is actually) 
-	# Heads up: Cloudflare and other big CDNs can route traffic through really strange datacenters - like from Turkey to Finland via Senegal
-	if (req.http.X-Country-Code ~ "(bd|bg|cn|cr|ru|hk|id|my|pl|sc|tw|ua|zz)") {
-		std.log("banned country: " + req.http.X-Country-Code);
-		return(synth(403, "Forbidden country: " + std.toupper(req.http.X-Country-Code)));
+	# Just an example how to do geo-blocking
+		# 1st: GeoIP and normalizing country codes to lower case, because remembering to use capital letters is just too hard
+		set req.http.X-Country-Code = country.lookup("country/iso_code", std.ip(req.http.X-Real-IP, "0.0.0.0"));
+		set req.http.X-Country-Code = std.tolower(req.http.X-Country-Code);
+	
+		# 2nd: Actual blocking: (mostly I do geo-blocking in iptables, but this is much easier way)
+		# I'll ban ir stop a country only after several tries, it is not a decision made easily (well... it is actually) 
+		# Heads up: Cloudflare and other big CDNs can route traffic through really strange datacenters - like from Turkey to Finland via Senegal
+		if (req.http.X-Country-Code ~ "(bd|bg|cn|cr|ru|hk|id|my|pl|sc|tw|ua|zz)") {
+			std.log("banned country: " + req.http.X-Country-Code);
+			return(synth(403, "Forbidden country: " + std.toupper(req.http.X-Country-Code)));
+		}
+	
+	# I can block service provider too.
+		# 1st: Finding out and normalizing ASN
+		set req.http.x-asn = asn.lookup("autonomous_system_organization", std.ip(req.http.X-Real-IP, "0.0.0.0"));
+		set req.http.x-asn = std.tolower(req.http.x-asn);
+	
+		# 2nd: Actual blocking: (customers from these are knocking security holes etc. way too often)
+		# Finding out ASN from whois-data isn't so straight forwarded
+		# You can find it out using ASN lookup like https://hackertarget.com/as-ip-lookup/
+		call asn_name;
+	
+	# Technical probes, so normalize UA using probes.vcl
+	# These are useful and I want to know if backend is working etc.
+	call tech_things;
+	
+	# These are nice bots, and I'm normalizing using nice-bot.vcl and using just one UA
+	call cute_bot_allowance;
+	
+	# Now we stop known useless ones who's not from whitelisted IPs using bad-bot.vcl
+	# This should not be active if Nginx do what it should do because I have bot filtering there
+	call bad_bot_detection;
+	
+	# Stop bots and knockers seeking holes using 403.vcl
+	# I don't let search agents and similar to forbidden urls. Otherwise Fail2ban would ban theirs IPs too.
+	# I get error for testing purposes, but Fail2ban has whitelisted my IP.
+	if (req.http.x-bot != "(nice)") {
+		call stop_pages;
 	}
 	
-	## I can block service provider too.
-	# 1st: Finding out and normalizing ASN
-	set req.http.x-asn = asn.lookup("autonomous_system_organization", std.ip(req.http.X-Real-IP, "0.0.0.0"));
-	set req.http.x-asn = std.tolower(req.http.x-asn);
-	
-	# 2nd: Actual blocking: (customers from these are knocking security holes etc. way too often)
-	# Finding out ASN from whois-data isn't so straight forwarded
-	# You can find it out using ASN lookup like https://hackertarget.com/as-ip-lookup/
-	call asn_name;
-	
-	## Slowing down if someone makes too many requests too fast
+	# Slowing down if someone makes too many requests too fast
 	# These values are way too low. Only one visit at WordPress will trigger it.
 	# Using IP as client.identity is mostly bad idea and it affects to real honest users, not bots.
 	# 15 requests in a 10 second timeframe. If that rate is exceeded, the user gets blocked for 30 seconds.
@@ -858,7 +879,7 @@ sub vcl_deliver {
 	set resp.http.Your-IP = req.http.X-Real-IP;
 	
 	## Don't show funny stuff to bots
-	if (req.http.x-bot !~ "(nice|bad|libs|tech)") {
+	if (req.http.x-bot == "visitor") {
 		# lookup can't be in sub vcl
 		set resp.http.Your-IP-Country = country.lookup("country/names/en", std.ip(req.http.X-Real-IP, "0.0.0.0")) + "/" + std.toupper(req.http.X-Country-Code);
 		set resp.http.Your-IP-City = city.lookup("city/names/en", std.ip(req.http.X-Real-IP, "0.0.0.0"));

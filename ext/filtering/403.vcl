@@ -6,7 +6,7 @@ sub stop_pages {
 ## Search agents and similar get 403. Otherwise Fail2ban would ban theirs IPs too.
 ## Heads up: here is propably somethig that will break your site!
 
-# I'm allowing whitelisted IPs
+# I can allow whitelisted IPs, but it is commented because of testing
 #if (std.ip(req.http.X-Real-IP, "0.0.0.0") !~ whitelist) {
 
 #Knock, knock, who's there globally?

@@ -11,7 +11,6 @@ sub tech_things {
 		) {
 			if (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ whitelist) {
 				set req.http.x-bot = "tech";
-				return(pass);
 			} else {
 				return(synth(403, "False Bot"));
 			}
@@ -19,9 +18,8 @@ sub tech_things {
 	
 	## UptimeRobot
 	if (req.http.User-Agent ~ "UptimeRobot") {
-		if (req.url ~ "^/(pong|tietosuojaseloste|latest|login|user)") {
+		if (req.url ~ "^/(pong|tietosuojaseloste|latest)") {
 			set req.http.x-bot = "tech";
-			return(pass);
 		} else {
 			return(synth(403, "False Bot"));
 		}

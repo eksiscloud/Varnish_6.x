@@ -463,7 +463,6 @@ sub bad_bot_detection {
 			} 
 		} else {
 			set req.http.x-bot = "tech";
-			return(pass);
 		}
 	}
 

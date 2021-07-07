@@ -5,6 +5,7 @@ sub asn_name {
 	# Just coming from some ASN doesn't be reason to hard banning, but everyone is knocking too often so I'll keep doors closed
 	if (
 		   req.http.x-asn ~ "alibaba"						# Alibaba (US) Technology Co., Ltd., US,CN
+		|| req.http.x-asn ~ "avast-as-cd"					# Privax LTD, GB etc.
 		|| req.http.x-asn ~ "bladeservers"					# LeaseVPS, NL, AU
 		|| req.http.x-asn ~ "chinanet-backbone"				# big part of China
 		|| req.http.x-asn ~ "chinatelecom"					# a lot and couple more, CN
