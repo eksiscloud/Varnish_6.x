@@ -18,6 +18,9 @@ vcl 4.1;
 
 import std;
 
+# Let's Encrypt gets its own backend
+include "/etc/varnish/letsencrypt.vcl";
+
 ## Backend tells where a site can be found
 backend default {					# use your servers instead default if you have more than just one
 	.host = "127.0.0.1";			# IP or Hostname of backend
