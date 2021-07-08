@@ -158,7 +158,7 @@ sub common_rules {
 	# I want send User-Agent to backend because that is te only way to show who is actually getting error 404; I don't serve bots other nice ones 
 	# and 404 from real users must fix right away
 	set req.http.x-agent = req.http.User-Agent;
-	if (req.http.x-bot == "") { set req.http.x-bot = "visitor"; }
+	if (req.http.x-bot !~ "(nice|tech|bad)") { set req.http.x-bot = "visitor"; }
 	unset req.http.User-Agent;
 	
 # The end
