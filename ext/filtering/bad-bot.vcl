@@ -113,6 +113,8 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "Embarcadero"
 		|| req.http.User-Agent ~ "EnigmaBot"
 		|| req.http.User-Agent ~ "Entale bot"					# bad
+		|| req.http.User-Agent ~ "en_NL"
+		|| req.http.User-Agent ~ "en-NL"
 		|| req.http.User-Agent ~ "en-US\)"
 		|| req.http.User-Agent ~ "e.ventures"
 		|| req.http.User-Agent ~ "Exabot"
@@ -224,6 +226,8 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "Nextcloud"
 		|| req.http.User-Agent ~ "newspaper"					# python3
 		|| req.http.User-Agent ~ "Nimbostratus-Bot"				# bad
+		|| req.http.User-Agent ~ "nl_NL"
+		|| req.http.User-Agent ~ "nl-NL"
 		|| req.http.User-Agent ~ "Nmap Scripting Engine"
 		|| req.http.User-Agent ~ "node-fetch"					# malicious
 		|| req.http.User-Agent ~ "NRCAudioBot"
@@ -240,7 +244,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "Pandalytics"
 		|| req.http.User-Agent ~ "panscient.com"
 		|| req.http.User-Agent ~ "PaperLiBot"
-		|| req.http.User-Agent ~ "PR-CY.RU"
+		|| req.http.User-Agent ~ "PCNBrowser"
 		|| req.http.User-Agent ~ "PetalBot"						# same as AspiegelBot
 		|| req.http.User-Agent ~ "PhantomJS"
 		|| req.http.User-Agent ~ "PHist/"
@@ -261,6 +265,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "Podverse"
 		|| req.http.User-Agent ~ "Podyssey"
 		|| req.http.User-Agent ~ "Poster"						# malicious
+		|| req.http.User-Agent ~ "PR-CY.RU"
 		|| req.http.User-Agent ~ "print\("						# malicious
 		|| req.http.User-Agent ~ "project-resonance"
 		|| req.http.User-Agent ~ "proximic"						# bad, really big issue, mostly from Amazon
