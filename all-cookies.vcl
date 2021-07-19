@@ -9,7 +9,7 @@ sub vcl_recv {
 	# sub vcl_hash {
 	#	hash_data(cookie.get("language"));
 	# }
-	# Well, filtering per sitetype is quite meaningless, though. And adds more hassling.
+	# Well, filtering per sitetype is quite meaningless, though. And adds more hassling. But I'm using x-host to filter different type of sites.
 	
 	# Gitea (almost nothing can be cached)
 	if (req.http.host ~ "git.eksis.one") {

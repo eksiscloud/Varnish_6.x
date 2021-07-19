@@ -40,6 +40,9 @@ include "/etc/varnish/ext/woocommerce_common.vcl";
 # CORS
 include "/etc/varnish/ext/addons/cors.vcl";
 
+# Secure headers
+include "/etc/varnish/ext/addons/security.vcl";
+
 # Some URL manipulations
 include "/etc/varnish/ext/redirect/manipulate.vcl";
 
@@ -262,10 +265,12 @@ acl forbidden {
 
 sub vcl_init {
 	
-	# GeiOP
+	# GeoIP
 	new country = geoip2.geoip2("/usr/share/GeoIP/GeoLite2-Country.mmdb");
 	new city = geoip2.geoip2("/usr/share/GeoIP/GeoLite2-City.mmdb");
 	new asn = geoip2.geoip2("/usr/share/GeoIP/GeoLite2-ASN.mmdb");
+	
+	
 	
 # The end of init
 }
@@ -850,6 +855,9 @@ sub vcl_deliver {
 	} else {
 		set resp.http.Vary = "Origin";
 	}
+	
+	## A little bit more security
+	call sec_headers;
 	
 	## Just some unneeded headers from debugs.vcl
 	call diagnose;

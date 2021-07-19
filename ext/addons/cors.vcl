@@ -11,9 +11,10 @@ sub cors {
 	
 
 	
-	#if (req.http.host ~ "www.katiska.info") {
-	#	set resp.http.Access-Control-Allow-Origin = "*";
-	#}
+#	if (req.http.host ~ "www.katiska.info") {
+#		unset resp.http.Access-Control-Allow-Origin;
+#		set resp.http.Access-Control-Allow-Origin = "*";
+#	}
 	
 	
 	

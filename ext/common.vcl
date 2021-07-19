@@ -77,6 +77,17 @@ sub common_rules {
 	#	return(synth(405, "Non-valid HTTP method!"));
 	#}
 	
+	## CSP logs
+	# This is actually not needed, because the url needs authorization when requested from web (well, my system wants)
+	# I did this just to get good night sleep
+	if (req.url ~ "^/_csp") {
+		if (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ whitelist) {
+			return(pass);
+		} else {
+			return(synth(403, "Not allowed"));
+		}
+	}
+	
 	## Auth requests shall be passed
 	if (req.http.Authorization || req.method == "POST") {
 		return (pass);
