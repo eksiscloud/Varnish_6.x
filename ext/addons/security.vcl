@@ -17,7 +17,8 @@ sub sec_headers {
 		# I'm using temporary rules to help reading/tuning/fixing
 		set resp.http.x-default-src = "default-src stats.eksis.eu *.googlesyndication.com www.google-analytics.com data: 'unsafe-inline' 'unsafe-eval' 'self';";
 		set resp.http.x-child-src = "child-src *.youtube.com *.doubleclick.net *.googlesyndication.com *.google.com 'self'";
-		set resp.http.x-script-src = "script-src 'unsafe-inline' 'unsafe-eval' 'self' data: stats.eksis.eu *.github.com *.fontawesome.com *.facebook.net *.ampproject.org *.googletagmanager.com partner.googleadservices.com *.googlesyndication.com adservice.google.fi adservice.google.se adservice.google.no adservice.google.it adservice.google.es adservice.google.com www.google-analytics.com ajax.googleapis.com www.googletagservices.com *.google.fi *.google.com *.doubleclick.net";
+		set resp.http.x-adservice = "adservice.google.com adservice.google.nl adservice.google.fi adservice.google.se adservice.google.no adservice.google.it adservice.google.es";
+		set resp.http.x-script-src = "script-src 'unsafe-inline' 'unsafe-eval' 'self' data: stats.eksis.eu *.github.com *.fontawesome.com *.facebook.net *.ampproject.org *.googletagmanager.com partner.googleadservices.com *.googlesyndication.com www.google-analytics.com ajax.googleapis.com www.googletagservices.com *.google.fi *.google.com *.doubleclick.net " + resp.http.x-adservice;
 		set resp.http.x-connect-src = "connect-src attestation.android.com *.doubleclick.net *.google-analytics.com *.gstatic.com *.googlesyndication.com stats.eksis.eu 'self'";
 		set resp.http.x-frame-src = "frame-src *.google.com *.googlesyndication.com *.doubleclick.net *.soundcloud.com *.youtube.com *.vimeo.com 'self'";
 		set resp.http.x-img-src = "img-src * data: 'self'";
@@ -32,15 +33,15 @@ sub sec_headers {
 		set resp.http.x-report = "report-uri https://" + req.http.host + "/_csp;";
 	
 		# I need hosts too - this would be easier if I wouldn't use FQDN in hosts... I will fix this, some day
-		if (req.http.host == "www.katiska.info") { set resp.http.x-csp-host = "*.katiska.info"; }
-		if (req.http.host == "store.katiska.info") { set resp.http.x-csp-host = "*.katiska.info"; }
+		if (req.http.host == "www.katiska.info") { set resp.http.x-csp-host = "*.katiska.info www.katiska.info"; }
+		if (req.http.host == "store.katiska.info") { set resp.http.x-csp-host = "*.katiska.info store.katiska.info"; }
 		if (req.http.host == "pro.katiska.info") { set resp.http.x-csp-host = "*.katiska.info"; }
-		if (req.http.host == "www.eksis.one") { set resp.http.x-csp-host = "*.eksis.one"; }
-		if (req.http.host == "store.eksis.one") { set resp.http.x-csp-host = "*.eksis.one"; }
+		if (req.http.host == "www.eksis.one") { set resp.http.x-csp-host = "*.eksis.one www.eksis.one"; }
+		if (req.http.host == "store.eksis.one") { set resp.http.x-csp-host = "*.eksis.one store.eksis.one"; }
 		if (req.http.host == "pro.eksis.one") { set resp.http.x-csp-host = "*.eksis.one"; }
-		if (req.http.host == "www.jagster.fi") { set resp.http.x-csp-host = "*.jagster.fi"; }
+		if (req.http.host == "www.jagster.fi") { set resp.http.x-csp-host = "*.jagster.fi www.jagster.fi"; }
 		if (req.http.host == "www.ymparistosuunnittelija.com") { set resp.http.x-csp-host = "*.ymparistosuunnittelija.com"; }
-		if (req.http.host == "www.koiranravitsemus.fi") { set resp.http.x-csp-host = "*.koiranravitsemus.fi"; }
+		if (req.http.host == "www.koiranravitsemus.fi") { set resp.http.x-csp-host = "www.koiranravitsemus.fi"; }
 	
 		# Actual CSP
 		if (req.url !~ "wp-admin") {
@@ -52,6 +53,7 @@ sub sec_headers {
 		# Remove temps
 		unset resp.http.x-default-src;
 		unset resp.http.x-child-src;
+		unset resp.http.x-adservice;
 		unset resp.http.x-script-src;
 		unset resp.http.x-connect-src;
 		unset resp.http.x-frame-src;
