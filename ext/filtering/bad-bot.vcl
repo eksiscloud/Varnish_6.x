@@ -89,6 +89,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "crawler4j"
 		|| req.http.User-Agent ~ "CriteoBot"
 		# D
+		|| req.http.User-Agent ~ "DataForSeoBot"
 		|| req.http.User-Agent ~ "datagnionbot"
 		|| req.http.User-Agent ~ "Datanyze"
 		|| req.http.User-Agent ~ "Dataprovider"

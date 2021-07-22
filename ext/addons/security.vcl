@@ -5,7 +5,7 @@ sub sec_headers {
 	### Everything here works only if not piped. So, Discourse can't be secured here - there is no need, becauce Discourse sets these up by itself
 
 	## Cross Site Scripting, aka. XSS
-	if (resp.http.X-XSS-Protection =="") {
+	if (!resp.http.X-XSS-Protection) {
 		set resp.http.X-XSS-Protection = "1; mode=block";
 	}
 	
@@ -38,18 +38,23 @@ sub sec_headers {
 		set resp.http.x-report = "report-uri https://" + req.http.host + "/_csp;";
 	
 		# I need hosts too - this would be easier if I wouldn't use FQDN in hosts... I will fix this, some day
-		if (req.http.host == "(www|store|pro|selko).katiska.info") { set resp.http.x-csp-host = "*.katiska.info"; }
-		if (req.http.host == "(www|store|pro).eksis.one") { set resp.http.x-csp-host = "store.eksis.one www.eksis.one cdn.eksis.one proto.eksis.one"; }
-		if (req.http.host == "www.jagster.fi") { set resp.http.x-csp-host = "*.jagster.fi *.katiska.info"; }
-		if (req.http.host == "www.ymparistosuunnittelija.com") { set resp.http.x-csp-host = "www.ymparistosuunnittelija.com"; }
-		if (req.http.host == "www.koiranravitsemus.fi") { set resp.http.x-csp-host = "www.koiranravitsemus.fi"; }
-	
+		if (req.http.host ~ "(www|store|pro|selko).katiska.info") { set resp.http.x-csp-host = "*.katiska.info"; }
+		if (req.http.host ~ "(www|store|pro).eksis.one") { set resp.http.x-csp-host = "*.eksis.one"; }
+		if (req.http.host ~ "www.jagster.fi") { set resp.http.x-csp-host = "*.jagster.fi"; }
+		if (req.http.host ~ "www.ymparistosuunnittelija.com") { set resp.http.x-csp-host = "www.ymparistosuunnittelija.com"; }
+		if (req.http.host ~ "www.koiranravitsemus.fi") { set resp.http.x-csp-host = "www.koiranravitsemus.fi"; }
+		
 		# Actual CSP
 		# if you want no action, intel only: resp.http.Content-Security-Policy-Report-Only
-		set resp.http.Content-Security-Policy = resp.http.x-default-src + " " + resp.http.x-child-src + " " + resp.http.x-csp-host + "; " + resp.http.x-script-src + " " + resp.http.x-csp-host + "; " + resp.http.x-connect-src + " " + resp.http.x-csp-host + "; " + resp.http.x-frame-src + " " + resp.http.x-csp-host + "; " + resp.http.x-img-src + " " + resp.http.x-www-google + " " + resp.http.x-csp-host + "; " + resp.http.x-media-src + " " + resp.http.x-csp-host + "; " + resp.http.x-font-src + " " + resp.http.x-csp-host + "; " + resp.http.x-style-src + " " + resp.http.x-csp-host + "; " + resp.http.x-form-action + "; " + resp.http.x-prefetch-src + " " + resp.http.x-csp-host + "; " + resp.http.x-manifest-src + " " + resp.http.x-csp-host + "; " + resp.http.x-frame-ancestors + " " + resp.http.x-csp-host + "; " + resp.http.x-upgrade-mixed + "; " + resp.http.x-report;
+		# For some reason embeds by WordPress are always blocked; I know this is a security breach, but...
+		if (req.http.host !~ "/embed/") {
+			set resp.http.Content-Security-Policy = resp.http.x-default-src + " " + resp.http.x-child-src + " " + resp.http.x-csp-host + "; " + resp.http.x-script-src + " " + resp.http.x-csp-host + "; " + resp.http.x-connect-src + " " + resp.http.x-csp-host + "; " + resp.http.x-frame-src + " " + resp.http.x-csp-host + "; " + resp.http.x-img-src + " " + resp.http.x-www-google + " " + resp.http.x-csp-host + "; " + resp.http.x-media-src + " " + resp.http.x-csp-host + "; " + resp.http.x-font-src + " " + resp.http.x-csp-host + "; " + resp.http.x-style-src + " " + resp.http.x-csp-host + "; " + resp.http.x-form-action + "; " + resp.http.x-prefetch-src + " " + resp.http.x-csp-host + "; " + resp.http.x-manifest-src + " " + resp.http.x-csp-host + "; " + resp.http.x-frame-ancestors + " " + resp.http.x-csp-host + "; " + resp.http.x-upgrade-mixed + "; " + resp.http.x-report;
+		} else { 
+			unset resp.http.Content-Security-Policy; 
+		}
 	
 		# Some hosts may not be here, even should
-		if (!resp.http.x-csp-host) {
+		if (resp.http.x-csp-host == "") {
 			unset resp.http.Content-Security-Policy;
 		}
 	
@@ -76,19 +81,19 @@ sub sec_headers {
 	}
 	
 	## HTTP Strict Transport Security, aka. HSTS
-	if (resp.http.Strict-Transport-Security == "") {
+	if (!resp.http.Strict-Transport-Security) {
 		set resp.http.Strict-Transport-Security = "max-age=31536000; includeSubdomains; ";
 	}
 
 	## MIME sniffing
-	if (resp.http.X-Content-Type-Options == "") {
+	if (!resp.http.X-Content-Type-Options) {
 		set resp.http.X-Content-Type-Options = "nosniff";
 	}
 	
 	## Referrer-Policy
-	#if (resp.http.Referrer-Policy == "") {
+	if (!resp.http.Referrer-Policy) {
 		set resp.http.Referrer-Policy = "same-origin";
-	#}
+	}
 	
 	## Cookies
 	# Cookies can be done, manipulated and changed using Varnish. But I can't.

@@ -44,6 +44,7 @@ sub asn_name {
 	if (
 		   req.http.x-asn ~ "adsafe-"						# Integral Ad Science, Inc., US
 		|| req.http.x-asn ~ "as_delis"						# Serverion BV, NL
+		|| req.http.x-asn ~ "blazingseo"					# DE but is from IL
 		|| req.http.x-asn ~ "chinanet-backbone"				# big part of China
 		|| req.http.x-asn ~ "chinatelecom"					# a lot and couple more, CN
 		|| req.http.x-asn ~ "colocrossing"					# ColoCrossing, US
@@ -56,6 +57,7 @@ sub asn_name {
 		|| req.http.x-asn ~ "leaseweb"						# LeaseWeb Netherlands B.V., NL
 		|| req.http.x-asn ~ "m247"							# QuickPacket, LLC, US, m247.com, GB, ES, RO
 		|| req.http.x-asn ~ "nocix"							# Nocix, LLC, US
+		|| req.http.x-asn ~ "ovh"							# OVH SAS, FR
 		|| req.http.x-asn ~ "peenq"							# PEENQ, NL
 		|| req.http.x-asn ~ "ponynet"						# FranTech Solutions, US
 		|| req.http.x-asn ~ "powerline-as"					# Ngok Fung trading, HK
