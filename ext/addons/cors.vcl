@@ -1,22 +1,12 @@
 sub cors {
 
 	if (req.http.X-Saved-Origin == "") {
-		set resp.http.Access-Control-Allow-Origin = "https://" + req.http.host;
+		set resp.http.Access-Control-Allow-Origin = "*";
 	} else {
 		set resp.http.Access-Control-Allow-Origin = req.http.X-Saved-Origin;
 	}
 	
 	unset req.http.X-Saved-Origin;
-	
-	
-
-	
-#	if (req.http.host ~ "www.katiska.info") {
-#		unset resp.http.Access-Control-Allow-Origin;
-#		set resp.http.Access-Control-Allow-Origin = "*";
-#	}
-	
-	
 	
 	# Discourse. Nothing here works either.
 #	if (req.http.host == "kaffein.jagster.fi") {
