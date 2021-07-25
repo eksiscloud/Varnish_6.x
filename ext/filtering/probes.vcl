@@ -10,7 +10,11 @@ sub tech_things {
 		|| req.http.User-Agent ~ "WP Rocket/"
 		) {
 			if (std.ip(req.http.X-Real-IP, "0.0.0.0") ~ whitelist) {
-				set req.http.x-bot = "tech";
+				if (req.http.User-Agent == "KatiskaWarmer") {
+					set req.http.x-bot = "visitor";
+				} else {
+					set req.http.x-bot = "tech";
+				}
 			} else {
 				return(synth(403, "False Bot"));
 			}

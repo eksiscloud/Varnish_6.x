@@ -99,7 +99,7 @@ sub common_rules {
 	}
 	
 	## Only GET and HEAD are cacheable methods AFAIK
-	# Well, Varnish doesn't cache POST and others anyway and I don't like unneeded pass-jumps
+	# Well, Varnish doesn't cache POST and others anyway, but I don't like unneeded pass-jumps so why is this here in first place?
 	if (req.method != "GET" && req.method != "HEAD") {
 		return(pass);
 	}
@@ -139,9 +139,9 @@ sub common_rules {
 	## Cache warmup
 	# wget --spider -o wget.log -e robots=off -r -l 5 -p -S -T3 --header="X-Bypass-Cache: 1" --header="User-Agent:CacheWarmer" -H --domains=example.com --show-progress www.example.com
 	# It saves a lot of directories, so think where you are before launching it... A protip: /tmp
-	if (req.http.X-Bypass-Cache == "1" && req.http.User-Agent == "CacheWarmer") {
-		return(pass);
-	}
+	#if (req.http.X-Bypass-Cache == "1" && req.http.User-Agent == "CacheWarmer") {
+	#	return(pass);
+	#}
 
 	## AWStats
 	if (req.url ~ "cgi-bin/awsstats.pl") {
@@ -169,7 +169,7 @@ sub common_rules {
 	# I want send User-Agent to backend because that is te only way to show who is actually getting error 404; I don't serve bots other nice ones 
 	# and 404 from real users must fix right away
 	set req.http.x-agent = req.http.User-Agent;
-	if (req.http.x-bot !~ "(nice|tech|bad)") { set req.http.x-bot = "visitor"; }
+	if (req.http.x-bot !~ "(nice|tech|bad|visitor)") { set req.http.x-bot = "visitor"; }
 	unset req.http.User-Agent;
 	
 # The end

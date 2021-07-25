@@ -800,7 +800,7 @@ sub vcl_backend_response {
 	## Do I really have to tell this again?
 	if (bereq.method == "POST") {
 		set beresp.uncacheable = true;
-		return (deliver);
+		return(deliver);
 	}
 
 	## I set X-Trace header, prepending it to X-Trace header received from backend. Useful for troubleshooting
@@ -856,15 +856,13 @@ sub vcl_deliver {
 		set resp.http.Vary = "Origin";
 	}
 	
-	## A little bit more security
-	call sec_headers;
-
-
-
-
-
-
-
+	## A little bit more security, but only for those who are identied themselves as visitors
+	if (req.http.x-bot == "visitor") {
+		call sec_headers;
+	} else {
+		set resp.http.X-Content-Type-Options = "nosniff";
+		set resp.http.Referrer-Policy = "same-origin";
+	}
 	
 	## Just some unneeded headers from debugs.vcl
 	call diagnose;
