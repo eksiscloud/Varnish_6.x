@@ -759,12 +759,12 @@ sub vcl_backend_response {
 	# all of excluded urls give 404 sometimes, so this is just failsafe. And just an ordinary 404 gave every now and then 403.
 	if (bereq.url !~ "(wp-json|caos|sitemap|lib/ajax)") {
 		if (beresp.status == 404 && bereq.url ~ "/([a-z0-9_\.-]+)\.(asp|aspx|php|js|jsp|rar|zip|tar|gz)") {
-			if (bereq.http.X-Country-Code !~ "fi" && bereq.http.x-bot != "(nice|tech)") {
-				set beresp.status = 666;
-				set beresp.ttl = 24h; # longer TTL for foreigners
-			} else {
+			if (bereq.http.X-Country-Code ~ "fi" || bereq.http.x-bot ~ "(nice|tech)") {
 				set beresp.status = 403;
 				set beresp.ttl = 1h; # shorter TTL for more trustful ones
+			} else {
+				set beresp.status = 666;
+				set beresp.ttl = 24h; # longer TTL for foreigners
 			}
 		}
 	}

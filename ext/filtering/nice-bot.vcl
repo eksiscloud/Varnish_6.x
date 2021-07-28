@@ -46,16 +46,17 @@ sub cute_bot_allowance {
 		# Apple
 		req.http.User-Agent ~ "Applebot"
 		|| req.http.User-Agent ~ "AppleCoreMedia"
+		|| req.http.User-Agent ~ "atc/"				# WatchOS, Podcasts
 		) { 
 			set req.http.x-bot = "nice"; 
 			set req.http.User-Agent = "Apple"; 
 		}
 		
 	elseif (
-		req.http.User-Agent == "iTMS" # iTunes
-		|| req.http.User-Agent ~ "Jakarta Commons-HttpClient" # always together with iTMS
-		|| req.http.User-Agent ~ "Podcastit" # Apple Podcast-app
-		|| req.http.User-Agent ~ "iTunes"	 # Older way to get podcasts, will disappers I reckon
+		req.http.User-Agent == "iTMS" 								# iTunes
+		|| req.http.User-Agent ~ "Jakarta Commons-HttpClient" 		# always together with iTMS
+		|| req.http.User-Agent ~ "(Podcastit|Podcaster|Podcasts)" 	# Apple Podcast-app
+		|| req.http.User-Agent ~ "iTunes"	 						# Older way to get podcasts, will disappers I reckon
 		) { 
 			set req.http.x-bot = "nice"; 
 			set req.http.User-Agent = "iTunes"; 
@@ -73,16 +74,21 @@ sub cute_bot_allowance {
 		}
 		
 	# podcasts
-	elseif (req.http.User-Agent ~ "Spotify") { set req.http.x-bot = "nice"; set req.http.User-Agent = "Spotify"; }
-	elseif (req.http.User-Agent ~ "StitcherBot") { set req.http.x-bot = "nice"; set req.http.User-Agent = "Stitcher"; }
-	elseif (req.http.User-Agent ~ "Podcaster") { set req.http.x-bot = "nice"; set req.http.User-Agent = "Podcaster"; }
-	elseif (req.http.User-Agent ~ "Overcast") { set req.http.x-bot = "nice"; set req.http.User-Agent = "Overcast"; }
+	elseif (req.http.User-Agent ~ "Airr/") { set req.http.x-bot = "nice"; set req.http.User-Agent = "Airr"; }							# https://www.airr.io/
+	elseif (req.http.User-Agent == "Amazon Music Podcast") { set req.http.x-bot = "nice"; set req.http.User-Agent = "Amazon Podcast"; }
+	elseif (req.http.User-Agent ~ "AntennaPod") { set req.http.x-bot = "nice"; set req.http.User-Agent = "AntennaPod"; }				# https://github.com/AntennaPod/AntennaPod
 	elseif (req.http.User-Agent ~ "Breaker") { set req.http.x-bot = "nice"; set req.http.User-Agent = "Breaker"; }
 	elseif (req.http.User-Agent ~ "CastBox") { set req.http.x-bot = "nice"; set req.http.User-Agent = "CastBox"; }
-	elseif (req.http.User-Agent == "Amazon Music Podcast") { set req.http.x-bot = "nice"; set req.http.User-Agent = "Amazon Podcast"; }
+	elseif (req.http.User-Agent ~ "Overcast") { set req.http.x-bot = "nice"; set req.http.User-Agent = "Overcast"; }
+	elseif (req.http.User-Agent ~ "Spotify") { set req.http.x-bot = "nice"; set req.http.User-Agent = "Spotify"; }
+	elseif (req.http.User-Agent ~ "StitcherBot") { set req.http.x-bot = "nice"; set req.http.User-Agent = "Stitcher"; }
+	
+	
+	
+	
 		
 	# Others
-	elseif (req.http.User-Agent ~ "ia_archiver") { set req.http.x-bot = "nice"; set req.http.User-Agent = "Alexa"; }
+	elseif (req.http.User-Agent ~ "(ia_archiver|AlexaMediaPlayer)") { set req.http.x-bot = "nice"; set req.http.User-Agent = "Alexa"; }
 	elseif (req.http.User-Agent ~ "Blekkobot") {set req.http.x-bot = "nice"; set req.http.User-Agent = "Blekko"; }
 	elseif (req.http.User-Agent == "Amazon Simple Notification Service Agent") { set req.http.x-bot = "nice"; set req.http.User-Agent = "AWS"; }
 	elseif (req.http.User-Agent ~ "^MeWeBot") { set req.http.x-bot = "nice"; set req.http.User-Agent = "MeWe"; }

@@ -46,6 +46,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "aria2"
 		|| req.http.User-Agent ~ "Asana"
 		|| req.http.User-Agent ~ "AspiegelBot"					# good
+		|| req.http.User-Agent ~ "AudioNow"						# https://audionow.de/
 		|| req.http.User-Agent ~ "AvocetCrawler"
 		|| req.http.User-Agent ~ "AVSearch"
 		|| req.http.User-Agent ~ "AwarioRssBot"					# brand/marketing - done
@@ -87,6 +88,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "COMODO"
 		|| req.http.User-Agent ~ "colly"
 		|| req.http.User-Agent ~ "crawler4j"
+		|| req.http.User-Agent ~ "Crawling"
 		|| req.http.User-Agent ~ "CriteoBot"
 		# D
 		|| req.http.User-Agent ~ "DataForSeoBot"
@@ -256,7 +258,7 @@ sub bad_bot_detection {
 		|| req.http.User-Agent ~ "Podalong"
 		|| req.http.User-Agent ~ "Podbean"
 		|| req.http.User-Agent ~ "Podcastindex"
-		|| req.http.User-Agent ~ "Podcastindex"
+		|| req.http.User-Agent ~ "PodcastRepublic"
 		|| req.http.User-Agent ~ "PodcastRegion"
 		|| req.http.User-Agent ~ "Podchaser-Parser"
 		|| req.http.User-Agent ~ "Podimo"
